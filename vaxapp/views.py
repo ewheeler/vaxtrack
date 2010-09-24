@@ -33,7 +33,7 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
 
     fig = figure()
     ax = fig.add_subplot(111)
-    ax.plot_date(dates, levels, '-')
+    ax.plot_date(dates, levels, '-', drawstyle='steps')
 
     # format the ticks
     ax.xaxis.set_major_locator(years)
@@ -52,7 +52,8 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
 
     save_charts = False
     if save_charts:
-        filename = "%s-%s.png" % (datetime.datetime.today().date().isoformat(), country_pk)
+        filename = "%s-%s-%s.png" % (datetime.datetime.today().date().isoformat(),\
+            country_pk, vaccine_abbr)
         file_path = "vaxapp/static/charts/" + filename
         fig.savefig(file_path)
 
