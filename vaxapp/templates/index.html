@@ -1,5 +1,10 @@
 {% extends "layout.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<img src="{% url chart-country 0 %}">
+{% if countrystocks %}
+    {% for cs in  countrystocks %}
+        <h3>{{cs.country.printable_name}} - {{cs.vaccine.abbr}}</h3>
+        <img src="{% url chart-country cs.country.pk cs.vaccine.abbr %}">
+    {% endfor %}
+{% endif %}
 {% endblock %}

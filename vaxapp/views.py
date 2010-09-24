@@ -5,6 +5,7 @@ import datetime
 
 from pylab import figure, axes, pie, title
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
 import matplotlib.pyplot
 
 from django.shortcuts import render_to_response, get_object_or_404
@@ -14,26 +15,45 @@ from django.db.models import Sum
 from models import *
 
 def index(req):
-    return render_to_response("index.html")
+    return render_to_response("index.html",\
+        {"countrystocks": CountryStock.objects.all()})
 
-def chart_country(req, country_pk=None):
-    f = figure(figsize=(6,6))
-    ax = axes([0.1, 0.1, 0.8, 0.8])
-    labels = 'Frogs', 'Hogs', 'Dogs', 'Logs'
-    fracs = [15,30,45, 10]
-    explode=(0, 0.05, 0, 0)
-    pie(fracs, explode=explode, labels=labels, autopct='%1.1f%%')
-    title('Raining Hogs and Dogs', bbox={'facecolor':'0.8', 'pad':5})
+def chart_country(req, country_pk=None, vaccine_abbr=None):
+    country_stock = CountryStock.objects.get(country__pk=country_pk,\
+        vaccine__abbr=vaccine_abbr)
 
-    canvas = FigureCanvasAgg(f)    
+    stocklevels = StockLevel.objects.filter(country_stock=country_stock).order_by('-date')
+
+    years    = YearLocator()   # every year
+    months   = MonthLocator()  # every month
+    yearsFmt = DateFormatter('%Y')
+
+    dates = stocklevels.values_list('date', flat=True)
+    levels = stocklevels.values_list('amount', flat=True)
+
+    fig = figure()
+    ax = fig.add_subplot(111)
+    ax.plot_date(dates, levels, '-')
+
+    # format the ticks
+    ax.xaxis.set_major_locator(years)
+    ax.xaxis.set_major_formatter(yearsFmt)
+    ax.xaxis.set_minor_locator(months)
+    ax.autoscale_view()
+
+    ax.grid(True)
+
+    fig.autofmt_xdate()
+
+    canvas = FigureCanvasAgg(fig)
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)
-    matplotlib.pyplot.close(f)
+    matplotlib.pyplot.close(fig)
 
     save_charts = False
     if save_charts:
         filename = "%s-%s.png" % (datetime.datetime.today().date().isoformat(), country_pk)
         file_path = "vaxapp/static/charts/" + filename
-        f.savefig(file_path)
+        fig.savefig(file_path)
 
     return response
