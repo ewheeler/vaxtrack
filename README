@@ -1,0 +1,9 @@
+Online monitoring and alert system integrating
+vaccine stock data (national coldstore data),
+delivery forecasts, and cold chain capacity
+tools to avoid stock outs and vaccine spoilage/wastage.
+
+DEPENDENCIES:
+    Django (http://djangoproject.com)
+    South (http://south.aeracode.org)
+    matplotlib (http://matplotlib.sourceforge.net)
