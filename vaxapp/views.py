@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
+
+import datetime
+
 from pylab import figure, axes, pie, title
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.pyplot
@@ -26,4 +29,11 @@ def chart_country(req, country_pk=None):
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)
     matplotlib.pyplot.close(f)
+
+    save_charts = False
+    if save_charts:
+        filename = "%s-%s.png" % (datetime.datetime.today().date().isoformat(), country_pk)
+        file_path = "vaxapp/static/charts/" + filename
+        f.savefig(file_path)
+
     return response
