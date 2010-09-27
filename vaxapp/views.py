@@ -31,24 +31,52 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
     dates = stocklevels.values_list('date', flat=True)
     levels = stocklevels.values_list('amount', flat=True)
 
-    fig = figure()
-    ax = fig.add_subplot(111)
-    ax.plot_date(dates, levels, '-', drawstyle='steps')
+    try:
+        forecasts = country_stock.forecast_set.all().order_by('year')
 
-    # format the ticks
-    ax.xaxis.set_major_locator(years)
-    ax.xaxis.set_major_formatter(yearsFmt)
-    ax.xaxis.set_minor_locator(months)
-    ax.autoscale_view()
+        three_by_year = dict()
+        nine_by_year = dict()
 
-    ax.grid(True)
+        # create dicts mapping year to buffer levels
+        # (according to CO forecast annual demand estimate)
+        three = [three_by_year.update({f.year:f.three_month_buffer}) for f in forecasts ]
+        nine = [nine_by_year.update({f.year:f.nine_month_buffer}) for f in forecasts ]
 
-    fig.autofmt_xdate()
+        # make a list of corresponding buffer levels for every reported stock level
+        three_month_buffers = [three_by_year[d.year] for d in dates]
+        nine_month_buffers = [nine_by_year[d.year] for d in dates]
 
-    canvas = FigureCanvasAgg(fig)
-    response = HttpResponse(content_type='image/png')
-    canvas.print_png(response)
-    matplotlib.pyplot.close(fig)
+    except Exception, e:
+        print e
+
+    try:
+        fig = figure()
+        ax = fig.add_subplot(111)
+
+        # plot stock levels
+        ax.plot_date(dates, levels, '-', drawstyle='steps')
+
+        # plot 3 and 9 month buffer levels as red lines
+        ax.plot_date(dates, three_month_buffers, '-', drawstyle='steps', color='red')
+        ax.plot_date(dates, nine_month_buffers, '-', drawstyle='steps', color='red')
+
+        # format the ticks
+        ax.xaxis.set_major_locator(years)
+        ax.xaxis.set_major_formatter(yearsFmt)
+        ax.xaxis.set_minor_locator(months)
+        ax.autoscale_view()
+
+        ax.grid(True)
+
+        fig.autofmt_xdate()
+
+        canvas = FigureCanvasAgg(fig)
+        response = HttpResponse(content_type='image/png')
+        canvas.print_png(response)
+        matplotlib.pyplot.close(fig)
+
+    except Exception, e:
+        print e
 
     save_charts = False
     if save_charts:
