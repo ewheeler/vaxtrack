@@ -27,7 +27,7 @@ def import_csv(args):
     # use codecs.open() instead of open() so all characters are utf-8 encoded
     # BEFORE we start dealing with them (just in case)
     # rU option is for universal-newline mode which takes care of \n or \r etc
-    csvee = codecs.open("mali.csv", "rU", encoding='utf-8', errors='ignore')
+    csvee = codecs.open("chad.csv", "rU", encoding='utf-8', errors='ignore')
 
     # sniffer attempts to guess the file's dialect e.g., excel, etc
     #dialect = csv.Sniffer().sniff(csvee.read(1024))
@@ -45,6 +45,13 @@ def import_csv(args):
         last_stock = 0
         print 'begin rows'
         row_count = 0
+
+        mali, m = Country.objects.get_or_create(name="MALI", printable_name="Mali",\
+            iso2_code="ML", iso3_code="MLI", numerical_code=466)
+
+        chad, c = Country.objects.get_or_create(name="CHAD", printable_name="Chad",\
+            iso2_code="TD", iso3_code="TCD", numerical_code=148)
+
         for row in reader:
             row_count += 1
             if row_count % 400 == 0:
@@ -125,6 +132,7 @@ def import_csv(args):
                                 date=date_obj)
 
                     if has_datum(row, 'BCG original country forecast'):
+                        date_obj = format_date(row['Date'])
                         clean_amount = int(only_digits(row['BCG original country forecast']))
                         if clean_amount is not None:
                             original_co = Delivery.objects.create(\
@@ -132,6 +140,7 @@ def import_csv(args):
                                 amount=clean_amount, type='CO')
 
                     if has_datum(row, 'BCG Unicef deliveries'):
+                        date_obj = format_date(row['Date'])
                         clean_amount = int(only_digits(row['BCG Unicef deliveries']))
                         if clean_amount is not None:
                             unicef = Delivery.objects.create(\
@@ -139,6 +148,7 @@ def import_csv(args):
                                 amount=clean_amount,type='UN')
 
                     if has_datum(row, 'BCG future delivery on PO'):
+                        date_obj = format_date(row['Date'])
                         clean_amount = int(only_digits(row['BCG future delivery on PO']))
                         if clean_amount is not None:
                             on_po = Delivery.objects.create(\
@@ -146,6 +156,7 @@ def import_csv(args):
                                 amount=clean_amount, type='FP')
 
                     if has_datum(row, 'BCG future delivery on forecast'):
+                        date_obj = format_date(row['Date'])
                         clean_amount = int(only_digits(row['BCG future delivery on forecast']))
                         if clean_amount is not None:
                             on_forecast = Delivery.objects.create(\
