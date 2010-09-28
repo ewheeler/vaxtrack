@@ -24,6 +24,7 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
     display_buffers = True
     display_forecast_projection = True
     display_purchased_projection = True
+    display_theoretical_forecast = True
 
     country_stock = CountryStock.objects.get(country__pk=country_pk,\
         vaccine__abbr=vaccine_abbr)
@@ -54,7 +55,7 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
             three_month_buffers = [three_by_year[d.year] for d in dates]
             nine_month_buffers = [nine_by_year[d.year] for d in dates]
 
-        def project_future_stock_levels(delivery_type):
+        def project_future_stock_levels(delivery_type, begin_date, begin_level, end_date=None):
             deliveries = country_stock.delivery_set.all().order_by('date')
             future_deliveries = deliveries.filter(type=delivery_type)
 
@@ -62,20 +63,20 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
             # get this year's forecast
             current_forecast = forecasts.get(year=current_year)
             # estimate daily consumption based on estimated annual demand
+            # TODO use appropriate year's estimate, not just current year!
             est_daily_consumption = int(float(current_forecast.demand_est)/float(365.0))
-            # get most recent stock level
-            latest_stock_level = stocklevels[0]
 
             # timedelta representing a change of one day
             one_day = datetime.timedelta(days=1)
+            # TODO use end_date parameter if given
             last_day_in_current_year = datetime.date(current_year, 12, 31)
             # timedelta representing remaining days in this year
             # following the most recent stock level
-            remaining_days_in_current_year = last_day_in_current_year - latest_stock_level.date
+            remaining_days_in_current_year = last_day_in_current_year - begin_date
 
             # variables to keep track of running totals while we loop
-            est_stock_level = latest_stock_level.amount
-            est_stock_date = latest_stock_level.date
+            est_stock_level = begin_level
+            est_stock_date = begin_date
             projected_stock_dates = list()
             projected_stock_levels = list()
 
@@ -101,6 +102,7 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
                 projected_stock_levels.append(est_stock_level)
             return projected_stock_dates, projected_stock_levels
 
+
         fig = figure(figsize=(9,6))
         ax = fig.add_subplot(111)
 
@@ -113,12 +115,17 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
             ax.plot_date(dates, nine_month_buffers, '-', drawstyle='steps', color='red')
 
         if display_forecast_projection:
-            projected_ff_dates, projected_ff_levels = project_future_stock_levels("FF")
+            projected_ff_dates, projected_ff_levels = project_future_stock_levels("FF", stocklevels[0].date, stocklevels[0].amount)
             ax.plot_date(projected_ff_dates, projected_ff_levels, '--', drawstyle='steps', color='orange')
 
         if display_purchased_projection:
-            projected_fp_dates, projected_fp_levels = project_future_stock_levels("FP")
+            projected_fp_dates, projected_fp_levels = project_future_stock_levels("FP", stocklevels[0].date, stocklevels[0].amount)
             ax.plot_date(projected_fp_dates, projected_fp_levels, '--', drawstyle='steps', color='blue')
+
+        if display_theoretical_forecast:
+            #TODO dynamic begin_date parameter
+            projected_co_dates, projected_co_levels = project_future_stock_levels("CO", datetime.date(2007,8,31), 0)
+            ax.plot_date(projected_co_dates, projected_co_levels, '--', drawstyle='steps', color='green')
 
         # format the ticks
         ax.xaxis.set_major_locator(years)
