@@ -22,6 +22,8 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
     # configuration options
     save_charts = False
     display_buffers = True
+    display_forecast_projection = True
+    display_purchased_projection = True
 
     country_stock = CountryStock.objects.get(country__pk=country_pk,\
         vaccine__abbr=vaccine_abbr)
@@ -52,28 +54,71 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
             three_month_buffers = [three_by_year[d.year] for d in dates]
             nine_month_buffers = [nine_by_year[d.year] for d in dates]
 
-        deliveries = country_stock.delivery_set.all().order_by('date')
-        future_forecast = deliveries.filter(type='FF')
-        future_forecast_dates = future_forecast.values_list('date', flat=True)
-        future_forecast_amounts = future_forecast.values_list('amount', flat=True)
+        def project_future_stock_levels(delivery_type):
+            deliveries = country_stock.delivery_set.all().order_by('date')
+            future_deliveries = deliveries.filter(type=delivery_type)
 
-    except Exception, e:
-        print 'ERROR DATA'
-        print e
+            current_year = datetime.datetime.today().year
+            # get this year's forecast
+            current_forecast = forecasts.get(year=current_year)
+            # estimate daily consumption based on estimated annual demand
+            est_daily_consumption = int(float(current_forecast.demand_est)/float(365.0))
+            # get most recent stock level
+            latest_stock_level = stocklevels[0]
 
-    try:
+            # timedelta representing a change of one day
+            one_day = datetime.timedelta(days=1)
+            last_day_in_current_year = datetime.date(current_year, 12, 31)
+            # timedelta representing remaining days in this year
+            # following the most recent stock level
+            remaining_days_in_current_year = last_day_in_current_year - latest_stock_level.date
+
+            # variables to keep track of running totals while we loop
+            est_stock_level = latest_stock_level.amount
+            est_stock_date = latest_stock_level.date
+            projected_stock_dates = list()
+            projected_stock_levels = list()
+
+            for day in range(remaining_days_in_current_year.days):
+                # increment date by one day
+                this_date = est_stock_date + one_day
+                est_stock_date = this_date
+                # check for forecasted deliveries for this date
+                deliveries_today = future_deliveries.filter(date=this_date)
+                if deliveries_today.count() != 0:
+                    for delivery in deliveries_today:
+                        # add any delivery amounts to the estimated stock level
+                        est_stock_level = est_stock_level + delivery.amount
+
+                # add date to list of dates
+                projected_stock_dates.append(this_date)
+                # subtract estimated daily consumption from stock level
+                est_stock_level = est_stock_level - est_daily_consumption
+                if est_stock_level < 0:
+                    # don't allow negative stock levels!
+                    est_stock_level = 0
+                # add level to list of levels
+                projected_stock_levels.append(est_stock_level)
+            return projected_stock_dates, projected_stock_levels
+
         fig = figure(figsize=(9,6))
         ax = fig.add_subplot(111)
 
         # plot stock levels
-        ax.plot_date(dates, levels, '-', drawstyle='steps')
+        ax.plot_date(dates, levels, '-', drawstyle='steps', color='blue')
 
         if display_buffers:
             # plot 3 and 9 month buffer levels as red lines
             ax.plot_date(dates, three_month_buffers, '-', drawstyle='steps', color='red')
             ax.plot_date(dates, nine_month_buffers, '-', drawstyle='steps', color='red')
 
-        ax.plot_date(future_forecast_dates, future_forecast_amounts, '-', drawstyle='steps', color='green')
+        if display_forecast_projection:
+            projected_ff_dates, projected_ff_levels = project_future_stock_levels("FF")
+            ax.plot_date(projected_ff_dates, projected_ff_levels, '--', drawstyle='steps', color='orange')
+
+        if display_purchased_projection:
+            projected_fp_dates, projected_fp_levels = project_future_stock_levels("FP")
+            ax.plot_date(projected_fp_dates, projected_fp_levels, '--', drawstyle='steps', color='blue')
 
         # format the ticks
         ax.xaxis.set_major_locator(years)
