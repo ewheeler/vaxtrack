@@ -1,0 +1,70 @@
+/* vim:tabstop=2:expandtab */
+
+* {
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  zoom: 1;
+}
+
+h1,h2,h3,h4,h5 {
+  font-size: 100%;
+}
+
+body {
+  font: 9pt verdana, sans-serif;
+  margin: 2em;
+}
+
+  #wrapper {
+    z-index: 1;
+  }
+  
+.clear_hack {
+  height: 0;
+  clear: both;
+  overflow: hidden;
+}
+
+h1 {
+  font-size: 2em;
+  margin: 0.5em 0;
+  font-weight: bold;
+  font-family: arial, sans-serif;
+}
+
+h2 {
+  font-size: 1.6em;
+  margin: 0.625em 0;
+}
+
+#content p.disaster {
+  text-align: center;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #f00;
+  background: #e00;
+  
+  /* 1em @ 500% */
+  font-size: 500%;
+  margin-bottom: 0.2em;
+}
+
+#header {
+  position: relative;
+}
+  
+  #header h1 {
+  }
+  
+    #header h1 a {
+      display: block;
+      width: 446px;
+      height: 120px;
+    }
+    
+      #header h1 a:hover {
+        text-decoration: none; }
+    
+      #header h1 a span {
+        visibility: hidden; }

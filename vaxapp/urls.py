@@ -13,6 +13,8 @@ urlpatterns = patterns('',
     # serve assets via django, during development
     url(r'^assets/js/(?P<path>.*)$', "django.views.static.serve",
     {"document_root": os.path.dirname(__file__) + "/static/javascripts"}),
+    url(r'^assets/css/(?P<path>.*)$', "django.views.static.serve",
+    {"document_root": os.path.dirname(__file__) + "/static/stylesheets"}),
     url(r'^$', views.index),
     url(r'^charts/(?P<country_pk>\w+)-(?P<vaccine_abbr>\w+).png$', views.chart_country, name="chart-country"),
     url(r'^admin/', include(admin.site.urls)),

@@ -3,8 +3,10 @@
 {% block content %}
 {% if countrystocks %}
     {% for cs in  countrystocks %}
-        <h3>{{cs.country.printable_name}} - {{cs.vaccine.abbr}}</h3>
-        <img src="{% url chart-country cs.country.pk cs.vaccine.abbr %}">
+        <div class="chart">
+            <h3>{{cs.country.printable_name}} - {{cs.vaccine.abbr}}</h3>
+            <img src="{% url chart-country cs.country.pk cs.vaccine.abbr %}">
+        </div>
     {% endfor %}
 {% endif %}
 {% endblock %}
