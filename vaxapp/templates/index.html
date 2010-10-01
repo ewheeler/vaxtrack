@@ -9,4 +9,15 @@
         </div>
     {% endfor %}
 {% endif %}
+<div class="module">
+	<h2>Upload data</h2>
+
+	<form action="{% url upload-country %}" method="post" enctype="multipart/form-data">
+		{{ country_form.as_p }}
+		{% csrf_token %}
+		<div class="submit">
+			<input type="submit" id="id_submit" value="Upload" />
+		</div>
+	</form>
+</div>
 {% endblock %}

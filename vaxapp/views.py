@@ -11,12 +11,17 @@ import matplotlib.pyplot
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.db.models import Sum
+from django.template import RequestContext
 
-from models import *
+from .models import *
+from . import forms
+from vax import import_data
 
 def index(req):
     return render_to_response("index.html",\
-        {"countrystocks": CountryStock.objects.all()})
+        {"countrystocks": CountryStock.objects.all(),\
+            "country_form": forms.CountryForm()},\
+            context_instance=RequestContext(req))
 
 def chart_country(req, country_pk=None, vaccine_abbr=None):
     # configuration options
@@ -28,21 +33,21 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
     display_theoretical_forecast = False
     display_adjusted_theoretical_forecast = False
 
-    country_stock = CountryStock.objects.get(country__pk=country_pk,\
-        vaccine__abbr=vaccine_abbr)
-
-    # oldest last
-    stocklevels = StockLevel.objects.filter(country_stock=country_stock)\
-        .order_by('-date')
-
-    years    = YearLocator()   # every year
-    months   = MonthLocator()  # every month
-    yearsFmt = DateFormatter('%Y')
-
-    dates = stocklevels.values_list('date', flat=True)
-    levels = stocklevels.values_list('amount', flat=True)
-
     try:
+        country_stock = CountryStock.objects.get(country__pk=country_pk,\
+            vaccine__abbr=vaccine_abbr)
+
+        # oldest last
+        stocklevels = StockLevel.objects.filter(country_stock=country_stock)\
+            .order_by('-date')
+
+        years    = YearLocator()   # every year
+        months   = MonthLocator()  # every month
+        yearsFmt = DateFormatter('%Y')
+
+        dates = stocklevels.values_list('date', flat=True)
+        levels = stocklevels.values_list('amount', flat=True)
+
         forecasts = country_stock.forecast_set.all().order_by('year')
 
         if display_buffers:
@@ -61,7 +66,12 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
             three_month_buffers = [three_by_year[d.year] for d in dates]
             nine_month_buffers = [nine_by_year[d.year] for d in dates]
 
-        def _project_future_stock_levels(delivery_type, begin_date, begin_level, end_date=None):
+    except Exception,e:
+        print 'ERROR DATA'
+        print e
+
+    def _project_future_stock_levels(delivery_type, begin_date, begin_level, end_date=None):
+        try:
             all_deliveries = country_stock.delivery_set.all().order_by('date')
             filtered_deliveries = all_deliveries.filter(type=delivery_type)
 
@@ -105,8 +115,12 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
                 # add level to list of levels
                 projected_stock_levels.append(est_stock_level)
             return projected_stock_dates, projected_stock_levels
+        except Exception,e:
+            print 'ERROR PROJECTION'
+            print e
 
 
+    try:
         # documentation sez figsize is in inches (!?)
         fig = figure(figsize=(15,12))
 
@@ -197,3 +211,30 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
         canvas.print_png(response)
 
         return response
+
+def handle_uploaded_file(f, filename='/tmp/wat.csv'):
+    destination = open(filename, 'wb+')
+    for chunk in f.chunks():
+        destination.write(chunk)
+    destination.close()
+
+def upload_country(req):
+    if req.method == "POST":
+        form = forms.CountryForm(req.POST)
+
+        if form.is_valid():
+            cleaned = form.cleaned_data
+
+            uploader = cleaned["uploader"]
+            filename = "/tmp/" + uploader + ".csv"
+
+            if "country_csv" in req.FILES:
+                try:
+                    handle_uploaded_file(req.FILES["country_csv"], filename)
+                except Exception, e:
+                    print e
+                try:
+                    import_data.import_csv(filename)
+                except Exception, e:
+                    print e
+    return HttpResponseRedirect('/')
