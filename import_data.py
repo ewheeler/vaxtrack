@@ -22,12 +22,12 @@ from decimal import Decimal as D
 
 from vaxapp.models import *
 
-def import_csv(args):
+def import_csv(file=None):
 
     # use codecs.open() instead of open() so all characters are utf-8 encoded
     # BEFORE we start dealing with them (just in case)
     # rU option is for universal-newline mode which takes care of \n or \r etc
-    csvee = codecs.open("chad.csv", "rU", encoding='utf-8', errors='ignore')
+    csvee = codecs.open(file, "rU", encoding='utf-8', errors='ignore')
 
     # sniffer attempts to guess the file's dialect e.g., excel, etc
     #dialect = csv.Sniffer().sniff(csvee.read(1024))
@@ -47,10 +47,10 @@ def import_csv(args):
         row_count = 0
 
         mali, m = Country.objects.get_or_create(name="MALI", printable_name="Mali",\
-            iso2_code="ML", iso3_code="MLI", numerical_code=466)
+            iso_code="ML", iso3_code="MLI", numerical_code=466)
 
         chad, c = Country.objects.get_or_create(name="CHAD", printable_name="Chad",\
-            iso2_code="TD", iso3_code="TCD", numerical_code=148)
+            iso_code="TD", iso3_code="TCD", numerical_code=148)
 
         for row in reader:
             row_count += 1
@@ -120,6 +120,35 @@ def import_csv(args):
                     vax, v = Vaccine.objects.get_or_create(abbr=row['Vaccine'])
                     country_stock, c = CountryStock.objects.get_or_create(\
                         vaccine=vax, country=country)
+
+                    # TODO this is just for testing purposes...
+                    if country.pk=='ML':
+                        f2007, f = Forecast.objects.get_or_create(\
+                            country_stock=country_stock, demand_est=860966,\
+                            year=2007)
+                        f2008, f = Forecast.objects.get_or_create(\
+                            country_stock=country_stock, demand_est=861581,\
+                            year=2008)
+                        f2009, f = Forecast.objects.get_or_create(\
+                            country_stock=country_stock, demand_est=759600,\
+                            year=2009)
+                        f2010, f = Forecast.objects.get_or_create(\
+                            country_stock=country_stock, demand_est=754923,\
+                            year=2010)
+
+                    if country.pk=='TD':
+                        f2007, f = Forecast.objects.get_or_create(\
+                            country_stock=country_stock, demand_est=694555,\
+                            year=2007)
+                        f2008, f = Forecast.objects.get_or_create(\
+                            country_stock=country_stock, demand_est=694555,\
+                            year=2008)
+                        f2009, f = Forecast.objects.get_or_create(\
+                            country_stock=country_stock, demand_est=738391,\
+                            year=2009)
+                        f2010, f = Forecast.objects.get_or_create(\
+                            country_stock=country_stock, demand_est=738283,\
+                            year=2010)
 
                     if has_data(row, ['Date','BCG WHO stock level']):
                         date_obj = format_date(row['Date'])
