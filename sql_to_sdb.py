@@ -10,7 +10,7 @@ def goboto():
     sdb = boto.connect_sdb()
 
     countries = Country.objects.all()
-    domain = sdb.create_domain('countrystocks')
+    domain = sdb.create_domain('countrystockdata')
     
     for country in countries:
 
@@ -26,7 +26,7 @@ def goboto():
                     item_name.update(str(country.iso_code))
                     item_name.update(str(countrystock.vaccine.abbr))
                     item_name.update("SL")
-                    item_name.update(str(stock_level.date))
+                    item_name.update(str(stock_level.date.year))
                     item_name.update(str(stock_level.amount))
 
                     item = domain.new_item(item_name.hexdigest())
@@ -34,6 +34,7 @@ def goboto():
                     item.add_value("supply", str(countrystock.vaccine.abbr))
                     item.add_value("type", "SL")
                     item.add_value("date", str(stock_level.date))
+                    item.add_value("year", str(stock_level.date.year))
                     item.add_value("amount", str(stock_level.amount))
                     item.save()
                     print item
@@ -55,6 +56,7 @@ def goboto():
                     item.add_value("supply", str(countrystock.vaccine.abbr))
                     item.add_value("type", "CF")
                     item.add_value("date", str(forecast.year))
+                    item.add_value("year", str(forecast.year))
                     item.add_value("amount", str(forecast.demand_est))
                     item.save()
                     print item
@@ -68,7 +70,7 @@ def goboto():
                     item_name.update(str(country.iso_code))
                     item_name.update(str(countrystock.vaccine.abbr))
                     item_name.update(str(delivery.type))
-                    item_name.update(str(delivery.date))
+                    item_name.update(str(delivery.date.year))
                     item_name.update(str(delivery.amount))
 
                     item = domain.new_item(item_name.hexdigest())
@@ -76,6 +78,7 @@ def goboto():
                     item.add_value("supply", str(countrystock.vaccine.abbr))
                     item.add_value("type", str(delivery.type))
                     item.add_value("date", str(delivery.date))
+                    item.add_value("year", str(delivery.date.year))
                     item.add_value("amount", str(delivery.amount))
                     item.save()
                     print item
