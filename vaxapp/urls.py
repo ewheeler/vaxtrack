@@ -16,7 +16,7 @@ urlpatterns = patterns('',
     url(r'^assets/css/(?P<path>.*)$', "django.views.static.serve",
     {"document_root": os.path.dirname(__file__) + "/static/stylesheets"}),
     url(r'^$', views.index),
-    url(r'^charts/(?P<country_pk>\w+)-(?P<vaccine_abbr>\w+).png$', views.chart_country, name="chart-country"),
+    url(r'^charts/(?P<country_pk>\w+)-(?P<vaccine_abbr>\w+).png$', views.chart_country_sdb, name="chart-country"),
     url(r'^upload$', views.upload_country, name='upload-country'),
     url(r'^admin/', include(admin.site.urls)),
 )
