@@ -28,12 +28,12 @@ def index(req):
 def chart_country(req, country_pk=None, vaccine_abbr=None):
     # configuration options
     print_to_web = True 
-    save_chart = False 
+    save_chart = True
     display_buffers = True
-    display_forecast_projection = False
-    display_purchased_projection = False
-    display_theoretical_forecast = False
-    display_adjusted_theoretical_forecast = False
+    display_forecast_projection = True
+    display_purchased_projection = True
+    display_theoretical_forecast = True
+    display_adjusted_theoretical_forecast = True
 
     try:
         country_stock = CountryStock.objects.get(country__pk=country_pk,\
@@ -200,11 +200,20 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
         print e
 
     if save_chart:
-        filename = "%s-%s-%s.png" % (datetime.datetime.today().date().isoformat(),\
-            country_pk, vaccine_abbr)
-        file_path = "vaxapp/static/charts/" + filename
-        fig.savefig(file_path)
-        return file_path
+        try:
+            filename = "%s-%s-%s.png" % (datetime.datetime.today().date().isoformat(),\
+                country_pk, vaccine_abbr)
+            file_path = "vaxapp/static/charts/" + filename
+            fig.savefig(file_path)
+        except Exception, e:
+            print 'ERROR SAVING'
+            print e
+        try:
+            s3_key = "%s-%s.png" % (country_pk, vaccine_abbr)
+            upload_file(file_path, 'vaxtrack_charts', s3_key, True)
+        except Exception, e:
+            print 'ERROR UPLOADING'
+            print e
 
     if print_to_web:
         # respond with figure for web display
@@ -217,7 +226,7 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
 def chart_country_sdb(req, country_pk=None, vaccine_abbr=None):
     # configuration options
     print_to_web = True 
-    save_chart = False 
+    save_chart = True
     display_buffers = True
     display_forecast_projection = True
     display_purchased_projection = True
@@ -397,15 +406,20 @@ def chart_country_sdb(req, country_pk=None, vaccine_abbr=None):
         print e
 
     if save_chart:
-        filename = "%s-%s-%s.png" % (datetime.datetime.today().date().isoformat(),\
-            country_pk, vaccine_abbr)
-        file_path = "vaxapp/static/charts/" + filename
-        fig.savefig(file_path)
         try:
-            upload_file(file_path, 'vaxtrack_charts', filename, True)
-            return True
+            filename = "%s-%s-%s.png" % (datetime.datetime.today().date().isoformat(),\
+                country_pk, vaccine_abbr)
+            file_path = "vaxapp/static/charts/" + filename
+            fig.savefig(file_path)
         except Exception, e:
-            return False
+            print 'ERROR SAVING'
+            print e
+        try:
+            s3_key = "%s-%s.png" % (country_pk, vaccine_abbr)
+            upload_file(file_path, 'vaxtrack_charts', s3_key, True)
+        except Exception, e:
+            print 'ERROR UPLOADING'
+            print e
 
     if print_to_web:
         # respond with figure for web display
