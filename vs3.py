@@ -6,8 +6,8 @@ import boto
 
 # constants and methods for use by temporary instances
 
-request_queue = boto.connect_sqs().create_queue('%(REQUEST_QUEUE)s')
-response_queue = boto.connect_sqs().create_queue('%(RESPONSE_QUEUE)s')
+request_queue = boto.connect_sqs().create_queue('chart_request_queue')
+response_queue = boto.connect_sqs().create_queue('chart_response_queue')
 count = 0
 
 def read_json_pointer_message():
