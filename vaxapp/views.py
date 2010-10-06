@@ -223,6 +223,10 @@ def chart_country(req, country_pk=None, vaccine_abbr=None):
 
         return response
 
+def get_chart(req, country_pk=None, vaccine_abbr=None):
+    chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s-%s.png" % (country_pk, vaccine_abbr)
+    return HttpResponseRedirect(chart_url)
+
 def chart_country_sdb(req, country_pk=None, vaccine_abbr=None):
     # configuration options
     print_to_web = True 
