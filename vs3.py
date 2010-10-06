@@ -2,6 +2,9 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 from django.conf import settings
 
+from celery.decorators import task
+from celery.task import PeriodicTask
+
 from vaxapp.models import *
 import boto
 
