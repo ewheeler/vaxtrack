@@ -65,11 +65,11 @@ SECURITY_GROUPS = getattr(settings, 'CHART_SECURITY_GROUPS', None)
 def queue_json_message(doc, doc_key):
     key_name = doc_key.name.replace(os.path.basename(doc_key.name), "message-%s.json" % str(uuid4()))
     key = doc_key.bucket.new_key(key_name)
-    message_data = simplejson.dumps({'bucket': doc_key.bucket.name, 'key': doc_key.name, 'uuid': doc.uuid})
+    message_data = json.dumps({'bucket': doc_key.bucket.name, 'key': doc_key.name, 'uuid': doc.uuid})
     key.set_contents_from_string(message_data)
     msg_body = {'bucket': key.bucket.name, 'key': key.name}
     queue = boto.connect_sqs(settings.CHART_AWS_KEY, settings.CHART_AWS_SECRET).create_queue(REQUEST_QUEUE)
-    msg = queue.new_message(body=simplejson.dumps(msg_body))
+    msg = queue.new_message(body=json.dumps(msg_body))
     queue.write(msg)
 
 
@@ -113,7 +113,7 @@ class CheckResponseQueueTask(PeriodicTask):
         queue = sqs.create_queue(RESPONSE_QUEUE)
         msg = queue.read()
         if msg is not None:
-            data = simplejson.loads(msg.get_body())
+            data = json.loads(msg.get_body())
             bucket = data.get('bucket', None)
             key = data.get("key", None)
             queue.delete_message(msg)
