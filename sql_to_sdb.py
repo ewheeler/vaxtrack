@@ -26,7 +26,7 @@ def goboto():
                     item_name.update(str(country.iso_code))
                     item_name.update(str(countrystock.vaccine.abbr))
                     item_name.update("SL")
-                    item_name.update(str(stock_level.date.year))
+                    item_name.update(str(stock_level.date))
                     item_name.update(str(stock_level.amount))
 
                     item = domain.new_item(item_name.hexdigest())
@@ -70,7 +70,7 @@ def goboto():
                     item_name.update(str(country.iso_code))
                     item_name.update(str(countrystock.vaccine.abbr))
                     item_name.update(str(delivery.type))
-                    item_name.update(str(delivery.date.year))
+                    item_name.update(str(delivery.date))
                     item_name.update(str(delivery.amount))
 
                     item = domain.new_item(item_name.hexdigest())
