@@ -17,6 +17,7 @@ from .models import *
 from . import forms
 from vax import import_data
 from vax.vsdb import *
+from vax.vs3 import upload_file
 
 def index(req):
     return render_to_response("index.html",\
@@ -400,7 +401,11 @@ def chart_country_sdb(req, country_pk=None, vaccine_abbr=None):
             country_pk, vaccine_abbr)
         file_path = "vaxapp/static/charts/" + filename
         fig.savefig(file_path)
-        return file_path
+        try:
+            upload_file(file_path, 'vaxtrack_charts', filename, True)
+            return True
+        except Exception, e:
+            return False
 
     if print_to_web:
         # respond with figure for web display
