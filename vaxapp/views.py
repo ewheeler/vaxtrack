@@ -360,12 +360,10 @@ def chart_country_sdb(req, country_pk=None, vaccine_abbr=None):
             drawstyle='steps', color='blue',\
             label='projected stock based on placed POs')
 
-        # reverse order of stocklevels so first element is the oldest one
-        rstocklevels = stocklevels.reverse()
         if display_theoretical_forecast:
             # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
             projected_co_dates, projected_co_levels = _project_future_stock_levels(\
-                "CO", rstocklevels[1]['date'], rstocklevels[1]['amount'])
+                "CO", stocklevels[-2]['date'], stocklevels[-2]['amount'])
             ax.plot_date(projected_co_dates, projected_co_levels, '--',\
             drawstyle='steps', color='green',\
             label='theoretical stock based on forecast')
@@ -373,7 +371,7 @@ def chart_country_sdb(req, country_pk=None, vaccine_abbr=None):
         if display_adjusted_theoretical_forecast:
             # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
             projected_un_dates, projected_un_levels = _project_future_stock_levels(\
-                "UN", rstocklevels[1]['date'], rstocklevels[1]['amount'])
+                "UN", stocklevels[-2]['date'], stocklevels[-2]['amount'])
             ax.plot_date(projected_un_dates, projected_un_levels, '--',\
             drawstyle='steps', color='orange',\
             label='theoretical stock adjusted with deliveries')
