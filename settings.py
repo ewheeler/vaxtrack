@@ -19,6 +19,9 @@ BROKER_VHOST = "curta"
 CELERY_RESULT_BACKEND = "amqp"
 CELERY_IMPORTS = ("tasks", )
 
+AUTH_PROFILE_MODULE = 'vaxapp.UserProfile'
+LOGIN_URL = '/login'
+LOGIN_REDIRECT_URL = '/'
 
 TIME_ZONE = 'America/New_York'
 LANGUAGE_CODE = 'en-us'

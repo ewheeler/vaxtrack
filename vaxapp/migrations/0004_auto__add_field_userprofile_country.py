@@ -8,91 +8,14 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         
-        # Deleting model 'Delivery'
-        db.delete_table('vaxapp_delivery')
-
-        # Deleting model 'Region'
-        db.delete_table('vaxapp_region')
-
-        # Deleting model 'Forecast'
-        db.delete_table('vaxapp_forecast')
-
-        # Deleting model 'Country'
-        db.delete_table('vaxapp_country')
-
-        # Deleting model 'StockLevel'
-        db.delete_table('vaxapp_stocklevel')
-
-        # Adding model 'UserProfile'
-        db.create_table('vaxapp_userprofile', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-        ))
-        db.send_create_signal('vaxapp', ['UserProfile'])
-
-        # Deleting field 'CountryStock.country'
-        db.delete_column('vaxapp_countrystock', 'country_id')
-
-        # Adding field 'CountryStock.country_iso_code'
-        db.add_column('vaxapp_countrystock', 'country_iso_code', self.gf('django.db.models.fields.CharField')(max_length=4, null=True, blank=True), keep_default=False)
+        # Adding field 'UserProfile.country'
+        db.add_column('vaxapp_userprofile', 'country', self.gf('django.db.models.fields.CharField')(max_length=4, null=True, blank=True), keep_default=False)
 
 
     def backwards(self, orm):
         
-        # Adding model 'Delivery'
-        db.create_table('vaxapp_delivery', (
-            ('country_stock', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['vaxapp.CountryStock'])),
-            ('amount', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
-            ('date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
-            ('type', self.gf('django.db.models.fields.CharField')(max_length=4, null=True, blank=True)),
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-        ))
-        db.send_create_signal('vaxapp', ['Delivery'])
-
-        # Adding model 'Region'
-        db.create_table('vaxapp_region', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=160, null=True, blank=True)),
-        ))
-        db.send_create_signal('vaxapp', ['Region'])
-
-        # Adding model 'Forecast'
-        db.create_table('vaxapp_forecast', (
-            ('country_stock', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['vaxapp.CountryStock'])),
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('demand_est', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
-            ('year', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
-        ))
-        db.send_create_signal('vaxapp', ['Forecast'])
-
-        # Adding model 'Country'
-        db.create_table('vaxapp_country', (
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=160, null=True, blank=True)),
-            ('numerical_code', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
-            ('region', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['vaxapp.Region'], null=True, blank=True)),
-            ('printable_name', self.gf('django.db.models.fields.CharField')(max_length=80)),
-            ('iso_code', self.gf('django.db.models.fields.CharField')(max_length=2, primary_key=True)),
-            ('iso3_code', self.gf('django.db.models.fields.CharField')(max_length=3, null=True, blank=True)),
-        ))
-        db.send_create_signal('vaxapp', ['Country'])
-
-        # Adding model 'StockLevel'
-        db.create_table('vaxapp_stocklevel', (
-            ('date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
-            ('amount', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
-            ('country_stock', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['vaxapp.CountryStock'])),
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-        ))
-        db.send_create_signal('vaxapp', ['StockLevel'])
-
-        # Deleting model 'UserProfile'
-        db.delete_table('vaxapp_userprofile')
-
-        # Adding field 'CountryStock.country'
-        db.add_column('vaxapp_countrystock', 'country', self.gf('django.db.models.fields.related.ForeignKey')(default='TK', to=orm['vaxapp.Country']), keep_default=False)
-
-        # Deleting field 'CountryStock.country_iso_code'
-        db.delete_column('vaxapp_countrystock', 'country_iso_code')
+        # Deleting field 'UserProfile.country'
+        db.delete_column('vaxapp_userprofile', 'country')
 
 
     models = {
@@ -140,6 +63,7 @@ class Migration(SchemaMigration):
         },
         'vaxapp.userprofile': {
             'Meta': {'object_name': 'UserProfile'},
+            'country': ('django.db.models.fields.CharField', [], {'max_length': '4', 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']"})
         },

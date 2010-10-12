@@ -4,6 +4,7 @@ import json
 from operator import attrgetter
 
 from django.db import models
+from django.contrib.auth.models import User
 
 class Country(object):
     ''' Provides a model-like interface and simple API 
@@ -13,6 +14,7 @@ class Country(object):
 
     def __init__(self, d):
         self.iso_code = d['iso2_code']
+        self.pk = d['iso2_code']
         self.iso3_code = d['iso3_code']
         self.printable_name = d['printable_name']
         self.name = d['name']
@@ -51,26 +53,19 @@ class Country(object):
 
     @classmethod
     def all_names(klass):
-        ''' Returns a list of all Country names in alphabetical order. '''
+        ''' Returns a list of all Country names. '''
         return [c.name for c in klass.all()]
 
+    @classmethod
+    def as_tuples(klass):
+        ''' Returns a list of 2-tuples for choices field. '''
+        return [(c.iso_code,c.name) for c in klass.all()]
 
-'''
-class Country(models.Model):
-    # TODO use flat json file for countries?
-    name = models.CharField(max_length=160, blank=True, null=True)
+    @classmethod
+    def as_tuples_for_admin(klass):
+        ''' Returns a list of 2-tuples for choices field. '''
+        return [(c.iso_code, c.iso_code + " (" + c.name + ")") for c in klass.all()]
 
-    printable_name = models.CharField(max_length=80)
-    iso_code = models.CharField(max_length=2, primary_key=True)
-    iso3_code = models.CharField(max_length=3, blank=True, null=True)
-    numerical_code = models.PositiveIntegerField(blank=True, null=True)
-
-    def __unicode__(self):
-        return self.printable_name
-
-    class Meta:
-        verbose_name_plural = "countries"
-'''
 
 class Vaccine(models.Model):
     name = models.CharField(max_length=160, blank=True, null=True)
@@ -79,10 +74,20 @@ class Vaccine(models.Model):
     def __unicode__(self):
         return self.abbr
 
+
 class CountryStock(models.Model):
     vaccine = models.ForeignKey(Vaccine)
-    #country = models.ForeignKey(Country)
-    country = models.CharField(max_length=4, blank=True, null=True)
+    country_iso_code = models.CharField(max_length=4, blank=True, null=True,
+        choices=Country.as_tuples_for_admin())
+
+    @property
+    def country(self):
+        return Country.get(self.country_iso_code)
 
     def __unicode__(self):
-        return "%s: %s" % (self.country, self.vaccine)
+        return "%s: %s" % (self.country.printable_name, self.vaccine)
+
+
+class UserProfile(models.Model):
+    user = models.ForeignKey(User)
+    country = models.CharField(max_length=4, blank=True, null=True)
