@@ -433,11 +433,15 @@ def chart_country_sdb(req, country_pk=None, vaccine_abbr=None):
 
         return response
 
-def handle_uploaded_file(f, filename='/tmp/wat.csv'):
+def handle_uploaded_file(f, filename):
+    # write to local filesystem
     destination = open(filename, 'wb+')
     for chunk in f.chunks():
         destination.write(chunk)
     destination.close()
+    # upload to s3
+    s3_key = filename
+    upload_file(filename, 'vaxtrack_uploads', s3_key, True)
 
 def upload_country(req):
     if req.method == "POST":
@@ -446,8 +450,13 @@ def upload_country(req):
         if form.is_valid():
             cleaned = form.cleaned_data
 
+            # TODO this field should be an authenticated user
+            # rather than a text field
             uploader = cleaned["uploader"]
-            filename = "/tmp/" + uploader + ".csv"
+            todays_date = datetime.datetime.today().date().isoformat()
+            # TODO add a counter to filename so users can upload
+            # several files in one day without overwriting
+            filename = "/tmp/" + uploader + "-" + todays_date + ".csv"
 
             if "country_csv" in req.FILES:
                 try:
@@ -455,6 +464,7 @@ def upload_country(req):
                 except Exception, e:
                     print e
                 try:
+                    # TODO queue processing for remote import
                     import_data.import_csv(filename)
                 except Exception, e:
                     print e
