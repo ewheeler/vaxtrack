@@ -25,6 +25,18 @@ def index(req):
             "country_form": forms.CountryForm()},\
             context_instance=RequestContext(req))
 
+def register(req):
+    if req.method == "POST":
+        form = forms.RegisterForm(req.POST)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('/login')
+
+    return render_to_response("register.html",\
+        {"register_form": forms.RegisterForm()},\
+        context_instance=RequestContext(req))
+
 def chart_country(req, country_pk=None, vaccine_abbr=None):
     # configuration options
     print_to_web = True 
