@@ -4,12 +4,21 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 ROOT_URLCONF = 'examples.urls'
 TEMPLATE_DIRS = ('/Users/ewheeler/dev/vax/vaxapp/templates',)
+
 DATABASE_ENGINE = 'mysql'
-#DATABASE_NAME = 'mirror'
 DATABASE_NAME = 'vax'
 DATABASE_USER = 'unicef'
 DATABASE_PASSWORD = 'm3p3m3p3'
 DATABASE_HOST = 'localhost'
+
+BROKER_HOST = "localhost"
+BROKER_PORT = 5672
+BROKER_USER = "unicef"
+BROKER_PASSWORD = "m3p3m3p3"
+BROKER_VHOST = "curta"
+CELERY_RESULT_BACKEND = "amqp"
+CELERY_IMPORTS = ("tasks", )
+
 
 TIME_ZONE = 'America/New_York'
 LANGUAGE_CODE = 'en-us'
@@ -58,4 +67,5 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'vax.vaxapp',
     'south',
+    'djcelery',
 )

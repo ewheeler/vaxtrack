@@ -7,3 +7,13 @@ DEPENDENCIES:
     Django (http://djangoproject.com)
     South (http://south.aeracode.org)
     matplotlib (http://matplotlib.sourceforge.net)
+    boto
+    celery
+
+INSTALLATION:
+    sudo apt-get install python-pip python-dev mysql-server git-core python-mysqldb python-matplotlib rabbitmq-server
+    sudo pip install setuptools boto django=1.2.3 south celery django-celery
+
+    optionally:
+    sudo apt-get install vim
+    sudo pip install ipython ipdb
