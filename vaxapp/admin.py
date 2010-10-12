@@ -4,10 +4,5 @@
 from django.contrib import admin
 from .models import *
 
-admin.site.register(Country)
-admin.site.register(Region)
 admin.site.register(Vaccine)
 admin.site.register(CountryStock)
-admin.site.register(StockLevel)
-admin.site.register(Forecast)
-admin.site.register(Delivery)
