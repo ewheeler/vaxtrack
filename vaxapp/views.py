@@ -12,17 +12,17 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.db.models import Sum
 from django.template import RequestContext
+from django.contrib.auth.decorators import permission_required
 
 from .models import *
 from . import forms
 from vax import import_data
 from vax.vsdb import *
-from vax.vs3 import upload_file
+from .tasks import process_file
 
 def index(req):
     return render_to_response("index.html",\
-        {"countrystocks": CountryStock.objects.all(),\
-            "country_form": forms.CountryForm()},\
+        {"countrystocks": CountryStock.objects.all()},\
             context_instance=RequestContext(req))
 
 def register(req):
@@ -445,39 +445,21 @@ def chart_country_sdb(req, country_pk=None, vaccine_abbr=None):
 
         return response
 
-def handle_uploaded_file(f, filename):
-    # write to local filesystem
-    destination = open(filename, 'wb+')
-    for chunk in f.chunks():
-        destination.write(chunk)
-    destination.close()
-    # upload to s3
-    s3_key = filename
-    upload_file(filename, 'vaxtrack_uploads', s3_key, True)
 
-def upload_country(req):
-    if req.method == "POST":
-        form = forms.CountryForm(req.POST)
-
+@permission_required('vaxapp.can_upload')
+def upload(req):
+    if req.method == 'POST':
+        form = forms.DocumentForm(req.POST, req.FILES)
         if form.is_valid():
-            cleaned = form.cleaned_data
+            doc = form.save(commit=False)
+            doc.user = req.user
+            doc.date_uploaded = datetime.datetime.utcnow()
+            doc.save()
+            process_file.delay(doc)
+            return HttpResponseRedirect('/')
+    else:
+        form = forms.DocumentForm()
+    return render_to_response("upload.html",\
+            {"country_form": form},\
+            context_instance=RequestContext(req))
 
-            # TODO this field should be an authenticated user
-            # rather than a text field
-            uploader = cleaned["uploader"]
-            todays_date = datetime.datetime.today().date().isoformat()
-            # TODO add a counter to filename so users can upload
-            # several files in one day without overwriting
-            filename = "/tmp/" + uploader + "-" + todays_date + ".csv"
-
-            if "country_csv" in req.FILES:
-                try:
-                    handle_uploaded_file(req.FILES["country_csv"], filename)
-                except Exception, e:
-                    print e
-                try:
-                    # TODO queue processing for remote import
-                    import_data.import_csv(filename)
-                except Exception, e:
-                    print e
-    return HttpResponseRedirect('/')
