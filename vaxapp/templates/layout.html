@@ -7,9 +7,17 @@
 	</head>
 	<body>
 		<div id="header">
+			<div id="auth">
+			    {% if user.is_authenticated %}
+				<p>Logged in as {{ user.username }}. <a href="{% url logout %}">Logout</a></p>
+			    {% else %}
+				<p>Welcome, please <a href="{% url login %}">log in</a> or <a href="{% url register %}">register</a>.</p>
+			    {% endif %}
+			</div>
 			<h1>Vaxtrack immunization monitoring system</h1>
 			<ul>
 				<li{% ifequal tab "dashboard" %} class="active"{% endifequal %}><a href="/">Dashboard</a></li>
+				<li{% ifequal tab "upload" %} class="active"{% endifequal %}><a href="{% url upload %}">Upload data</a></li>
 			</ul>
 		</div>
 		<div id="inner">

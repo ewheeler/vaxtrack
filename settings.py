@@ -17,7 +17,9 @@ BROKER_USER = "unicef"
 BROKER_PASSWORD = "m3p3m3p3"
 BROKER_VHOST = "curta"
 CELERY_RESULT_BACKEND = "amqp"
-CELERY_IMPORTS = ("tasks", )
+CELERY_IMPORTS = ("vaxapp.tasks", )
+
+CSV_UPLOAD_BUCKET = 'vaxtrack_uploads'
 
 AUTH_PROFILE_MODULE = 'vaxapp.UserProfile'
 LOGIN_URL = '/login'
@@ -34,7 +36,7 @@ USE_I18N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = ''
+MEDIA_ROOT = '/home/ewheeler/temp/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
