@@ -6,3 +6,4 @@ from .models import *
 
 admin.site.register(Vaccine)
 admin.site.register(CountryStock)
+admin.site.register(Document)
