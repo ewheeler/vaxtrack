@@ -1,23 +1,38 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4
+import os
 
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
+from django.utils.translation import ugettext_lazy as _
+
 from .models import Country
+from .models import Document
 from .models import UserProfile
 
+class DocumentValidationError(forms.ValidationError):
+    def __init__(self):
+        msg = _(u'Only CSV files are valid uploads.')
+        super(DocumentValidationError, self).__init__(msg)
 
-class CountryForm(forms.Form):
-    uploader = forms.CharField(
-        label="Your name",
-        max_length=160)
 
-    country_csv = forms.FileField(
-        label="Country stock data CSV file",
-        required=False,
-        help_text="Upload a <em>csv file</em> " +
-                  "containing country stock data.")
+class DocumentField(forms.FileField):
+    """A validating CSV document upload field"""
+
+    def clean(self, data, initial=None):
+        f = super(DocumentField, self).clean(data, initial)
+        ext = os.path.splitext(f.name)[1][1:].lower()
+        if ext == 'csv' and f.content_type == 'text/csv':
+            return f
+        raise DocumentValidationError()
+
+class DocumentForm(forms.ModelForm):
+    local_document = DocumentField()
+
+    class Meta:
+        model = Document
+        fields = ('name', 'local_document')
 
 class RegisterForm(forms.Form):
     first_name = forms.CharField(
