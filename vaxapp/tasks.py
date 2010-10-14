@@ -16,14 +16,6 @@ from celery.task import PeriodicTask
 
 from vaxapp.models import Document
 
-@task
-def add(x, y):
-    return x + y
-
-@task
-def queue_new_data():
-    pass
-
 #sudo ./manage.py celeryd -v 2 -B -s celery -E -l INFO
 
 REQUEST_QUEUE = getattr(settings, "CHART_REQUEST_QUEUE", "chart_requests")
@@ -134,7 +126,6 @@ class CheckQueueLevelsTask(PeriodicTask):
                 'SECRET': settings.CHART_AWS_SECRET,
                 'RESPONSE_QUEUE': RESPONSE_QUEUE,
                 'REQUEST_QUEUE': REQUEST_QUEUE}
-                '''
             r = ec2.run_instances(
                 image_id=AMI_ID,
                 min_count=to_boot,
@@ -143,4 +134,6 @@ class CheckQueueLevelsTask(PeriodicTask):
                 security_groups=SECURITY_GROUPS)
                 #user_data=startup)
             launched = len(r.instances)
+                '''
+            launched = 0
         return launched
