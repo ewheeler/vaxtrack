@@ -1,4 +1,4 @@
-{% extends "layout-split-2.html" %}
+{% extends "layout-split-3.html" %}
 
 {% block title %}Dashboard{% endblock %}
 
@@ -19,6 +19,17 @@
 	</form>
     </div>
     {% endif %}
+{% endblock %}
+
+{% block middle %}
+    <form action="">
+        <input type="checkbox" name="chart" value="ED" />Use estimated data<br />
+        <input type="checkbox" name="chart" value="BO" />Show buffer stock  &amp; overstock indicators<br />
+        <input type="checkbox" name="chart" value="FF" />Show forecasted stock level (forcasted)<br />
+        <input type="checkbox" name="chart" value="FP" />Show forecasted stock level (adjusted with POs)<br />
+        <input type="checkbox" name="chart" value="CO" />Show projected stock level (based on forecast)<br />
+        <input type="checkbox" name="chart" value="UN" />Show projected stock level (adjusted with deliveries)<br />
+    </form>
 {% endblock %}
 
 {% block right %}
