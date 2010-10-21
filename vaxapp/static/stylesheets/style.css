@@ -68,3 +68,50 @@ h2 {
     
       #header h1 a span {
         visibility: hidden; }
+
+.col-1, .col-2, .col-3, .col-4, .col-5, .col-6 {
+    margin-left: 1em;
+    min-height: 1px;
+    float: left;
+}
+
+
+.two-columns        { padding-left: 1em; }
+.two-columns .col-1 { margin-left: -1em; }
+
+    .two-columns .col-1,
+    .two-columns .col-2 {
+        width: 50%; }
+
+
+.three-columns        { padding-left: 2em; }
+.three-columns .col-1 { margin-left: -2em; }
+
+    .three-columns .col-2 {
+        width: 34%; }
+
+    .three-columns .col-1,
+    .three-columns .col-3 {
+        width: 33%; }
+
+/* this is not okay. but it is, unfortunately, the least error-prone way
+ * (that i know) of fixing broken floaty layouts in IE6 */
+div.clear-hack {
+    overflow: hidden;
+    clear: both;
+    height: 0;
+}
+
+#inner {
+    padding: 1em;
+    position: relative;
+}
+
+div.module {
+    margin-top: 2em;
+    position: relative;
+}
+
+    div.module div.module {
+        border: 1px solid #8fbcc9; }
+

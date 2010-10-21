@@ -20,9 +20,17 @@ from vax import import_data
 from vax.vsdb import *
 from .tasks import process_file
 
-def index(req):
+def index(req, country_pk=None):
+    if country_pk is not None:
+        countrystocks = CountryStock.objects.filter(country=country_pk)
+    else:
+        countrystocks = False
+    countries = [c.country for c in CountryStock.objects.all()]
+    vaccines = Vaccine.objects.all()
     return render_to_response("index.html",\
-        {"countrystocks": CountryStock.objects.all()},\
+        {"countrystocks": countrystocks,\
+            "countries": countries,\
+            "vaccines": vaccines},\
             context_instance=RequestContext(req))
 
 def register(req):

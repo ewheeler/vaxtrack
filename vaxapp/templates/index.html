@@ -1,12 +1,35 @@
-{% extends "layout.html" %}
+{% extends "layout-split-2.html" %}
+
 {% block title %}Dashboard{% endblock %}
-{% block content %}
-{% if countrystocks %}
-    {% for cs in  countrystocks %}
-        <div class="chart">
-            <h3>{{cs.country.printable_name}} - {{cs.vaccine.abbr}}</h3>
-            <img src="{% url chart-country cs.country.pk cs.vaccine.abbr %}">
-        </div>
-    {% endfor %}
-{% endif %}
+
+{% block left %}
+    {% if countries %}
+    <div class="module">
+	<form action="">
+	    <select name="country">
+	    {% for c in countries %}
+		    <option value="{{c.pk}}">{{c.printable_name}}</option>
+	    {% endfor %}
+	    </select>
+	</form>
+	<form action="">
+	    {% for v in vaccines %}
+		    <input type="radio" name="{{ v.abbr }}" value="{{ v.abbr }}"/> {{ v.name }} <br />
+	    {% endfor %}
+	</form>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block right %}
+    {% if countrystocks %}
+    <div class="module">
+	{% for cs in  countrystocks %}
+	    <div class="chart">
+		<h3>{{cs.country.printable_name}} - {{cs.vaccine.abbr}}</h3>
+		<img src="{% url chart-country cs.country.pk cs.vaccine.abbr %}">
+	    </div>
+	{% endfor %}
+    </div>
+    {% endif %}
 {% endblock %}
