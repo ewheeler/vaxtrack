@@ -1,18 +1,63 @@
 {% extends "layout-split-3.html" %}
 
 {% block title %}Dashboard{% endblock %}
+{% block javascripts %}
+{{ block.super }}
+<script type="text/javascript">
+
+$(document).ready(function(){
+
+    var options = new Array();
+    var vaccine = "BCG";
+    var country = "TD";
+    var chart_name = "";
+
+    $("#chart_options :input").val(["ED","BO","FF","FP","CO","UN"]);
+    $("#vaccines :input").val(["BCG"]);
+    $("#country").val("TD");
+    get_chart();
+
+    $("#chart_options :input").click(function(){
+        options = new Array();
+	$("#chart_options :input:checked").each(function() {
+	    options.push( $(this).val() );
+	});
+        get_chart();
+    });
+
+    $("#vaccines :input").click(function(){
+        vaccine = "";
+	$("#vaccines :input:radio:checked").each(function() {
+	    vaccine = $(this).val();
+	});
+        get_chart();
+    });
+
+    $("#country").change(function(){
+        country = "";
+	country = $(this).val();
+        get_chart();
+    });
+
+    function get_chart(){
+        chart_name = country + "-" + vaccine + ".png";
+        $("#chart").attr('src', "/charts/" + chart_name);
+    };
+});
+</script>
+{% endblock %}
 
 {% block left %}
     {% if countries %}
     <div class="module">
-	<form action="">
-	    <select name="country">
+	<form id="countries" action="">
+	    <select id="country">
 	    {% for c in countries %}
 		    <option value="{{c.pk}}">{{c.printable_name}}</option>
 	    {% endfor %}
 	    </select>
 	</form>
-	<form action="">
+	<form id="vaccines" action="">
 	    {% for v in vaccines %}
 		    <input type="radio" name="{{ v.abbr }}" value="{{ v.abbr }}"/> {{ v.name }} <br />
 	    {% endfor %}
@@ -22,25 +67,21 @@
 {% endblock %}
 
 {% block middle %}
-    <form action="">
-        <input type="checkbox" name="chart" value="ED" />Use estimated data<br />
-        <input type="checkbox" name="chart" value="BO" />Show buffer stock  &amp; overstock indicators<br />
-        <input type="checkbox" name="chart" value="FF" />Show forecasted stock level (forcasted)<br />
-        <input type="checkbox" name="chart" value="FP" />Show forecasted stock level (adjusted with POs)<br />
-        <input type="checkbox" name="chart" value="CO" />Show projected stock level (based on forecast)<br />
-        <input type="checkbox" name="chart" value="UN" />Show projected stock level (adjusted with deliveries)<br />
+    <form id="chart_options" action="">
+        <input type="checkbox" name="ED" value="ED" checked="checked" />Use estimated data<br />
+        <input type="checkbox" name="BO" value="BO" checked="checked" />Show buffer stock  &amp; overstock indicators<br />
+        <input type="checkbox" name="FF" value="FF" checked="checked" />Show forecasted stock level (forcasted)<br />
+        <input type="checkbox" name="FP" value="FP" checked="checked" />Show forecasted stock level (adjusted with POs)<br />
+        <input type="checkbox" name="CO" value="CO" checked="checked" />Show projected stock level (based on forecast)<br />
+        <input type="checkbox" name="UN" value="UN" checked="checked" />Show projected stock level (adjusted with deliveries)<br />
     </form>
 {% endblock %}
 
 {% block right %}
-    {% if countrystocks %}
     <div class="module">
-	{% for cs in  countrystocks %}
-	    <div class="chart">
-		<h3>{{cs.country.printable_name}} - {{cs.vaccine.abbr}}</h3>
-		<img src="{% url chart-country cs.country.pk cs.vaccine.abbr %}">
-	    </div>
-	{% endfor %}
+	<div>
+	    <h3></h3>
+	    <img id="chart" src="">
+	</div>
     </div>
-    {% endif %}
 {% endblock %}
