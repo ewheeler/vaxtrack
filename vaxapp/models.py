@@ -11,65 +11,34 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
-class Country(object):
-    ''' Provides a model-like interface and simple API 
-        for country information, which is loaded from a JSON file. '''
+class Country(models.Model):
+    name = models.CharField(max_length=160, blank=True, null=True)
 
-    world = json.load(open('vaxapp/world.json'))
-
-    def __init__(self, d):
-        self.iso_code = d['iso2_code']
-        self.pk = d['iso2_code']
-        self.iso3_code = d['iso3_code']
-        self.printable_name = d['printable_name']
-        self.name = d['name']
-        self.numerical_code = d['numerical_code']
+    printable_name = models.CharField(max_length=80)
+    iso2_code = models.CharField(max_length=2, primary_key=True)
+    iso3_code = models.CharField(max_length=3, blank=True, null=True)
+    numerical_code = models.PositiveIntegerField(blank=True, null=True)
 
     def __unicode__(self):
         return self.printable_name
 
-    @classmethod
-    def filter(klass, attr, value):
-        # XXX creates new (or duplicate) Country
-        # objects upon each call. i don't think thats
-        # a problem because they should not be modified
-        # and will get garbage-collected eventually.
-        # perhaps there is a better way...
-        matches = []
-        for d in klass.world:
-            if attr in d:
-                if d[attr] == value:
-                    matches.append(Country(d))
-        return matches
-
-    @classmethod
-    def get(klass, query):
-        ''' Returns a single Country (or False) matching iso_code query. '''
-        dicts = klass.filter('iso2_code', query)
-        if len(dicts) == 1:
-            return dicts[0]
-        else:
-            return False
-
-    @classmethod
-    def all(klass):
-        ''' Returns a list of all Country objects in alphabetical order. '''
-        return sorted([Country(d) for d in klass.world], key=attrgetter('name'))
+    class Meta:
+        verbose_name_plural = "countries"
 
     @classmethod
     def all_names(klass):
         ''' Returns a list of all Country names. '''
-        return [c.name for c in klass.all()]
+        return [c.name for c in klass.objects.all()]
 
     @classmethod
     def as_tuples(klass):
         ''' Returns a list of 2-tuples for choices field. '''
-        return [(c.iso_code,c.name) for c in klass.all()]
+        return [(c.iso3_code,c.name) for c in klass.objects.all()]
 
     @classmethod
     def as_tuples_for_admin(klass):
         ''' Returns a list of 2-tuples for choices field. '''
-        return [(c.iso_code, c.iso_code + " (" + c.name + ")") for c in klass.all()]
+        return [(c.iso3_code, c.iso3_code + " (" + c.name + ")") for c in klass.objects.all()]
 
 
 class Vaccine(models.Model):
@@ -82,12 +51,7 @@ class Vaccine(models.Model):
 
 class CountryStock(models.Model):
     vaccine = models.ForeignKey(Vaccine)
-    country_iso_code = models.CharField(max_length=4, blank=True, null=True,
-        choices=Country.as_tuples_for_admin())
-
-    @property
-    def country(self):
-        return Country.get(self.country_iso_code)
+    country = models.ForeignKey(Country)
 
     def __unicode__(self):
         return "%s: %s" % (self.country.printable_name, self.vaccine)
@@ -100,7 +64,7 @@ class CountryStock(models.Model):
 
 class UserProfile(models.Model):
     user = models.ForeignKey(User)
-    country = models.CharField(max_length=4, blank=True, null=True)
+    country = models.ForeignKey(Country, blank=True, null=True)
 
 DOCUMENT_STATES = (
     ('U', _('Uploaded')),
