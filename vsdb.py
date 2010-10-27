@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 from operator import itemgetter
+import hashlib
 
 from vaxapp.models import *
 import boto
@@ -92,15 +93,41 @@ def all_deliveries_for_type_asc(country, supply, type):
 def forecast_for_year(country, supply, year):
     return decode_results(_type_for_year(country, year, supply, 'CF'))
 
+cached_year_results = {}
 def _type_for_year(country, year, supply, type):
-    sdb = boto.connect_sdb()
-    cs = sdb.get_domain('countrystockdata')
-    query = "SELECT * FROM `countrystockdata` WHERE `country`='%s' AND `year`='%s' AND `supply`='%s' AND `type`='%s'" % (country, year, supply, type)
-    return cs.select(query)
+    # TODO cache results better!
+    search = hashlib.md5()
+    search.update(str(country))
+    search.update(str(year))
+    search.update(str(supply))
+    search.update(str(type))
+    hashed = search.hexdigest()
 
+    if hashed in cached_year_results:
+        result = cached_year_results[hashed]
+    else:
+        sdb = boto.connect_sdb()
+        cs = sdb.get_domain('countrystockdata')
+        query = "SELECT * FROM `countrystockdata` WHERE `country`='%s' AND `year`='%s' AND `supply`='%s' AND `type`='%s'" % (country, year, supply, type)
+        result = cs.select(query)
+        cached_year_results.update({hashed:result})
+    return result
+
+cached_results = {}
 def _get_all_type(country, supply, type):
-    # TODO cache results!
-    sdb = boto.connect_sdb()
-    cs = sdb.get_domain('countrystockdata')
-    query = "SELECT * FROM `countrystockdata` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (country, supply, type)
-    return cs.select(query)
+    # TODO cache results better!
+    search = hashlib.md5()
+    search.update(str(country))
+    search.update(str(supply))
+    search.update(str(type))
+    hashed = search.hexdigest()
+
+    if hashed in cached_results:
+        result = cached_results[hashed]
+    else:
+        sdb = boto.connect_sdb()
+        cs = sdb.get_domain('countrystockdata')
+        query = "SELECT * FROM `countrystockdata` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (country, supply, type)
+        result = cs.select(query)
+        cached_results.update({hashed:result})
+    return result
