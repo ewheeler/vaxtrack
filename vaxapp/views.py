@@ -668,7 +668,6 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
         import ipdb; ipdb.set_trace()
 
     if save_chart:
-        '''
         try:
             filename = "%s-%s-%s.png" % (country_pk, vaccine_abbr, options_str)
             file_path = "/tmp/" + filename
@@ -677,7 +676,6 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
             print 'ERROR SAVING'
             print e
             import ipdb; ipdb.set_trace()
-        '''
         try:
             s3_key = "%s-%s-%s.png" % (country_pk, vaccine_abbr, options_str)
             upload_file(file_path, 'vaxtrack_charts', s3_key, True)
