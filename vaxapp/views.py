@@ -54,7 +54,7 @@ def register(req):
         {"register_form": forms.RegisterForm()},\
         context_instance=RequestContext(req))
 
-def get_chart(req, country_pk=None, vaccine_abbr=None, chart_opts="BCFPU"):
+def get_chart(req, country_pk=None, vaccine_abbr=None, chart_opts=""):
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s-%s-%s.png" % (country_pk, vaccine_abbr, chart_opts)
     return HttpResponseRedirect(chart_url)
 
