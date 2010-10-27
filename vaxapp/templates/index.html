@@ -12,7 +12,7 @@ $(document).ready(function(){
     var country = "TD";
     var chart_name = "";
 
-    $("#chart_options :input").val(["ED","BO","FF","FP","CO","UN"]);
+    $("#chart_options :input").val(["B","F","P","C","U"]);
     $("#vaccines :input").val(["BCG"]);
     $("#country").val("TD");
     get_chart();
@@ -67,12 +67,11 @@ $(document).ready(function(){
 	</form>
         <h4>Data</h4>
         <form id="chart_options" action="">
-            <input type="checkbox" name="ED" value="ED" checked="checked" />Use estimated data<br />
-            <input type="checkbox" name="BO" value="BO" checked="checked" />Show buffer stock  &amp; overstock indicators<br />
-            <input type="checkbox" name="FF" value="FF" checked="checked" />Show forecasted stock level (forcasted)<br />
-            <input type="checkbox" name="FP" value="FP" checked="checked" />Show forecasted stock level (adjusted with POs)<br />
-            <input type="checkbox" name="CO" value="CO" checked="checked" />Show projected stock level (based on forecast)<br />
-            <input type="checkbox" name="UN" value="UN" checked="checked" />Show projected stock level (adjusted with deliveries)<br />
+            <input type="checkbox" name="B" value="B" checked="checked" />Show buffer stock  &amp; overstock indicators<br />
+            <input type="checkbox" name="F" value="F" checked="checked" />Show forecasted stock level (forcasted)<br />
+            <input type="checkbox" name="P" value="P" checked="checked" />Show forecasted stock level (adjusted with POs)<br />
+            <input type="checkbox" name="C" value="C" checked="checked" />Show projected stock level (based on forecast)<br />
+            <input type="checkbox" name="U" value="U" checked="checked" />Show projected stock level (adjusted with deliveries)<br />
         </form>
     </div>
     {% endif %}
