@@ -11,7 +11,6 @@ from boto.sdb.db.manager import sdbmanager
 # not sure how to use these models exactly...
 # http://groups.google.com/group/boto-users/browse_thread/thread/3bc0feb15183cf2a/3e44b4e7bbd44fae?lnk=gst&q=sdb#3e44b4e7bbd44fae
 # http://cloudcarpenters.com/blog/simpledb_primer_with_python_and_boto/
-'''
 class Vaxtrack(Model):
     country = StringProperty()
     supply = StringProperty()
@@ -23,7 +22,6 @@ class Vaxtrack(Model):
     amount = IntegerProperty()
 
 #Vaxtrack._manager = sdbmanager.SDBManager( Vaxtrack, "countrystockdata", None, None, 'sdb.amazonaws.com', None, None, None, False ) 
-'''
 # boto models don't seem to work exactly as expected (some stuff is not implemented),
 # so here is an alternate interface... that hopefully can be swapped out easily
 # if boto's model implementation improves
@@ -101,6 +99,7 @@ def _type_for_year(country, year, supply, type):
     return cs.select(query)
 
 def _get_all_type(country, supply, type):
+    # TODO cache results!
     sdb = boto.connect_sdb()
     cs = sdb.get_domain('countrystockdata')
     query = "SELECT * FROM `countrystockdata` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (country, supply, type)
