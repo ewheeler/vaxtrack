@@ -24,6 +24,7 @@ from .models import *
 from . import forms
 from vax import import_data
 from vax.vsdb import *
+from vax.vs3 import upload_file
 from .tasks import process_file
 
 def index(req, country_pk=None):
