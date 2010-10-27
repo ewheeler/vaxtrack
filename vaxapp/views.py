@@ -661,6 +661,7 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
         import ipdb; ipdb.set_trace()
 
     if save_chart:
+        '''
         try:
             filename = "%s-%s-%s.png" % (country_pk, vaccine_abbr, options_str)
             file_path = "/tmp/" + filename
@@ -676,7 +677,7 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
         except Exception, e:
             print 'ERROR UPLOADING'
             print e
-        '''
+            import ipdb; ipdb.set_trace()
 
 @permission_required('vaxapp.can_upload')
 def upload(req):
