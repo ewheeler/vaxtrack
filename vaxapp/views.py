@@ -66,14 +66,12 @@ def powerset(iterable):
 def generate_all_charts_country_sdb(country_pk=None, vaccine_abbr=None):
     ''' Calls all_charts_country_sdb with all permutations of `options`
         string where each character represents one option. '''
-    # 5 options = 5! charts = 120 charts
+    # 5 options = 2^5 = 32 charts
     options = "BFPCU"
     for p in powerset(options):
         params = {}
         dicts = [params.update({c:True}) for c in p]
-        print(params)
-        if len(params) > 0:
-            print all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=vaccine_abbr, **params)
+        print all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=vaccine_abbr, **params)
 
 def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
     # string of options (as single characters) in alphabetical order
