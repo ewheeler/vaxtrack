@@ -3,6 +3,12 @@
 
 import datetime
 
+# allow this to run on a headless server
+# (otherwise pylab will use TkAgg backend)
+import matplotlib
+matplotlib.use('Agg')
+import pylab
+
 from pylab import figure, axes, pie, title
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
