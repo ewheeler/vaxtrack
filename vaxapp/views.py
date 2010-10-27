@@ -2,6 +2,8 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 import datetime
+from itertools import chain
+from itertools import combinations
 
 # allow this to run on a headless server
 # (otherwise pylab will use TkAgg backend)
@@ -56,32 +58,33 @@ def get_chart(req, country_pk=None, vaccine_abbr=None, chart_opts="BCFPU"):
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s-%s-%s.png" % (country_pk, vaccine_abbr, chart_opts)
     return HttpResponseRedirect(chart_url)
 
-def all_perms(str):
-    ''' Generator that returns all permutations of a given string. '''
-    if len(str) <=1:
-        yield str
-    else:
-        for perm in all_perms(str[1:]):
-            for i in range(len(perm)+1):
-                yield perm[:i] + str[0:1] + perm[i:]
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 def generate_all_charts_country_sdb(country_pk=None, vaccine_abbr=None):
     ''' Calls all_charts_country_sdb with all permutations of `options`
         string where each character represents one option. '''
     # 5 options = 5! charts = 120 charts
     options = "BFPCU"
-    for p in all_perms(options):
+    for p in powerset(options):
         params = {}
         dicts = [params.update({c:True}) for c in p]
-        all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=vaccine_abbr, **params)
+        print(params)
+        if len(params) > 0:
+            print all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=vaccine_abbr, **params)
 
 def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
-    # configuration options
-    save_chart = True
     # string of options (as single characters) in alphabetical order
     # used later for filename
     options_str = ''.join(sorted(kwargs.keys()))
 
+    # configuration options
+    save_chart = True
+
+    # default to false if options are not specified
+    # TODO handle gracefully if all are false
     display_buffers = kwargs.get('B', False)
     display_forecast_projection = kwargs.get('F', False)
     display_purchased_projection = kwargs.get('P', False)
@@ -275,11 +278,13 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
         try:
             s3_key = "%s-%s-%s.png" % (country_pk, vaccine_abbr, options_str)
             upload_file(file_path, 'vaxtrack_charts', s3_key, True)
+            return file_path
         except Exception, e:
             print 'ERROR UPLOADING'
             print e
             import ipdb; ipdb.set_trace()
-    return
+
+    return 'wat'
 
 @permission_required('vaxapp.can_upload')
 def upload(req):
