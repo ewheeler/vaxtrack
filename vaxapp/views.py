@@ -683,6 +683,7 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
             print 'ERROR UPLOADING'
             print e
             import ipdb; ipdb.set_trace()
+    return
 
 @permission_required('vaxapp.can_upload')
 def upload(req):
