@@ -7,7 +7,7 @@
 
 $(document).ready(function(){
 
-    var options = new Array();
+    var options = new Array("B","F","P","C","U");
     var vaccine = "BCG";
     var country = "TD";
     var chart_name = "";
@@ -40,7 +40,8 @@ $(document).ready(function(){
     });
 
     function get_chart(){
-        chart_name = country + "-" + vaccine + ".png";
+        chart_opts = options.sort().join("")
+        chart_name = country + "-" + vaccine + "-" + chart_opts + ".png";
         $("#chart").attr('src', "/charts/" + chart_name);
     };
 });
