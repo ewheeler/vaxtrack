@@ -1,9 +1,9 @@
-{% extends "layout.html" %}
+{% extends "layout-split-2.html" %}
 {% block title %}Upload data{% endblock %}
-{% block content %}
+{% block right %}
 <div class="module">
 	<h3>Upload data</h3>
-
+        <div id="upload_form">
 	<form action="{% url upload %}" method="post" enctype="multipart/form-data">
 		{{ country_form.as_p }}
 		{% csrf_token %}
@@ -11,5 +11,6 @@
 			<input type="submit" id="id_submit" value="Upload" />
 		</div>
 	</form>
+        </div>
 </div>
 {% endblock %}

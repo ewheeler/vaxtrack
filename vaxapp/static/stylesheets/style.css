@@ -136,6 +136,25 @@ h2 {
             margin-left: 0.25em;
         }
 
+#upload_form {
+    border-left: 1px dotted #0099FF;
+    border-right: 1px dotted #0099FF;
+    border-bottom: 1px dotted #0099FF;
+}
+
+    #upload_form form {
+        padding: 1em;
+        font-size: 75%;
+    }
+
+    #upload_form form input{
+        margin-bottom: 0.5em;
+    }
+
+    #upload_form form label{
+        margin-left: 0.25em;
+    }
+
 /* this is not okay. but it is, unfortunately, the least error-prone way
  * (that i know) of fixing broken floaty layouts in IE6 */
 div.clear-hack {
@@ -152,23 +171,27 @@ div.clear-hack {
     #header #auth {
         font-size: 80%;
         position: absolute;
-        line-height: 22px;
         margin: 0 10px;
         right: 0;
         top: 0;
         color: #0099FF;
-        background-color: #FEFFC8;
     }
         #header #auth a {
             color: #0099FF;
         }
+
+        #header #auth a:hover {
+            text-decoration: none;
+        }
+
         #header #auth p {
             padding: 0.5em;
         }
 
     #branding {
         padding: 0 10px;
-        border-bottom: 1px dotted #0099FF;
+        background-color: #FEFFC8;
+        border-bottom: 1px solid #0099FF;
     }
 
     /* align in the middle of the unicef blue stripe of header bg, and
@@ -208,7 +231,7 @@ div.clear-hack {
         margin: 0;
     }
 
-    #tabs { left: 0; }
+    #tabs { left: 10px; }
     #page-tabs { right: 0;  }
 
         #tabs li,
@@ -216,6 +239,9 @@ div.clear-hack {
             display: block;
             float: left;
             line-height: 28px;
+            border-left: 1px solid #0099FF;
+            border-top: 1px solid #0099FF;
+            border-right: 1px solid #0099FF;
         }
 
         /* 5px spacing between each tab, to match the top gap, since
@@ -230,8 +256,6 @@ div.clear-hack {
                 display: block;
                 padding: 0 1em;
                 background: #0099FF;
-                border-right: 1px solid #0099FF;
-                border-left: 1px solid #0099FF;
 
                 /* disable the focus outline on tabs, to avoid a rather
                  * ugly dotted box around tabs while they have focus (we
@@ -254,7 +278,7 @@ div.clear-hack {
             #tabs li.active a:hover, #page-tabs li.active a:hover,
             #tabs li.active a:focus, #page-tabs li.active a:focus {
 
-                background: #FEFFC8;
+                background: #fff;
                 text-decoration: none;
                 text-shadow: none;
                 color: #0099FF;
@@ -263,9 +287,6 @@ div.clear-hack {
                 border: 1px solid #FEFFC8;
                 border-bottom: 0;
 
-                /* nudge the active tab north by one pixel, to line it
-                 * up with the tops of the other tabs */
-                margin-top: -1px;
             }
 
             /* brighten up inactive tabs when hovering or tab-focusing
@@ -291,6 +312,10 @@ div.clear-hack {
 }
     #footer a {
         color: #0099FF;
+    }
+
+    #footer a:hover {
+        text-decoration: none;
     }
 
     #footer p.rights {
