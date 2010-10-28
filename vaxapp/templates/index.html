@@ -12,14 +12,14 @@ $(document).ready(function(){
     var country = "TD";
     var chart_name = "";
 
-    $("#chart_options :input").val(["B","F","P","C","U"]);
+    $("#plot_options :input").val(["B","F","P","C","U"]);
     $("#vaccines :input").val(["BCG"]);
     $("#country").val("TD");
     get_chart();
 
-    $("#chart_options :input").click(function(){
+    $("#plot_options :input").click(function(){
         options = new Array();
-	$("#chart_options :input:checked").each(function() {
+	$("#plot_options :input:checked").each(function() {
 	    options.push( $(this).val() );
 	});
         get_chart();
