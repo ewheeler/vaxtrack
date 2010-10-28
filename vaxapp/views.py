@@ -55,6 +55,24 @@ def register(req):
         {"register_form": forms.RegisterForm()},\
         context_instance=RequestContext(req))
 
+@permission_required('vaxapp.can_upload')
+def upload(req):
+    if req.method == 'POST':
+        form = forms.DocumentForm(req.POST, req.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.user = req.user
+            doc.date_uploaded = datetime.datetime.utcnow()
+            doc.save()
+            process_file.delay(doc)
+            return HttpResponseRedirect('/')
+    else:
+        form = forms.DocumentForm()
+    return render_to_response("upload.html",\
+            {"country_form": form,
+            "tab": "upload"},\
+            context_instance=RequestContext(req))
+
 def get_chart(req, country_pk=None, vaccine_abbr=None, chart_opts=""):
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s-%s-%s.png" % (country_pk, vaccine_abbr, chart_opts)
     return HttpResponseRedirect(chart_url)
@@ -284,22 +302,3 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
             import ipdb; ipdb.set_trace()
 
     return 'wat'
-
-@permission_required('vaxapp.can_upload')
-def upload(req):
-    if req.method == 'POST':
-        form = forms.DocumentForm(req.POST, req.FILES)
-        if form.is_valid():
-            doc = form.save(commit=False)
-            doc.user = req.user
-            doc.date_uploaded = datetime.datetime.utcnow()
-            doc.save()
-            process_file.delay(doc)
-            return HttpResponseRedirect('/')
-    else:
-        form = forms.DocumentForm()
-    return render_to_response("upload.html",\
-            {"country_form": form,
-            "tab": "upload"},\
-            context_instance=RequestContext(req))
-
