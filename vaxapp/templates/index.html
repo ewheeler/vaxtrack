@@ -43,7 +43,7 @@ $(document).ready(function(){
         chart_opts = options.sort().join("")
         chart_name = country + "-" + vaccine + "-" + chart_opts + ".png";
         $("#chart").attr('src', "/charts/" + chart_name);
-        $("#flag").attr('src', "/assets/icons/bandiere/" + country + ".gif");
+        $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
     };
 });
 </script>
