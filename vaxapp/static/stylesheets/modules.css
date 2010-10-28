@@ -79,8 +79,7 @@ div.module h3 {
 }
 
     div.module h2 {
-        background-color: #000;
-        background-image: url("../images/h2-bg.png");
+        background-color: #0099FF;
         text-shadow: #000 2px 2px 1px;
         padding: 0.3125em;
         font-size: 160%;
@@ -97,8 +96,7 @@ div.module h3 {
      * h2-bg image 80% opaque and re-saved it. STILL TODO: ask meghana
      * to make this pretty */
     div.module h3 {
-        background-image: url("../images/h3-bg.png");
-        background-color: #333;
+        background-color: #0099FF;
         padding: 0.5em;
         font-size: 100%;
     }

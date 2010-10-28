@@ -3,7 +3,6 @@
 * {
   padding: 0;
   margin: 0;
-  line-height: 1;
   zoom: 1;
 }
 
@@ -100,9 +99,26 @@ h2 {
     .three-columns .col-3 img{
         width: 100%; }
 
+#vaccines {
+    font-size: 75%;
+}
+
+#vaccines label{
+    margin-left: 0.25em;
+}
+
 #chart_options {
     font-size: 75%;
 }
+
+#chart_options input{
+    margin-bottom: 0.5em;
+}
+
+#chart_options label{
+    margin-left: 0.25em;
+}
+
 /* this is not okay. but it is, unfortunately, the least error-prone way
  * (that i know) of fixing broken floaty layouts in IE6 */
 div.clear-hack {
@@ -116,3 +132,126 @@ div.clear-hack {
     position: relative;
 }
 
+.col-1 form {
+    padding: 1em;
+}
+
+    #header #auth {
+        font-size: 80%;
+        position: absolute;
+        line-height: 22px;
+        margin: 0 10px;
+        right: 0;
+        top: 0;
+    }
+
+    #branding {
+        padding: 0 10px;
+        border-bottom: 1px dotted #0099FF;
+    }
+
+    /* align in the middle of the unicef blue stripe of header bg, and
+     * display logo on the right. TODO: extract the unicef branding */
+    #branding h1 {
+        background: url("../images/unicef-logo.png") no-repeat 100% 50%;
+        height: 65px;
+        color: #fff;
+        margin: 0;
+    }
+
+        * html #branding h1 {
+            width: 940px; }
+
+        #branding h1 a {
+            height: 65px;
+            width: 245px;
+            display: block;
+            color: #0099FF;
+            text-decoration: none;
+
+            /* float the RapidSMS logo, in case any app would like to
+             * append anything to the light blue (empty) stripe */
+            float: left;
+        }
+
+            #branding h1 a span {
+                position: absolute;
+                left: -9999px;
+            }
+
+    #tabs,
+    #page-tabs {
+        position: absolute;
+        bottom: 0;
+        padding: 0;
+        margin: 0;
+    }
+
+    #tabs { left: 0; }
+    #page-tabs { right: 0;  }
+
+        #tabs li,
+        #page-tabs li {
+            display: block;
+            float: left;
+            line-height: 28px;
+        }
+
+        /* 5px spacing between each tab, to match the top gap, since
+         * we're using pixel-positioned backgrounds there */
+        #tabs li { margin-right: 5px; }
+        #page-tabs li { margin-left: 5px; }
+
+            #tabs li a,
+            #page-tabs li a {
+                color: #fff;
+                height 2em;
+                display: block;
+                padding: 0 1em;
+                background: #0099FF;
+                border-right: 1px solid #0099FF;
+                border-left: 1px solid #0099FF;
+
+                /* disable the focus outline on tabs, to avoid a rather
+                 * ugly dotted box around tabs while they have focus (we
+                 * remain accessible by providing an :focus, later) */
+                outline: none;
+            }
+
+            /* there are unread messages in this tab! TODO: is this just
+             * for the training app? if so, move it there! */
+            #tabs li.unread a span {
+                display: block;
+                padding-right: 21px;
+                background: url("../icons/silk/email_open.png") no-repeat 100% 50%;
+            }
+
+            /* always highlight the active (in the navigation sense, not
+             * the css :active sense) tab, even when it's being hovered
+             * or focused, since clicking it again is mostly useless */
+            #tabs li.active a,       #page-tabs li.active a,
+            #tabs li.active a:hover, #page-tabs li.active a:hover,
+            #tabs li.active a:focus, #page-tabs li.active a:focus {
+
+                background: #FEFFC8;
+                text-decoration: none;
+                text-shadow: none;
+                color: #0099FF;
+
+                /* the same color as the strip in header-bg.png */
+                border: 1px solid #FEFFC8;
+                border-bottom: 0;
+
+                /* nudge the active tab north by one pixel, to line it
+                 * up with the tops of the other tabs */
+                margin-top: -1px;
+            }
+
+            /* brighten up inactive tabs when hovering or tab-focusing
+             * with the keyboard (we removed the outline, above) */
+            #tabs li a:hover, #page-tabs li a:hover,
+            #tabs li a:focus, #page-tabs li a:focus {
+                color: #FEFFC8;
+                text-shadow: black 0 0 2px;
+                text-decoration: none;
+            }

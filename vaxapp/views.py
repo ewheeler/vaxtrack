@@ -39,7 +39,8 @@ def index(req, country_pk=None):
     return render_to_response("index.html",\
         {"countrystocks": countrystocks,\
             "countries": countries,\
-            "vaccines": vaccines},\
+            "vaccines": vaccines,\
+            "tab": "dashboard"},\
             context_instance=RequestContext(req))
 
 def register(req):
@@ -298,6 +299,7 @@ def upload(req):
     else:
         form = forms.DocumentForm()
     return render_to_response("upload.html",\
-            {"country_form": form},\
+            {"country_form": form,
+            "tab": "upload"},\
             context_instance=RequestContext(req))
 

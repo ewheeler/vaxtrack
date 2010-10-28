@@ -1,5 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+{% load i18n %}
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 	<head>
 		<title>Vaxtrack :: {% block title %}{% endblock %}</title>
@@ -14,6 +15,11 @@
 	</head>
 	<body>
 		<div id="header">
+                        <div id="branding">
+                                <h1>
+                                        <a title="{% trans "Return to the Dashboard" %}" href="/">VaxTrack</a>
+                                </h1>
+                        </div>
 			<div id="auth">
 			    {% if user.is_authenticated %}
 				<p>Logged in as {{ user.username }}. <a href="{% url logout %}">Logout</a></p>
@@ -21,8 +27,7 @@
 				<p>Welcome, please <a href="{% url login %}">log in</a> or <a href="{% url register %}">register</a>.</p>
 			    {% endif %}
 			</div>
-			<h1>Vaxtrack immunization monitoring system</h1>
-			<ul>
+			<ul id=tabs>
 				<li{% ifequal tab "dashboard" %} class="active"{% endifequal %}><a href="/">Dashboard</a></li>
 				<li{% ifequal tab "upload" %} class="active"{% endifequal %}><a href="{% url upload %}">Upload data</a></li>
 			</ul>
