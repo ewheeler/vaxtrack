@@ -3,7 +3,7 @@
 {% block right %}
 <div class="module">
 	<h3>Upload data</h3>
-        <div id="upload_form">
+        <div id="vaxform">
 	<form action="{% url upload %}" method="post" enctype="multipart/form-data">
 		{{ country_form.as_p }}
 		{% csrf_token %}

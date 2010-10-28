@@ -1,24 +1,27 @@
-{% extends "layout.html" %}
+{% extends "layout-split-2.html" %}
 {% block title %}Login{% endblock %}
-{% block content %}
+{% block right %}
+<div class="module">
+    <div id="vaxform">
+        {% if form.errors %}
+        <p>Oops. Your username and password didn't match. Please try again.</p>
+        {% endif %}
 
-{% if form.errors %}
-<p>Oops. Your username and password didn't match. Please try again.</p>
-{% endif %}
+        {% if user.is_authenticated %}
+        <p>You're already logged in!</p>
 
-{% if user.is_authenticated %}
-<p>You're already logged in!</p>
+        {% else %}
 
-{% else %}
-
-<h1>Register for Vaxtrack</h1>
+        <h3>Register for Vaxtrack</h3>
 
 
-<form method="post" action="{% url register %}">
-	{{ register_form.as_p }}
-	{% csrf_token %}
-<input type="submit" value="register" />
-</form>
+        <form method="post" action="{% url register %}">
+                {{ register_form.as_p }}
+                {% csrf_token %}
+        <input type="submit" value="register" />
+        </form>
+    </div>
+</div>
 
 {% endif %}
 {% endblock %}

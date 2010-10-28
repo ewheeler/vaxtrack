@@ -99,20 +99,20 @@ h2 {
     .three-columns .col-3 img{
         width: 100%; }
 
-#chart_options {
+#vaxform {
     border-left: 1px dotted #0099FF;
     border-right: 1px dotted #0099FF;
     border-bottom: 1px dotted #0099FF;
 }
 
-    #chart_options h5 {
+    #vaxform h5 {
         font-size: 90%;
         padding-left: 0.5em;
         padding-top: 0.5em;
         color: #0099FF;
     }
 
-    #chart_options form {
+    #vaxform form {
         padding: 1em;
     }
 
@@ -135,25 +135,6 @@ h2 {
         #plot_options label{
             margin-left: 0.25em;
         }
-
-#upload_form {
-    border-left: 1px dotted #0099FF;
-    border-right: 1px dotted #0099FF;
-    border-bottom: 1px dotted #0099FF;
-}
-
-    #upload_form form {
-        padding: 1em;
-        font-size: 75%;
-    }
-
-    #upload_form form input{
-        margin-bottom: 0.5em;
-    }
-
-    #upload_form form label{
-        margin-left: 0.25em;
-    }
 
 /* this is not okay. but it is, unfortunately, the least error-prone way
  * (that i know) of fixing broken floaty layouts in IE6 */
