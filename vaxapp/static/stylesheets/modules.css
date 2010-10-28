@@ -19,8 +19,12 @@ div.module.collapsed {
     height: 2.6em;
 }
 
+    /* margin-bottom is so the border of the
+       included div is not visible when collapsed */
     div.module.collapsed h3 {
-        background-image: url("../images/h2-bg-collapsed.png"); }
+        background-color: #FEFFC8;
+        color: #0099FF;
+        margin-bottom: 1em;}
 
     div.module.collapsed + div.module {
         margin-top: 1px; }
