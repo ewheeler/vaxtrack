@@ -43,6 +43,7 @@ $(document).ready(function(){
         chart_opts = options.sort().join("")
         chart_name = country + "-" + vaccine + "-" + chart_opts + ".png";
         $("#chart").attr('src', "/charts/" + chart_name);
+        $("#flag").attr('src', "/assets/icons/bandiere/" + country + ".gif");
     };
 });
 </script>
@@ -60,6 +61,7 @@ $(document).ready(function(){
                         <option value="{{c.pk}}">{{c.printable_name}}</option>
                 {% endfor %}
                 </select>
+                <img id="flag" src="">
             </form>
             <h5>Vaccine</h5>
             <form id="vaccines" action="">
