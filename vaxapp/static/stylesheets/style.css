@@ -99,25 +99,42 @@ h2 {
     .three-columns .col-3 img{
         width: 100%; }
 
-#vaccines {
-    font-size: 75%;
-}
-
-#vaccines label{
-    margin-left: 0.25em;
-}
-
 #chart_options {
-    font-size: 75%;
+    border-left: 1px dotted #0099FF;
+    border-right: 1px dotted #0099FF;
+    border-bottom: 1px dotted #0099FF;
 }
 
-#chart_options input{
-    margin-bottom: 0.5em;
-}
+    #chart_options h5 {
+        font-size: 90%;
+        padding-left: 0.5em;
+        padding-top: 0.5em;
+        color: #0099FF;
+    }
 
-#chart_options label{
-    margin-left: 0.25em;
-}
+    #chart_options form {
+        padding: 1em;
+    }
+
+        #vaccines {
+            font-size: 75%;
+        }
+
+        #vaccines label{
+            margin-left: 0.25em;
+        }
+
+        #plot_options {
+            font-size: 75%;
+        }
+
+        #plot_options input{
+            margin-bottom: 0.5em;
+        }
+
+        #plot_options label{
+            margin-left: 0.25em;
+        }
 
 /* this is not okay. but it is, unfortunately, the least error-prone way
  * (that i know) of fixing broken floaty layouts in IE6 */
@@ -132,10 +149,6 @@ div.clear-hack {
     position: relative;
 }
 
-.col-1 form {
-    padding: 1em;
-}
-
     #header #auth {
         font-size: 80%;
         position: absolute;
@@ -143,7 +156,15 @@ div.clear-hack {
         margin: 0 10px;
         right: 0;
         top: 0;
+        color: #0099FF;
+        background-color: #FEFFC8;
     }
+        #header #auth a {
+            color: #0099FF;
+        }
+        #header #auth p {
+            padding: 0.5em;
+        }
 
     #branding {
         padding: 0 10px;
@@ -255,3 +276,25 @@ div.clear-hack {
                 text-shadow: black 0 0 2px;
                 text-decoration: none;
             }
+
+#footer {
+    border-top: 1px dotted #eee;
+    padding: 0.5em;
+    clear: both;
+    color: #0099FF;
+    background-color: #FEFFC8;
+    font-size: 75%;
+
+    /* reserve space for at two lines of links @ LH=1.4 (for the
+     * copyright and licensing/download info) */
+    min-height: 2.8em;
+}
+    #footer a {
+        color: #0099FF;
+    }
+
+    #footer p.rights {
+        text-align: right;
+        float: right;
+        margin: 0;
+    }

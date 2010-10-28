@@ -52,34 +52,36 @@ $(document).ready(function(){
     {% if countries %}
     <div class="module expanded">
         <h3>Chart options</h3>
-        <h4>Country</h4>
-	<form id="countries" action="">
-	    <select id="country">
-	    {% for c in countries %}
-		    <option value="{{c.pk}}">{{c.printable_name}}</option>
-	    {% endfor %}
-	    </select>
-	</form>
-        <h4>Vaccine</h4>
-	<form id="vaccines" action="">
-	    {% for v in vaccines %}
-		    <input type="radio" id="radio-{{ v.abbr }}" value="{{ v.abbr }}"/>
-                    <label for="radio-{{ v.abbr }}"> {{ v.name }} </label><br />
-	    {% endfor %}
-	</form>
-        <h4>Data</h4>
-        <form id="chart_options" action="">
-            <input type="checkbox" id="checkbox-B" value="B" checked="checked" />
-            <label for="checkbox-B">buffer stock  &amp; overstock indicators</label><br />
-            <input type="checkbox" id="checkbox-F" value="F" checked="checked" />
-            <label for="checkbox-F">forecasted stock level (CO forecast)</label><br />
-            <input type="checkbox" id="checkbox-P" value="P" checked="checked" />
-            <label for="checkbox-F">forecasted stock level (with POs)</label><br />
-            <input type="checkbox" id="checkbox-C" value="C" checked="checked" />
-            <label for="checkbox-F">projected stock level (CO forecast)</label><br />
-            <input type="checkbox" id="checkbox-U" value="U" checked="checked" />
-            <label for="checkbox-F">projected stock level (with deliveries)</label><br />
-        </form>
+        <div id="chart_options">
+            <h5>Country</h5>
+            <form id="countries" action="">
+                <select id="country">
+                {% for c in countries %}
+                        <option value="{{c.pk}}">{{c.printable_name}}</option>
+                {% endfor %}
+                </select>
+            </form>
+            <h5>Vaccine</h5>
+            <form id="vaccines" action="">
+                {% for v in vaccines %}
+                        <input type="radio" id="radio-{{ v.abbr }}" value="{{ v.abbr }}"/>
+                        <label for="radio-{{ v.abbr }}"> {{ v.name }} </label><br />
+                {% endfor %}
+            </form>
+            <h5>Plot</h5>
+            <form id="plot_options" action="">
+                <input type="checkbox" id="checkbox-B" value="B" checked="checked" />
+                <label for="checkbox-B">buffer stock  &amp; overstock indicators</label><br />
+                <input type="checkbox" id="checkbox-F" value="F" checked="checked" />
+                <label for="checkbox-F">forecasted stock level (CO forecast)</label><br />
+                <input type="checkbox" id="checkbox-P" value="P" checked="checked" />
+                <label for="checkbox-F">forecasted stock level (with POs)</label><br />
+                <input type="checkbox" id="checkbox-C" value="C" checked="checked" />
+                <label for="checkbox-F">projected stock level (CO forecast)</label><br />
+                <input type="checkbox" id="checkbox-U" value="U" checked="checked" />
+                <label for="checkbox-F">projected stock level (with deliveries)</label><br />
+            </form>
+        </div>
     </div>
     {% endif %}
 {% endblock %}
