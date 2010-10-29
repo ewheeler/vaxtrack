@@ -1,34 +1,36 @@
-{% extends "layout.html" %}
+{% extends "layout-split-2.html" %}
 {% block title %}Login{% endblock %}
-{% block content %}
+{% block right%}
+<div class="module">
+    <div id="vaxform">
+        {% if form.errors %}
+        <p>Oops. Your username and password didn't match. Please try again.</p>
+        {% endif %}
 
-{% if form.errors %}
-<p>Oops. Your username and password didn't match. Please try again.</p>
-{% endif %}
+        {% if user.is_authenticated %}
+        <p>Oops. You may not have permission to view the page you requested.</p>
 
-{% if user.is_authenticated %}
-<p>Oops. You may not have permission to view the page you requested.</p>
+        {% else %}
 
-{% else %}
-
-<h1>Please log in to Vaxtrack</h1>
+        <h3>Please log in to Vaxtrack</h3>
 
 
-<form method="post" action="{% url django.contrib.auth.views.login %}">
-<table>
-<tr>
-    <td>{{ form.username.label_tag }}</td>
-    <td>{{ form.username }}</td>
-</tr>
-<tr>
-    <td>{{ form.password.label_tag }}</td>
-    <td>{{ form.password }}</td>
-</tr>
-</table>
-{% csrf_token %}
-<input type="submit" value="login" />
-<input type="hidden" name="next" value="{{ next }}" />
-</form>
-
-{% endif %}
+        <form method="post" action="{% url django.contrib.auth.views.login %}">
+        <table>
+        <tr>
+            <td>{{ form.username.label_tag }}</td>
+            <td>{{ form.username }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.password.label_tag }}</td>
+            <td>{{ form.password }}</td>
+        </tr>
+        </table>
+        {% csrf_token %}
+        <input type="submit" value="login" />
+        <input type="hidden" name="next" value="{{ next }}" />
+        </form>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
