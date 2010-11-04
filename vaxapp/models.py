@@ -59,11 +59,11 @@ class Vaccine(models.Model):
     abbr_fr_alt = models.CharField(max_length=30, blank=True, null=True)
 
     def __unicode__(self):
-        return self.abbr
+        return self.slug
 
     @property
     def abbr(self):
-        return self.slug
+        return self.abbr_en
 
 
 class CountryStock(models.Model):

@@ -35,7 +35,8 @@ def index(req, country_pk=None):
     else:
         countrystocks = False
     countries = [c.country for c in CountryStock.objects.all()]
-    vaccines = Vaccine.objects.all()
+    # TODO unique list
+    vaccines = [v.vaccine for v in CountryStock.objects.all()]
     return render_to_response("index.html",\
         {"countrystocks": countrystocks,\
             "countries": countries,\

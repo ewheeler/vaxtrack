@@ -66,8 +66,8 @@ $(document).ready(function(){
             <h5>Vaccine</h5>
             <form id="vaccines" action="">
                 {% for v in vaccines %}
-                        <input type="radio" id="radio-{{ v.abbr }}" value="{{ v.abbr }}"/>
-                        <label for="radio-{{ v.abbr }}"> {{ v.name }} </label><br />
+                        <input type="radio" id="radio-{{ v.slug }}" value="{{ v.slug }}"/>
+                        <label for="radio-{{ v.slug }}"> {{ v.abbr }} </label><br />
                 {% endfor %}
             </form>
             <h5>Plot</h5>
