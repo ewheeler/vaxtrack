@@ -5,5 +5,7 @@ from django.contrib import admin
 from .models import *
 
 admin.site.register(Vaccine)
+admin.site.register(VaccineGroup)
+admin.site.register(Country)
 admin.site.register(CountryStock)
 admin.site.register(Document)

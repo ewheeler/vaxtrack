@@ -41,12 +41,29 @@ class Country(models.Model):
         return [(c.iso3_code, c.iso3_code + " (" + c.name + ")") for c in klass.objects.all()]
 
 
+class VaccineGroup(models.Model):
+    abbr_en = models.CharField(max_length=160, blank=True, null=True)
+    abbr_fr = models.CharField(max_length=160, blank=True, null=True)
+
+    def __unicode__(self):
+        return self.abbr_en
+
+
 class Vaccine(models.Model):
     name = models.CharField(max_length=160, blank=True, null=True)
-    abbr = models.CharField(max_length=20, blank=True, null=True)
+    slug = models.CharField(max_length=160, blank=True, null=True)
+    group = models.ForeignKey(VaccineGroup)
+
+    abbr_en = models.CharField(max_length=30, blank=True, null=True)
+    abbr_fr = models.CharField(max_length=30, blank=True, null=True)
+    abbr_fr_alt = models.CharField(max_length=30, blank=True, null=True)
 
     def __unicode__(self):
         return self.abbr
+
+    @property
+    def abbr(self):
+        return self.slug
 
 
 class CountryStock(models.Model):
