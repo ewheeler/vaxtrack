@@ -1,0 +1,962 @@
+[
+    {
+        "pk": 1, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "BCG", 
+            "group": 1, 
+            "name": null, 
+            "abbr_en": "BCG-10", 
+            "abbr_fr": "BCG-10", 
+            "slug": "bcg-10"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "BCG", 
+            "group": 1, 
+            "name": null, 
+            "abbr_en": "BCG-20", 
+            "abbr_fr": "BCG-10", 
+            "slug": "bcg-20"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "Cholera", 
+            "group": 2, 
+            "name": null, 
+            "abbr_en": "Cholera", 
+            "abbr_fr": "Cholera", 
+            "slug": "cholera"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "Cholera", 
+            "group": 2, 
+            "name": null, 
+            "abbr_en": "Cholera-1", 
+            "abbr_fr": "Cholera-1", 
+            "slug": "cholera-1"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "Cholera", 
+            "group": 2, 
+            "name": null, 
+            "abbr_en": "Cholera-2", 
+            "abbr_fr": "Cholera-2", 
+            "slug": "cholera-2"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 3, 
+            "name": null, 
+            "abbr_en": "Dt-10", 
+            "abbr_fr": "", 
+            "slug": "dt-10"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 3, 
+            "name": null, 
+            "abbr_en": "Dt-20", 
+            "abbr_fr": "", 
+            "slug": "dt-20"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "DTC", 
+            "group": 4, 
+            "name": null, 
+            "abbr_en": "DTP-10", 
+            "abbr_fr": "DTC-10", 
+            "slug": "dtp-10"
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "DTC", 
+            "group": 4, 
+            "name": null, 
+            "abbr_en": "DTP-20", 
+            "abbr_fr": "DTC-10", 
+            "slug": "dtp-20"
+        }
+    }, 
+    {
+        "pk": 10, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "DTC-HepB", 
+            "group": 5, 
+            "name": null, 
+            "abbr_en": "DTP-HepB-2", 
+            "abbr_fr": "DTC-HepB-2", 
+            "slug": "dtp-hepb-2"
+        }
+    }, 
+    {
+        "pk": 11, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "DTC-HepB", 
+            "group": 5, 
+            "name": null, 
+            "abbr_en": "DTP-HepB-10", 
+            "abbr_fr": "DTC-HepB-10", 
+            "slug": "dtp-hepb-10"
+        }
+    }, 
+    {
+        "pk": 12, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "DTC-HepB-Hib", 
+            "group": 6, 
+            "name": null, 
+            "abbr_en": "DTP-HepB+Hib-1", 
+            "abbr_fr": "DTC-HepB-Hib-1", 
+            "slug": "dtp-hepbhib-1"
+        }
+    }, 
+    {
+        "pk": 13, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "DTC-HepB-Hib", 
+            "group": 6, 
+            "name": null, 
+            "abbr_en": "DTP-HepB+Hib-2", 
+            "abbr_fr": "DTC-HepB-Hib-2", 
+            "slug": "dtp-hepbhib-2"
+        }
+    }, 
+    {
+        "pk": 14, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "DTC-Hib", 
+            "group": 7, 
+            "name": null, 
+            "abbr_en": "DTP-Hib-1 (lph)", 
+            "abbr_fr": "DTC-Hib-1 (lyophilise)", 
+            "slug": "dtp-hib-1-lph"
+        }
+    }, 
+    {
+        "pk": 15, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "DTC-Hib", 
+            "group": 7, 
+            "name": null, 
+            "abbr_en": "DTP-Hib-1 (lqd)", 
+            "abbr_fr": "DTC-Hib-1 (liquide)", 
+            "slug": "dtp-hib-1-lqd"
+        }
+    }, 
+    {
+        "pk": 16, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "DTC-Hib", 
+            "group": 7, 
+            "name": null, 
+            "abbr_en": "DTP-Hib-10", 
+            "abbr_fr": "DTC-Hib-10", 
+            "slug": "dtp-hib-10"
+        }
+    }, 
+    {
+        "pk": 17, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "HepB", 
+            "group": 8, 
+            "name": null, 
+            "abbr_en": "HepB-1", 
+            "abbr_fr": "HepB-1", 
+            "slug": "hepb-1"
+        }
+    }, 
+    {
+        "pk": 18, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "HepB", 
+            "group": 8, 
+            "name": null, 
+            "abbr_en": "HepB-2", 
+            "abbr_fr": "HepB-2", 
+            "slug": "hepb-2"
+        }
+    }, 
+    {
+        "pk": 19, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "HepB", 
+            "group": 8, 
+            "name": null, 
+            "abbr_en": "HepB-6", 
+            "abbr_fr": "HepB-6", 
+            "slug": "hepb-6"
+        }
+    }, 
+    {
+        "pk": 20, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "HepB", 
+            "group": 8, 
+            "name": null, 
+            "abbr_en": "HepB-10", 
+            "abbr_fr": "HepB-10", 
+            "slug": "hepb-10"
+        }
+    }, 
+    {
+        "pk": 21, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "HepB", 
+            "group": 8, 
+            "name": null, 
+            "abbr_en": "HepB-20", 
+            "abbr_fr": "HepB-20", 
+            "slug": "hepb-20"
+        }
+    }, 
+    {
+        "pk": 22, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "HepB Adulte", 
+            "group": 9, 
+            "name": null, 
+            "abbr_en": "HepB-1 Adult", 
+            "abbr_fr": "HepB-1 Adulte", 
+            "slug": "hepb-1-adult"
+        }
+    }, 
+    {
+        "pk": 23, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "HepB Adulte", 
+            "group": 9, 
+            "name": null, 
+            "abbr_en": "HepB-10 Adult", 
+            "abbr_fr": "HepB-10 Adulte", 
+            "slug": "hepb-10-adult"
+        }
+    }, 
+    {
+        "pk": 24, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "Hib-1", 
+            "group": 10, 
+            "name": null, 
+            "abbr_en": "Hib-1", 
+            "abbr_fr": "Hib-1", 
+            "slug": "hib-1"
+        }
+    }, 
+    {
+        "pk": 25, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "Hib-1 (lyophilise)", 
+            "group": 10, 
+            "name": null, 
+            "abbr_en": "Hib-1 (lph)", 
+            "abbr_fr": "Hib-1 (lph)", 
+            "slug": "hib-1-lph"
+        }
+    }, 
+    {
+        "pk": 26, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "Hib-1 (liquide)", 
+            "group": 10, 
+            "name": null, 
+            "abbr_en": "Hib-1 (lqd)", 
+            "abbr_fr": "Hib-1 (lqd)", 
+            "slug": "hib-1-lqd"
+        }
+    }, 
+    {
+        "pk": 27, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "Hib-10", 
+            "group": 10, 
+            "name": null, 
+            "abbr_en": "Hib-10", 
+            "abbr_fr": "Hib-10", 
+            "slug": "hib-10"
+        }
+    }, 
+    {
+        "pk": 28, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 11, 
+            "name": null, 
+            "abbr_en": "Influenza-1", 
+            "abbr_fr": "", 
+            "slug": "influenza-1"
+        }
+    }, 
+    {
+        "pk": 29, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 11, 
+            "name": null, 
+            "abbr_en": "Influenza-10", 
+            "abbr_fr": "", 
+            "slug": "influenza-10"
+        }
+    }, 
+    {
+        "pk": 30, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 12, 
+            "name": null, 
+            "abbr_en": "IPV-1", 
+            "abbr_fr": "VPI-1", 
+            "slug": "ipv-1"
+        }
+    }, 
+    {
+        "pk": 31, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 12, 
+            "name": null, 
+            "abbr_en": "IPV-10", 
+            "abbr_fr": "VPI-10", 
+            "slug": "ipv-10"
+        }
+    }, 
+    {
+        "pk": 32, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 13, 
+            "name": null, 
+            "abbr_en": "Mea-1", 
+            "abbr_fr": "VAR-1", 
+            "slug": "mea-1"
+        }
+    }, 
+    {
+        "pk": 33, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 13, 
+            "name": null, 
+            "abbr_en": "Mea-10", 
+            "abbr_fr": "VAR-10", 
+            "slug": "mea-10"
+        }
+    }, 
+    {
+        "pk": 34, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 13, 
+            "name": null, 
+            "abbr_en": "Mea-20", 
+            "abbr_fr": "VAR-20", 
+            "slug": "mea-20"
+        }
+    }, 
+    {
+        "pk": 35, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 13, 
+            "name": null, 
+            "abbr_en": "Measles", 
+            "abbr_fr": "VAR", 
+            "slug": "measles"
+        }
+    }, 
+    {
+        "pk": 36, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 14, 
+            "name": null, 
+            "abbr_en": "Mening A/C-10", 
+            "abbr_fr": "VAM AC-10", 
+            "slug": "mening-ac-10"
+        }
+    }, 
+    {
+        "pk": 37, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 14, 
+            "name": null, 
+            "abbr_en": "Mening A/C-50", 
+            "abbr_fr": "VAM AC-50", 
+            "slug": "mening-ac-50"
+        }
+    }, 
+    {
+        "pk": 38, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 14, 
+            "name": null, 
+            "abbr_en": "Mening AC&W-50", 
+            "abbr_fr": "VAM W50", 
+            "slug": "mening-acw-50"
+        }
+    }, 
+    {
+        "pk": 39, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 14, 
+            "name": null, 
+            "abbr_en": "Mening ACYW135-1", 
+            "abbr_fr": "VAM W135-1", 
+            "slug": "mening-acyw135-1"
+        }
+    }, 
+    {
+        "pk": 40, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 14, 
+            "name": null, 
+            "abbr_en": "Mening ACYW135-10", 
+            "abbr_fr": "VAM W135-10", 
+            "slug": "mening-acyw135-10"
+        }
+    }, 
+    {
+        "pk": 41, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "ROR", 
+            "group": 15, 
+            "name": null, 
+            "abbr_en": "MMR-1", 
+            "abbr_fr": "ROR-1", 
+            "slug": "mmr-1"
+        }
+    }, 
+    {
+        "pk": 42, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "ROR", 
+            "group": 15, 
+            "name": null, 
+            "abbr_en": "MMR-5", 
+            "abbr_fr": "ROR-5", 
+            "slug": "mmr-5"
+        }
+    }, 
+    {
+        "pk": 43, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "ROR", 
+            "group": 15, 
+            "name": null, 
+            "abbr_en": "MMR-10", 
+            "abbr_fr": "ROR-10", 
+            "slug": "mmr-10"
+        }
+    }, 
+    {
+        "pk": 44, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 16, 
+            "name": null, 
+            "abbr_en": "MR-2", 
+            "abbr_fr": "", 
+            "slug": "mr-2"
+        }
+    }, 
+    {
+        "pk": 45, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 16, 
+            "name": null, 
+            "abbr_en": "MR-10", 
+            "abbr_fr": "", 
+            "slug": "mr-10"
+        }
+    }, 
+    {
+        "pk": 46, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "VAO", 
+            "group": 17, 
+            "name": null, 
+            "abbr_en": "Mumps", 
+            "abbr_fr": "VAO", 
+            "slug": "mumps"
+        }
+    }, 
+    {
+        "pk": 47, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "mVPO1", 
+            "group": 18, 
+            "name": null, 
+            "abbr_en": "MOPV1-20", 
+            "abbr_fr": "mVPO1-20", 
+            "slug": "mopv1-20"
+        }
+    }, 
+    {
+        "pk": 48, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "mVPO3", 
+            "group": 18, 
+            "name": null, 
+            "abbr_en": "MOPV3-20", 
+            "abbr_fr": "mVPO3-20", 
+            "slug": "mopv3-20"
+        }
+    }, 
+    {
+        "pk": 49, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 18, 
+            "name": null, 
+            "abbr_en": "OPV Bulk", 
+            "abbr_fr": "", 
+            "slug": "opv-bulk"
+        }
+    }, 
+    {
+        "pk": 50, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "VPO", 
+            "group": 18, 
+            "name": null, 
+            "abbr_en": "OPV-50", 
+            "abbr_fr": "VPO-50", 
+            "slug": "opv-50"
+        }
+    }, 
+    {
+        "pk": 51, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "tVPO", 
+            "group": 18, 
+            "name": null, 
+            "abbr_en": "TOPV-20", 
+            "abbr_fr": "tVPO-20", 
+            "slug": "topv-20"
+        }
+    }, 
+    {
+        "pk": 52, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "tVPO", 
+            "group": 18, 
+            "name": null, 
+            "abbr_en": "TOPV-10", 
+            "abbr_fr": "tVPO-10", 
+            "slug": "topv-10"
+        }
+    }, 
+    {
+        "pk": 53, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "bVPO", 
+            "group": 18, 
+            "name": null, 
+            "abbr_en": "BOPV-20", 
+            "abbr_fr": "bVPO-20", 
+            "slug": "bopv-20"
+        }
+    }, 
+    {
+        "pk": 54, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 19, 
+            "name": null, 
+            "abbr_en": "Anti-diphtheria serum", 
+            "abbr_fr": "Serum anti-diphterie", 
+            "slug": "anti-diphtheria-serum"
+        }
+    }, 
+    {
+        "pk": 55, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 19, 
+            "name": null, 
+            "abbr_en": "Anti-scorpion venom", 
+            "abbr_fr": "Serum anti-scorpion", 
+            "slug": "anti-scorpion-venom"
+        }
+    }, 
+    {
+        "pk": 56, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 19, 
+            "name": null, 
+            "abbr_en": "Anti-tetanus serum", 
+            "abbr_fr": "Serum anti-tetanique", 
+            "slug": "anti-tetanus-serum"
+        }
+    }, 
+    {
+        "pk": 57, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 19, 
+            "name": null, 
+            "abbr_en": "Foetal Bovine Serum", 
+            "abbr_fr": "", 
+            "slug": "foetal-bovine-serum"
+        }
+    }, 
+    {
+        "pk": 58, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 19, 
+            "name": null, 
+            "abbr_en": "Snake antivenom", 
+            "abbr_fr": "Antivenin", 
+            "slug": "snake-antivenom"
+        }
+    }, 
+    {
+        "pk": 59, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 19, 
+            "name": null, 
+            "abbr_en": "Pneumococcal Serum", 
+            "abbr_fr": "", 
+            "slug": "pneumococcal-serum"
+        }
+    }, 
+    {
+        "pk": 60, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 19, 
+            "name": null, 
+            "abbr_en": "Tuberculin/PPD", 
+            "abbr_fr": "", 
+            "slug": "tuberculinppd"
+        }
+    }, 
+    {
+        "pk": 61, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 20, 
+            "name": null, 
+            "abbr_en": "PCV1-7", 
+            "abbr_fr": "", 
+            "slug": "pcv1-7"
+        }
+    }, 
+    {
+        "pk": 62, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 21, 
+            "name": null, 
+            "abbr_en": "Rabies", 
+            "abbr_fr": "", 
+            "slug": "rabies"
+        }
+    }, 
+    {
+        "pk": 63, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 21, 
+            "name": null, 
+            "abbr_en": "Rabies HDC-1", 
+            "abbr_fr": "", 
+            "slug": "rabies-hdc-1"
+        }
+    }, 
+    {
+        "pk": 64, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 21, 
+            "name": null, 
+            "abbr_en": "Rabies HRI-1", 
+            "abbr_fr": "", 
+            "slug": "rabies-hri-1"
+        }
+    }, 
+    {
+        "pk": 65, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 21, 
+            "name": null, 
+            "abbr_en": "Rabies-1", 
+            "abbr_fr": "", 
+            "slug": "rabies-1"
+        }
+    }, 
+    {
+        "pk": 66, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 21, 
+            "name": null, 
+            "abbr_en": "Rabies-2", 
+            "abbr_fr": "", 
+            "slug": "rabies-2"
+        }
+    }, 
+    {
+        "pk": 67, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 21, 
+            "name": null, 
+            "abbr_en": "Rabies-5", 
+            "abbr_fr": "", 
+            "slug": "rabies-5"
+        }
+    }, 
+    {
+        "pk": 68, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 22, 
+            "name": null, 
+            "abbr_en": "Rubella-1", 
+            "abbr_fr": "", 
+            "slug": "rubella-1"
+        }
+    }, 
+    {
+        "pk": 69, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 22, 
+            "name": null, 
+            "abbr_en": "Rubella-10", 
+            "abbr_fr": "", 
+            "slug": "rubella-10"
+        }
+    }, 
+    {
+        "pk": 70, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 23, 
+            "name": null, 
+            "abbr_en": "Td-10", 
+            "abbr_fr": "", 
+            "slug": "td-10"
+        }
+    }, 
+    {
+        "pk": 71, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 23, 
+            "name": null, 
+            "abbr_en": "Td-20", 
+            "abbr_fr": "", 
+            "slug": "td-20"
+        }
+    }, 
+    {
+        "pk": 72, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 24, 
+            "name": null, 
+            "abbr_en": "TT uniject", 
+            "abbr_fr": "", 
+            "slug": "tt-uniject"
+        }
+    }, 
+    {
+        "pk": 73, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 24, 
+            "name": null, 
+            "abbr_en": "TT-10", 
+            "abbr_fr": "VAT", 
+            "slug": "tt-10"
+        }
+    }, 
+    {
+        "pk": 74, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 24, 
+            "name": null, 
+            "abbr_en": "TT-20", 
+            "abbr_fr": "VAT", 
+            "slug": "tt-20"
+        }
+    }, 
+    {
+        "pk": 75, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "", 
+            "group": 25, 
+            "name": null, 
+            "abbr_en": "Typhoid", 
+            "abbr_fr": "", 
+            "slug": "typhoid"
+        }
+    }, 
+    {
+        "pk": 76, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "VAA", 
+            "group": 26, 
+            "name": null, 
+            "abbr_en": "YF-1", 
+            "abbr_fr": "VAA-1", 
+            "slug": "yf-1"
+        }
+    }, 
+    {
+        "pk": 77, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "VAA", 
+            "group": 26, 
+            "name": null, 
+            "abbr_en": "YF-5", 
+            "abbr_fr": "VAA-5", 
+            "slug": "yf-5"
+        }
+    }, 
+    {
+        "pk": 78, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "VAA", 
+            "group": 26, 
+            "name": null, 
+            "abbr_en": "YF-10", 
+            "abbr_fr": "VAA-10", 
+            "slug": "yf-10"
+        }
+    }, 
+    {
+        "pk": 79, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "VAA", 
+            "group": 26, 
+            "name": null, 
+            "abbr_en": "YF-20", 
+            "abbr_fr": "VAA-20", 
+            "slug": "yf-20"
+        }
+    }, 
+    {
+        "pk": 80, 
+        "model": "vaxapp.vaccine", 
+        "fields": {
+            "abbr_fr_alt": "VAA", 
+            "group": 26, 
+            "name": null, 
+            "abbr_en": "YF-50", 
+            "abbr_fr": "VAA-50", 
+            "slug": "yf-50"
+        }
+    }
+]
