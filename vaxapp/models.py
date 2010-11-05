@@ -71,19 +71,19 @@ class Vaccine(models.Model):
             match = None
             for obj in klass.objects.all():
                 fields = []
-                fields.append(obj.slug)
-                fields.append(obj.abbr_en)
-                fields.append(obj.abbr_fr)
-                fields.append(obj.abbr_fr_alt)
-                if term in fields:
+                fields.append(obj.slug.lower())
+                fields.append(obj.abbr_en.lower())
+                fields.append(obj.abbr_fr.lower())
+                fields.append(obj.abbr_fr_alt.lower())
+                if term.lower() in fields:
                     match = obj
                     break
             if match is None:
                 for obj in klass.objects.all():
                     fields = []
-                    fields.append(obj.group.abbr_en)
-                    fields.append(obj.group.abbr_fr)
-                    if term in fields:
+                    fields.append(obj.group.abbr_en.lower())
+                    fields.append(obj.group.abbr_fr.lower())
+                    if term.lower() in fields:
                         return 'matched a group'
             return match
         except Exception, e:
