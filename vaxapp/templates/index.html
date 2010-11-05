@@ -8,13 +8,13 @@
 $(document).ready(function(){
 
     var options = new Array("B","F","P","C","U");
-    var vaccine = "BCG";
-    var country = "TD";
+    var vaccine = "bcg-10";
+    var country = "SN";
     var chart_name = "";
 
     $("#plot_options :input").val(["B","F","P","C","U"]);
-    $("#vaccines :input").val(["BCG"]);
-    $("#country").val("TD");
+    $("#vaccines :input").val(["bcg-10"]);
+    $("#country").val("SN");
     get_chart();
 
     $("#plot_options :input").click(function(){
@@ -41,7 +41,7 @@ $(document).ready(function(){
 
     function get_chart(){
         chart_opts = options.sort().join("")
-        chart_name = country + "-" + vaccine + "-" + chart_opts + ".png";
+        chart_name = country + "_" + vaccine + "_" + chart_opts + ".png";
         $("#chart").attr('src', "/charts/" + chart_name);
         $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
     };
