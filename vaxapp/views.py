@@ -97,6 +97,10 @@ def generate_all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=Non
         dicts = [params.update({c:True}) for c in p]
         print all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=vaccine_abbr, lang=lang, **params)
 
+def generate_six_charts_country_sdb(country_pk=None, lang=None):
+    for v in ['opv-50', 'measles', 'tt-10', 'dtp-hepbhib-1', 'yf-1', 'bcg-10']:
+        print all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=v, lang=lang)
+
 def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwargs):
     # string of options (as single characters) in alphabetical order
     # used later for filename
