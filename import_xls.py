@@ -56,19 +56,25 @@ def import_who(file=None):
                 day = first_of_year + timedelta(day_of_year-1)
 
                 vax = values[2][:-4]
+                try:
+                    vax_slug = Vaccine.lookup_slug(vax).slug
+                except Exception, e:
+                    print 'cannot find vax'
+                    continue
+
                 amount = int(values[3])
                 stocks.append(values)
                 try:
                     item_name = hashlib.md5()
                     item_name.update(str(country.iso2_code))
-                    item_name.update(str(vax))
+                    item_name.update(str(vax_slug))
                     item_name.update("SL")
                     item_name.update(str(day))
                     item_name.update(str(amount))
 
                     item = domain.new_item(item_name.hexdigest())
                     item.add_value("country", str(country.iso2_code))
-                    item.add_value("supply", str(vax))
+                    item.add_value("supply", str(vax_slug))
                     item.add_value("type", "SL")
                     item.add_value("date", str(day))
                     item.add_value("year", str(year))
