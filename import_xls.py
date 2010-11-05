@@ -68,7 +68,8 @@ def import_who(file=None):
                     vaccine = Vaccine.lookup_slug(vax)
                     vax_slug = vaccine.slug
                 except Exception, e:
-                    print 'cannot find vax'
+                    print e
+                    print 'cannot find vax: %s' % (vax)
                     continue
 
                 amount = int(values[3])
