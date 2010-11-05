@@ -26,7 +26,8 @@ $(document).ready(function(){
     });
 
     $("#vaccines :input").click(function(){
-        vaccine = "";
+        $("#radio-" + vaccine).checked = false;
+        vaccine = ""; 
 	$("#vaccines :input:radio:checked").each(function() {
 	    vaccine = $(this).val();
 	});
