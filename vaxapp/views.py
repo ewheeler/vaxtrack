@@ -295,7 +295,8 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, **kwargs):
             import ipdb; ipdb.set_trace()
         try:
             s3_key = "%s-%s-%s.png" % (country_pk, vaccine_abbr, options_str)
-            upload_file(file_path, 'vaxtrack_charts', s3_key, True)
+            s3_path = "%s/%s/%s/" % (lang, country_pk, vaccine_abbr)
+            upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
             return file_path
         except Exception, e:
             print 'ERROR UPLOADING'
