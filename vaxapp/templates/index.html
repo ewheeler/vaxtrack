@@ -7,12 +7,12 @@
 
 $(document).ready(function(){
 
-    var options = new Array("B","F","P","C","U");
+    var options = new Array();
     var vaccine = "bcg-10";
     var country = "SN";
     var chart_name = "";
 
-    $("#plot_options :input").val(["B","F","P","C","U"]);
+    $("#plot_options :input").val([]);
     $("#vaccines :input").val(["bcg-10"]);
     $("#country").val("SN");
     get_chart();
