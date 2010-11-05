@@ -18,7 +18,7 @@ from decimal import Decimal as D
 from vaxapp.models import *
 
 def import_who(file=None):
-    book = xlrd.open_workbook("SENEGAL_2010.xls")
+    book = xlrd.open_workbook(file)
     sheets = book.sheet_names()
     country_names = Country.objects.values_list('printable_name', flat=True)
     sheet = None
@@ -29,8 +29,8 @@ def import_who(file=None):
             break
 
     if sheet is not None:
-        #sdb = boto.connect_sdb()
-        #domain = sdb.create_domain('countrystockdata')
+        sdb = boto.connect_sdb()
+        domain = sdb.create_domain('countrystockdata')
 
         titles = []
         stocks = []
@@ -66,7 +66,6 @@ def import_who(file=None):
                     item_name.update(str(day))
                     item_name.update(str(amount))
 
-                    '''
                     item = domain.new_item(item_name.hexdigest())
                     item.add_value("country", str(country.iso2_code))
                     item.add_value("supply", str(vax))
@@ -76,12 +75,10 @@ def import_who(file=None):
                     item.add_value("amount", str(amount))
                     item.save()
                     print item
-                    '''
                 except Exception, e:
                     print 'error creating stock level'
                     print e
 
-                print "%s  %s  %s" % (day, vax, amount)
             else:
                 titles.append(values)
         print len(titles)
