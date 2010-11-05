@@ -59,11 +59,36 @@ class Vaccine(models.Model):
     abbr_fr_alt = models.CharField(max_length=30, blank=True, null=True)
 
     def __unicode__(self):
-        return self.slug
+        return "%s (%s)" % (self.slug, ",".join([self.abbr_en, self.abbr_fr, self.abbr_fr_alt]))
 
     @property
     def abbr(self):
         return self.abbr_en
+
+    @classmethod
+    def lookup_slug(klass, term):
+        try:
+            match = None
+            for obj in klass.objects.all():
+                fields = []
+                fields.append(obj.slug)
+                fields.append(obj.abbr_en)
+                fields.append(obj.abbr_fr)
+                fields.append(obj.abbr_fr_alt)
+                if term in fields:
+                    match = obj
+                    break
+            if match is None:
+                for obj in klass.objects.all():
+                    fields = []
+                    fields.append(obj.group.abbr_en)
+                    fields.append(obj.group.abbr_fr)
+                    if term in fields:
+                        return 'matched a group'
+            return match
+        except Exception, e:
+            print 'BANG'
+            print e
 
 
 class CountryStock(models.Model):
