@@ -18,6 +18,14 @@ from decimal import Decimal as D
 from vaxapp.models import *
 
 def import_who(file=None):
+'''
+opv-50
+measles
+tt-10
+dtp-hepbhib-1
+yf-1
+bcg-10
+'''
     book = xlrd.open_workbook(file)
     sheets = book.sheet_names()
     country_names = Country.objects.values_list('printable_name', flat=True)
@@ -57,7 +65,8 @@ def import_who(file=None):
 
                 vax = values[2][:-4]
                 try:
-                    vax_slug = Vaccine.lookup_slug(vax).slug
+                    vaccine = Vaccine.lookup_slug(vax)
+                    vax_slug = vaccine.slug
                 except Exception, e:
                     print 'cannot find vax'
                     continue
@@ -85,6 +94,7 @@ def import_who(file=None):
                     print 'error creating stock level'
                     print e
 
+                cs, csc = CountryStock.objects.get_or_create(vaccine=vaccine, country=country)
             else:
                 titles.append(values)
         print len(titles)
