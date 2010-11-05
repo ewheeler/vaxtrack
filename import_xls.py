@@ -18,14 +18,14 @@ from decimal import Decimal as D
 from vaxapp.models import *
 
 def import_who(file=None):
-'''
-opv-50
-measles
-tt-10
-dtp-hepbhib-1
-yf-1
-bcg-10
-'''
+    '''
+    opv-50
+    measles
+    tt-10
+    dtp-hepbhib-1
+    yf-1
+    bcg-10
+    '''
     book = xlrd.open_workbook(file)
     sheets = book.sheet_names()
     country_names = Country.objects.values_list('printable_name', flat=True)
