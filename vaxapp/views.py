@@ -75,7 +75,9 @@ def upload(req):
             context_instance=RequestContext(req))
 
 def get_chart(req, country_pk=None, vaccine_abbr=None, chart_opts=""):
-    chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s-%s-%s.png" % (country_pk, vaccine_abbr, chart_opts)
+    path = "%s/%s/%s/" % ('en', country_pk, vaccine_abbr)
+    filename = "en-%s-%s-%s.png" % (country_pk, vaccine_abbr, chart_opts)
+    chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s%s" % (path, filename)
     return HttpResponseRedirect(chart_url)
 
 def powerset(iterable):
