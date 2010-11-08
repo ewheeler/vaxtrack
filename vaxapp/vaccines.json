@@ -8,6 +8,7 @@
             "name": null, 
             "abbr_en": "BCG-10", 
             "abbr_fr": "BCG-10", 
+            "abbr_en_alt": null, 
             "slug": "bcg-10"
         }
     }, 
@@ -20,6 +21,7 @@
             "name": null, 
             "abbr_en": "BCG-20", 
             "abbr_fr": "BCG-10", 
+            "abbr_en_alt": null, 
             "slug": "bcg-20"
         }
     }, 
@@ -32,6 +34,7 @@
             "name": null, 
             "abbr_en": "Cholera", 
             "abbr_fr": "Cholera", 
+            "abbr_en_alt": null, 
             "slug": "cholera"
         }
     }, 
@@ -44,6 +47,7 @@
             "name": null, 
             "abbr_en": "Cholera-1", 
             "abbr_fr": "Cholera-1", 
+            "abbr_en_alt": null, 
             "slug": "cholera-1"
         }
     }, 
@@ -56,6 +60,7 @@
             "name": null, 
             "abbr_en": "Cholera-2", 
             "abbr_fr": "Cholera-2", 
+            "abbr_en_alt": null, 
             "slug": "cholera-2"
         }
     }, 
@@ -68,6 +73,7 @@
             "name": null, 
             "abbr_en": "Dt-10", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "dt-10"
         }
     }, 
@@ -80,6 +86,7 @@
             "name": null, 
             "abbr_en": "Dt-20", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "dt-20"
         }
     }, 
@@ -92,6 +99,7 @@
             "name": null, 
             "abbr_en": "DTP-10", 
             "abbr_fr": "DTC-10", 
+            "abbr_en_alt": null, 
             "slug": "dtp-10"
         }
     }, 
@@ -104,6 +112,7 @@
             "name": null, 
             "abbr_en": "DTP-20", 
             "abbr_fr": "DTC-10", 
+            "abbr_en_alt": null, 
             "slug": "dtp-20"
         }
     }, 
@@ -116,6 +125,7 @@
             "name": null, 
             "abbr_en": "DTP-HepB-2", 
             "abbr_fr": "DTC-HepB-2", 
+            "abbr_en_alt": null, 
             "slug": "dtp-hepb-2"
         }
     }, 
@@ -128,6 +138,7 @@
             "name": null, 
             "abbr_en": "DTP-HepB-10", 
             "abbr_fr": "DTC-HepB-10", 
+            "abbr_en_alt": null, 
             "slug": "dtp-hepb-10"
         }
     }, 
@@ -137,9 +148,10 @@
         "fields": {
             "abbr_fr_alt": "DTC-HepB-Hib", 
             "group": 6, 
-            "name": null, 
+            "name": "", 
             "abbr_en": "DTP-HepB+Hib-1", 
             "abbr_fr": "DTC-HepB-Hib-1", 
+            "abbr_en_alt": "DTP-HepB-Hib-1", 
             "slug": "dtp-hepbhib-1"
         }
     }, 
@@ -152,6 +164,7 @@
             "name": null, 
             "abbr_en": "DTP-HepB+Hib-2", 
             "abbr_fr": "DTC-HepB-Hib-2", 
+            "abbr_en_alt": null, 
             "slug": "dtp-hepbhib-2"
         }
     }, 
@@ -164,6 +177,7 @@
             "name": null, 
             "abbr_en": "DTP-Hib-1 (lph)", 
             "abbr_fr": "DTC-Hib-1 (lyophilise)", 
+            "abbr_en_alt": null, 
             "slug": "dtp-hib-1-lph"
         }
     }, 
@@ -176,6 +190,7 @@
             "name": null, 
             "abbr_en": "DTP-Hib-1 (lqd)", 
             "abbr_fr": "DTC-Hib-1 (liquide)", 
+            "abbr_en_alt": null, 
             "slug": "dtp-hib-1-lqd"
         }
     }, 
@@ -188,6 +203,7 @@
             "name": null, 
             "abbr_en": "DTP-Hib-10", 
             "abbr_fr": "DTC-Hib-10", 
+            "abbr_en_alt": null, 
             "slug": "dtp-hib-10"
         }
     }, 
@@ -200,6 +216,7 @@
             "name": null, 
             "abbr_en": "HepB-1", 
             "abbr_fr": "HepB-1", 
+            "abbr_en_alt": null, 
             "slug": "hepb-1"
         }
     }, 
@@ -212,6 +229,7 @@
             "name": null, 
             "abbr_en": "HepB-2", 
             "abbr_fr": "HepB-2", 
+            "abbr_en_alt": null, 
             "slug": "hepb-2"
         }
     }, 
@@ -224,6 +242,7 @@
             "name": null, 
             "abbr_en": "HepB-6", 
             "abbr_fr": "HepB-6", 
+            "abbr_en_alt": null, 
             "slug": "hepb-6"
         }
     }, 
@@ -236,6 +255,7 @@
             "name": null, 
             "abbr_en": "HepB-10", 
             "abbr_fr": "HepB-10", 
+            "abbr_en_alt": null, 
             "slug": "hepb-10"
         }
     }, 
@@ -248,6 +268,7 @@
             "name": null, 
             "abbr_en": "HepB-20", 
             "abbr_fr": "HepB-20", 
+            "abbr_en_alt": null, 
             "slug": "hepb-20"
         }
     }, 
@@ -260,6 +281,7 @@
             "name": null, 
             "abbr_en": "HepB-1 Adult", 
             "abbr_fr": "HepB-1 Adulte", 
+            "abbr_en_alt": null, 
             "slug": "hepb-1-adult"
         }
     }, 
@@ -272,6 +294,7 @@
             "name": null, 
             "abbr_en": "HepB-10 Adult", 
             "abbr_fr": "HepB-10 Adulte", 
+            "abbr_en_alt": null, 
             "slug": "hepb-10-adult"
         }
     }, 
@@ -284,6 +307,7 @@
             "name": null, 
             "abbr_en": "Hib-1", 
             "abbr_fr": "Hib-1", 
+            "abbr_en_alt": null, 
             "slug": "hib-1"
         }
     }, 
@@ -296,6 +320,7 @@
             "name": null, 
             "abbr_en": "Hib-1 (lph)", 
             "abbr_fr": "Hib-1 (lph)", 
+            "abbr_en_alt": null, 
             "slug": "hib-1-lph"
         }
     }, 
@@ -308,6 +333,7 @@
             "name": null, 
             "abbr_en": "Hib-1 (lqd)", 
             "abbr_fr": "Hib-1 (lqd)", 
+            "abbr_en_alt": null, 
             "slug": "hib-1-lqd"
         }
     }, 
@@ -320,6 +346,7 @@
             "name": null, 
             "abbr_en": "Hib-10", 
             "abbr_fr": "Hib-10", 
+            "abbr_en_alt": null, 
             "slug": "hib-10"
         }
     }, 
@@ -332,6 +359,7 @@
             "name": null, 
             "abbr_en": "Influenza-1", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "influenza-1"
         }
     }, 
@@ -344,6 +372,7 @@
             "name": null, 
             "abbr_en": "Influenza-10", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "influenza-10"
         }
     }, 
@@ -356,6 +385,7 @@
             "name": null, 
             "abbr_en": "IPV-1", 
             "abbr_fr": "VPI-1", 
+            "abbr_en_alt": null, 
             "slug": "ipv-1"
         }
     }, 
@@ -368,6 +398,7 @@
             "name": null, 
             "abbr_en": "IPV-10", 
             "abbr_fr": "VPI-10", 
+            "abbr_en_alt": null, 
             "slug": "ipv-10"
         }
     }, 
@@ -380,6 +411,7 @@
             "name": null, 
             "abbr_en": "Mea-1", 
             "abbr_fr": "VAR-1", 
+            "abbr_en_alt": null, 
             "slug": "mea-1"
         }
     }, 
@@ -392,6 +424,7 @@
             "name": null, 
             "abbr_en": "Mea-10", 
             "abbr_fr": "VAR-10", 
+            "abbr_en_alt": null, 
             "slug": "mea-10"
         }
     }, 
@@ -404,6 +437,7 @@
             "name": null, 
             "abbr_en": "Mea-20", 
             "abbr_fr": "VAR-20", 
+            "abbr_en_alt": null, 
             "slug": "mea-20"
         }
     }, 
@@ -416,6 +450,7 @@
             "name": null, 
             "abbr_en": "Measles", 
             "abbr_fr": "VAR", 
+            "abbr_en_alt": null, 
             "slug": "measles"
         }
     }, 
@@ -428,6 +463,7 @@
             "name": null, 
             "abbr_en": "Mening A/C-10", 
             "abbr_fr": "VAM AC-10", 
+            "abbr_en_alt": null, 
             "slug": "mening-ac-10"
         }
     }, 
@@ -440,6 +476,7 @@
             "name": null, 
             "abbr_en": "Mening A/C-50", 
             "abbr_fr": "VAM AC-50", 
+            "abbr_en_alt": null, 
             "slug": "mening-ac-50"
         }
     }, 
@@ -452,6 +489,7 @@
             "name": null, 
             "abbr_en": "Mening AC&W-50", 
             "abbr_fr": "VAM W50", 
+            "abbr_en_alt": null, 
             "slug": "mening-acw-50"
         }
     }, 
@@ -464,6 +502,7 @@
             "name": null, 
             "abbr_en": "Mening ACYW135-1", 
             "abbr_fr": "VAM W135-1", 
+            "abbr_en_alt": null, 
             "slug": "mening-acyw135-1"
         }
     }, 
@@ -476,6 +515,7 @@
             "name": null, 
             "abbr_en": "Mening ACYW135-10", 
             "abbr_fr": "VAM W135-10", 
+            "abbr_en_alt": null, 
             "slug": "mening-acyw135-10"
         }
     }, 
@@ -488,6 +528,7 @@
             "name": null, 
             "abbr_en": "MMR-1", 
             "abbr_fr": "ROR-1", 
+            "abbr_en_alt": null, 
             "slug": "mmr-1"
         }
     }, 
@@ -500,6 +541,7 @@
             "name": null, 
             "abbr_en": "MMR-5", 
             "abbr_fr": "ROR-5", 
+            "abbr_en_alt": null, 
             "slug": "mmr-5"
         }
     }, 
@@ -512,6 +554,7 @@
             "name": null, 
             "abbr_en": "MMR-10", 
             "abbr_fr": "ROR-10", 
+            "abbr_en_alt": null, 
             "slug": "mmr-10"
         }
     }, 
@@ -524,6 +567,7 @@
             "name": null, 
             "abbr_en": "MR-2", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "mr-2"
         }
     }, 
@@ -536,6 +580,7 @@
             "name": null, 
             "abbr_en": "MR-10", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "mr-10"
         }
     }, 
@@ -548,6 +593,7 @@
             "name": null, 
             "abbr_en": "Mumps", 
             "abbr_fr": "VAO", 
+            "abbr_en_alt": null, 
             "slug": "mumps"
         }
     }, 
@@ -560,6 +606,7 @@
             "name": null, 
             "abbr_en": "MOPV1-20", 
             "abbr_fr": "mVPO1-20", 
+            "abbr_en_alt": null, 
             "slug": "mopv1-20"
         }
     }, 
@@ -572,6 +619,7 @@
             "name": null, 
             "abbr_en": "MOPV3-20", 
             "abbr_fr": "mVPO3-20", 
+            "abbr_en_alt": null, 
             "slug": "mopv3-20"
         }
     }, 
@@ -584,6 +632,7 @@
             "name": null, 
             "abbr_en": "OPV Bulk", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "opv-bulk"
         }
     }, 
@@ -596,6 +645,7 @@
             "name": null, 
             "abbr_en": "OPV-50", 
             "abbr_fr": "VPO-50", 
+            "abbr_en_alt": null, 
             "slug": "opv-50"
         }
     }, 
@@ -608,6 +658,7 @@
             "name": null, 
             "abbr_en": "TOPV-20", 
             "abbr_fr": "tVPO-20", 
+            "abbr_en_alt": null, 
             "slug": "topv-20"
         }
     }, 
@@ -620,6 +671,7 @@
             "name": null, 
             "abbr_en": "TOPV-10", 
             "abbr_fr": "tVPO-10", 
+            "abbr_en_alt": null, 
             "slug": "topv-10"
         }
     }, 
@@ -632,6 +684,7 @@
             "name": null, 
             "abbr_en": "BOPV-20", 
             "abbr_fr": "bVPO-20", 
+            "abbr_en_alt": null, 
             "slug": "bopv-20"
         }
     }, 
@@ -644,6 +697,7 @@
             "name": null, 
             "abbr_en": "Anti-diphtheria serum", 
             "abbr_fr": "Serum anti-diphterie", 
+            "abbr_en_alt": null, 
             "slug": "anti-diphtheria-serum"
         }
     }, 
@@ -656,6 +710,7 @@
             "name": null, 
             "abbr_en": "Anti-scorpion venom", 
             "abbr_fr": "Serum anti-scorpion", 
+            "abbr_en_alt": null, 
             "slug": "anti-scorpion-venom"
         }
     }, 
@@ -668,6 +723,7 @@
             "name": null, 
             "abbr_en": "Anti-tetanus serum", 
             "abbr_fr": "Serum anti-tetanique", 
+            "abbr_en_alt": null, 
             "slug": "anti-tetanus-serum"
         }
     }, 
@@ -680,6 +736,7 @@
             "name": null, 
             "abbr_en": "Foetal Bovine Serum", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "foetal-bovine-serum"
         }
     }, 
@@ -692,6 +749,7 @@
             "name": null, 
             "abbr_en": "Snake antivenom", 
             "abbr_fr": "Antivenin", 
+            "abbr_en_alt": null, 
             "slug": "snake-antivenom"
         }
     }, 
@@ -704,6 +762,7 @@
             "name": null, 
             "abbr_en": "Pneumococcal Serum", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "pneumococcal-serum"
         }
     }, 
@@ -716,6 +775,7 @@
             "name": null, 
             "abbr_en": "Tuberculin/PPD", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "tuberculinppd"
         }
     }, 
@@ -728,6 +788,7 @@
             "name": null, 
             "abbr_en": "PCV1-7", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "pcv1-7"
         }
     }, 
@@ -740,6 +801,7 @@
             "name": null, 
             "abbr_en": "Rabies", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "rabies"
         }
     }, 
@@ -752,6 +814,7 @@
             "name": null, 
             "abbr_en": "Rabies HDC-1", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "rabies-hdc-1"
         }
     }, 
@@ -764,6 +827,7 @@
             "name": null, 
             "abbr_en": "Rabies HRI-1", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "rabies-hri-1"
         }
     }, 
@@ -776,6 +840,7 @@
             "name": null, 
             "abbr_en": "Rabies-1", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "rabies-1"
         }
     }, 
@@ -788,6 +853,7 @@
             "name": null, 
             "abbr_en": "Rabies-2", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "rabies-2"
         }
     }, 
@@ -800,6 +866,7 @@
             "name": null, 
             "abbr_en": "Rabies-5", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "rabies-5"
         }
     }, 
@@ -812,6 +879,7 @@
             "name": null, 
             "abbr_en": "Rubella-1", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "rubella-1"
         }
     }, 
@@ -824,6 +892,7 @@
             "name": null, 
             "abbr_en": "Rubella-10", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "rubella-10"
         }
     }, 
@@ -836,6 +905,7 @@
             "name": null, 
             "abbr_en": "Td-10", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "td-10"
         }
     }, 
@@ -848,6 +918,7 @@
             "name": null, 
             "abbr_en": "Td-20", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "td-20"
         }
     }, 
@@ -860,6 +931,7 @@
             "name": null, 
             "abbr_en": "TT uniject", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "tt-uniject"
         }
     }, 
@@ -872,6 +944,7 @@
             "name": null, 
             "abbr_en": "TT-10", 
             "abbr_fr": "VAT", 
+            "abbr_en_alt": null, 
             "slug": "tt-10"
         }
     }, 
@@ -884,6 +957,7 @@
             "name": null, 
             "abbr_en": "TT-20", 
             "abbr_fr": "VAT", 
+            "abbr_en_alt": null, 
             "slug": "tt-20"
         }
     }, 
@@ -896,6 +970,7 @@
             "name": null, 
             "abbr_en": "Typhoid", 
             "abbr_fr": "", 
+            "abbr_en_alt": null, 
             "slug": "typhoid"
         }
     }, 
@@ -908,6 +983,7 @@
             "name": null, 
             "abbr_en": "YF-1", 
             "abbr_fr": "VAA-1", 
+            "abbr_en_alt": null, 
             "slug": "yf-1"
         }
     }, 
@@ -920,6 +996,7 @@
             "name": null, 
             "abbr_en": "YF-5", 
             "abbr_fr": "VAA-5", 
+            "abbr_en_alt": null, 
             "slug": "yf-5"
         }
     }, 
@@ -932,6 +1009,7 @@
             "name": null, 
             "abbr_en": "YF-10", 
             "abbr_fr": "VAA-10", 
+            "abbr_en_alt": null, 
             "slug": "yf-10"
         }
     }, 
@@ -944,6 +1022,7 @@
             "name": null, 
             "abbr_en": "YF-20", 
             "abbr_fr": "VAA-20", 
+            "abbr_en_alt": null, 
             "slug": "yf-20"
         }
     }, 
@@ -956,6 +1035,7 @@
             "name": null, 
             "abbr_en": "YF-50", 
             "abbr_fr": "VAA-50", 
+            "abbr_en_alt": null, 
             "slug": "yf-50"
         }
     }

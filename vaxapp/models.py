@@ -55,11 +55,17 @@ class Vaccine(models.Model):
     group = models.ForeignKey(VaccineGroup)
 
     abbr_en = models.CharField(max_length=30, blank=True, null=True)
+    abbr_en_alt = models.CharField(max_length=30, blank=True, null=True)
     abbr_fr = models.CharField(max_length=30, blank=True, null=True)
     abbr_fr_alt = models.CharField(max_length=30, blank=True, null=True)
 
     def __unicode__(self):
-        return "%s (%s)" % (self.slug, ",".join([self.abbr_en, self.abbr_fr, self.abbr_fr_alt]))
+        alternates = [a for a in [self.abbr_en, self.abbr_en_alt, self.abbr_fr,\
+            self.abbr_fr_alt] if a not in ['', None]]
+        if len(alternates) > 0:
+            return "%s (%s)" % (self.slug, ",".join(alternates))
+        else:
+            return self.slug
 
     @property
     def abbr(self):
@@ -71,19 +77,20 @@ class Vaccine(models.Model):
             match = None
             for obj in klass.objects.all():
                 fields = []
-                fields.append(obj.slug.lower())
-                fields.append(obj.abbr_en.lower())
-                fields.append(obj.abbr_fr.lower())
-                fields.append(obj.abbr_fr_alt.lower())
-                if term.lower() in fields:
+                fields.append(obj.slug)
+                fields.append(obj.abbr_en)
+                fields.append(obj.abbr_en_alt)
+                fields.append(obj.abbr_fr)
+                fields.append(obj.abbr_fr_alt)
+                if term.lower() in [f.lower() for f in fields if f is not None]:
                     match = obj
                     break
             if match is None:
                 for obj in klass.objects.all():
                     fields = []
-                    fields.append(obj.group.abbr_en.lower())
-                    fields.append(obj.group.abbr_fr.lower())
-                    if term.lower() in fields:
+                    fields.append(obj.group.abbr_en)
+                    fields.append(obj.group.abbr_fr)
+                    if term.lower() in [f.lower() for f in fields if f is not None]:
                         return 'matched a group'
             return match
         except Exception, e:
