@@ -172,8 +172,10 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
 
             def _est_daily_consumption_for_year(year):
                 ''' Return daily consumption based on estimated annual demand '''
-                forecast = forecast_for_year(country_pk, vaccine_abbr, year)[0]
-                return int(float(forecast['amount'])/float(365.0))
+                #forecast = forecast_for_year(country_pk, vaccine_abbr, year)[0]
+                COs = type_for_year(country_pk, vaccine_abbr, year, 'CO')
+                sum_amount = sum([c['amount'] for c in COs])
+                return int(float(sum_amount)/float(365.0))
 
             # timedelta representing a change of one day
             one_day = datetime.timedelta(days=1)

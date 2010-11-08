@@ -93,6 +93,9 @@ def all_deliveries_for_type_asc(country, supply, type):
 def forecast_for_year(country, supply, year):
     return decode_results(_type_for_year(country, year, supply, 'CF'))
 
+def type_for_year(country, supply, type, year):
+    return decode_results(_type_for_year(country, year, supply, type))
+
 cached_year_results = {}
 def _type_for_year(country, year, supply, type):
     # TODO cache results better!
