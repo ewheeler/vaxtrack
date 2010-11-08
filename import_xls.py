@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 coding=utf-8
+import re
 import sys
+import time
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -100,3 +102,125 @@ def import_who(file=None):
                 titles.append(values)
         print len(titles)
         print len(stocks)
+
+
+def only_digits(raw_str):
+    cleaned = re.sub("[^0-9]", "", raw_str) 
+    if cleaned != "":
+        return cleaned
+    else:
+        return None
+
+def first_monday_of_week(year, week):
+    ''' Returns the date of the first monday of a given
+        week number and year.'''
+    d = date(int(year), 1, 4)  # The Jan 4th must be in week 1  according to ISO
+    return d + timedelta(weeks=(int(week)-1), days=-d.weekday())
+
+def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
+    book = xlrd.open_workbook(file)
+
+    if book.datemode not in (0,1):
+        return "oops. unknown datemode!"
+
+    def xldate_to_datetime(xldate):
+        return datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
+
+    def xldate_to_date(xldate):
+        return xldate_to_datetime(xldate).date()
+
+    sheets = book.sheet_names()
+    sheet = None
+    if 'Sheet1' in sheets:
+        sheet = book.sheet_by_name('Sheet1')
+
+    if sheet is None:
+        return "oops. expecting sheet named 'Sheet1'"
+
+    country_names = Country.objects.values_list('printable_name', flat=True)
+    column_names = sheet.row_values(0)
+
+    for r in range(int(sheet.nrows))[1:]:
+        rd = dict(zip(column_names, sheet.row_values(r)))
+        try:
+            # TODO better country lookup
+            country = Country.objects.get(printable_name=rd['Country'])
+        except Exception, e:
+            continue
+
+        senegal = Country.objects.get(iso2_code='SN')
+        niger = Country.objects.get(iso2_code='NE')
+
+        if country not in [senegal, niger]:
+            continue
+
+        vaccine = Vaccine.lookup_slug(rd['Product'])
+        if vaccine is None:
+            print "oops. could not find vaccine '%s'" % (rd['Product'])
+            continue
+
+        vax_slug = vaccine.slug
+        allocation_type = None
+        amount = int(rd['Total Doses']) # or rd['Total Vials'] ???
+
+        forecast_doses = int(rd['Doses- Forecast ']) # or rd['Vials - Forecast']
+        po_doses = int(rd['Doses- On PO']) # or rd['Vials- on PO']
+
+        year = int(rd['YYYY'])
+        year_month = rd['YYYY-MM']
+        year_week = rd['YYYY-WW']
+        input_date = xldate_to_date(rd['Input Date'])
+        approx_date = None
+
+        file_type = rd['File Type']
+        if file_type == 'Weekly':
+            yr, week = year_week.split('-')
+            approx_date = first_monday_of_week(yr, week)
+
+        if file_type == 'Monthly':
+            yr, month = year_month.split('-')
+            approx_date = date(int(yr), int(month), 15)
+
+        if approx_date is not None:
+            sdb = boto.connect_sdb()
+            domain = sdb.create_domain('countrystockdata')
+
+            if forecast_doses > 0.0 and po_doses == 0.0:
+                if approx_date <= date.today():
+                    # original CO forecast (CO)
+                    allocation_type = 'CO'
+                else:
+                    # future delivery on forecast (FF)
+                    allocation_type = 'FF'
+
+            if forecast_doses == 0.0 and po_doses > 0.0:
+                if approx_date <= date.today():
+                    # unicef deliveries (UN)
+                    allocation_type = 'UN'
+                else:
+                    # future delivery on PO (FP)
+                    allocation_type = 'FF'
+
+            # TODO what about
+            # forecast for year (CF) ???
+
+            try:
+                item_name = hashlib.md5()
+                item_name.update(str(country.iso2_code))
+                item_name.update(str(vax_slug))
+                item_name.update(allocation_type)
+                item_name.update(str(approx_date))
+                item_name.update(str(amount))
+
+                item = domain.new_item(item_name.hexdigest())
+                item.add_value("country", str(country.iso2_code))
+                item.add_value("supply", str(vax_slug))
+                item.add_value("type", allocation_type)
+                item.add_value("date", str(approx_date))
+                item.add_value("year", str(year))
+                item.add_value("amount", str(amount))
+                item.save()
+                print item
+            except Exception, e:
+                print 'error creating stock level'
+                print e
