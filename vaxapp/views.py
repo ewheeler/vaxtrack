@@ -34,9 +34,9 @@ def index_dev(req, country_pk=None):
         countrystocks = CountryStock.objects.filter(country=country_pk)
     else:
         countrystocks = False
-    countries = list(set([c.country for c in CountryStock.objects.all()]))
+    countries = list(set([c.country for c in CountryStock.objects.all().exclude(country__iso2_code='TD').exclude(country__iso2_code='ML')]))
     # TODO preserve order? 
-    vaccines = list(set([v.vaccine for v in CountryStock.objects.all()]))
+    vaccines = list(set([v.vaccine for v in CountryStock.objects.all().exclude(vaccine__abbr_en='BCG')]))
     return render_to_response("dev.html",\
         {"countrystocks": countrystocks,\
             "countries": countries,\
