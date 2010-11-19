@@ -204,6 +204,8 @@ def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
             # TODO what about
             # forecast for year (CF) ???
 
+            # TODO save row number
+
             try:
                 item_name = hashlib.md5()
                 item_name.update(str(country.iso2_code))
