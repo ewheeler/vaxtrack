@@ -180,9 +180,14 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
                 for f in forecasts]
 
             # make a list of corresponding buffer levels for every reported stock level
-            # TODO can this be done without plotting for each stock level?
-            three_month_buffers = [three_by_year[d.year] for d in dates]
-            nine_month_buffers = [nine_by_year[d.year] for d in dates]
+            first_and_last_days = []
+            for y in sorted(three_by_year.keys()):
+                first_and_last_days.append(datetime.date(y, 1, 1))
+                first_and_last_days.append(datetime.date(y, 12, 31))
+
+            three_month_buffers = [three_by_year[d.year] for d in first_and_last_days]
+            nine_month_buffers = [nine_by_year[d.year] for d in first_and_last_days]
+
 
     except Exception,e:
         print 'ERROR DATA'
@@ -261,9 +266,9 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
 
         if display_buffers:
             # plot 3 and 9 month buffer levels as red lines
-            ax.plot_date(dates, three_month_buffers, '-', drawstyle='steps',\
+            ax.plot_date(first_and_last_days, three_month_buffers, '-', drawstyle='steps',\
                 color='red', label='3 month buffer')
-            ax.plot_date(dates, nine_month_buffers, '-', drawstyle='steps',\
+            ax.plot_date(first_and_last_days, nine_month_buffers, '-', drawstyle='steps',\
                 color='red', label='9 month buffer')
 
         if display_forecast_projection:
