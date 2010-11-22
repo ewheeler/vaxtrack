@@ -110,6 +110,10 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
+def update_dev():
+    for iso in ['SN', 'NE']:
+        generate_six_charts_country_sdb(iso, 'en')
+
 def generate_all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, options="BFPCU"):
     ''' Calls all_charts_country_sdb with all permutations of `options`
         string where each character represents one option. '''
