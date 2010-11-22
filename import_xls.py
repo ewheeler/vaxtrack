@@ -270,12 +270,11 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
         vax_slug = vaccine.slug
         allocation_type = 'CF'
 
-        amount = int(rd['Doses- CO Forecast '])
+        amount = int(rd['Doses - CO Forecast'])
 
         year = int(rd['YYYY'])
         year_month = rd['YYYY-MM']
         year_week = rd['YYYY-WW']
-        input_date = xldate_to_date(rd['Input Date'])
         approx_date = None
 
         file_type = rd['File Type']
