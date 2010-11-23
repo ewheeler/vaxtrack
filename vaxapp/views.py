@@ -194,7 +194,7 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
             first_and_last_days = []
             for y in sorted(three_by_year.keys()):
                 first_and_last_days.append(datetime.date(y, 1, 1))
-                first_and_last_days.append(datetime.date(y, 12, 31))
+                #first_and_last_days.append(datetime.date(y, 12, 31))
 
             three_month_buffers = [three_by_year[d.year] for d in first_and_last_days]
             nine_month_buffers = [nine_by_year[d.year] for d in first_and_last_days]
