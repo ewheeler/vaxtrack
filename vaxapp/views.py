@@ -132,7 +132,6 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
     save_chart = True
 
     # default to false if options are not specified
-    # TODO handle gracefully if all are false
     display_buffers = kwargs.get('B', False)
     display_forecast_projection = kwargs.get('F', False)
     display_purchased_projection = kwargs.get('P', False)
@@ -140,9 +139,11 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
     display_adjusted_theoretical_forecast = kwargs.get('U', False)
 
     def values_list(dict_list, key):
+        # kindof like django querysets's flat values list
         return [d[key] for d in dict_list]
 
     def filter(dict_list, attr, value):
+        # kindof like django queryset's filter
         matches = []
         for dict in dict_list:
             if attr in dict:
