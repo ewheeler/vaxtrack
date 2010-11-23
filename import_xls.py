@@ -125,7 +125,8 @@ def first_monday_of_week(year, week):
     d = date(int(year), 1, 4)  # The Jan 4th must be in week 1  according to ISO
     return d + timedelta(weeks=(int(week)-1), days=-d.weekday())
 
-def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
+def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Office Forecasts 2008.xls"):
+    target_sheet = 'allocations'
     book = xlrd.open_workbook(file)
 
     if book.datemode not in (0,1):
@@ -139,11 +140,11 @@ def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
 
     sheets = book.sheet_names()
     sheet = None
-    if 'Sheet1' in sheets:
-        sheet = book.sheet_by_name('Sheet1')
+    if target_sheet in sheets:
+        sheet = book.sheet_by_name(target_sheet)
 
     if sheet is None:
-        return "oops. expecting sheet named 'Sheet1'"
+        return "oops. expecting sheet named '%s'" % (target_sheet)
 
     country_names = Country.objects.values_list('printable_name', flat=True)
     column_names = sheet.row_values(0)
@@ -151,8 +152,7 @@ def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
     for r in range(int(sheet.nrows))[1:]:
         rd = dict(zip(column_names, sheet.row_values(r)))
         try:
-            # TODO better country lookup
-            country = Country.objects.get(printable_name=rd['Country'])
+            country = Country.lookup(rd['Country'])
         except Exception, e:
             continue
 
@@ -169,10 +169,21 @@ def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
 
         vax_slug = vaccine.slug
         allocation_type = None
-        amount = int(rd['Total Doses']) # or rd['Total Vials'] ???
 
-        forecast_doses = int(rd['Doses- Forecast ']) # or rd['Vials - Forecast']
-        po_doses = int(rd['Doses- On PO']) # or rd['Vials- on PO']
+        try:
+            forecast_doses = int(rd['Doses- Forecast '])
+        except ValueError:
+            forecast_doses = None
+
+        try:
+            po_doses = int(rd['Doses- On PO'])
+        except ValueError:
+            po_doses = None
+
+        try:
+            co_forecast = int(rd['Doses- CO Forecast '])
+        except ValueError:
+            co_forecast = None
 
         year = int(rd['YYYY'])
         year_month = rd['YYYY-MM']
@@ -193,7 +204,8 @@ def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
             sdb = boto.connect_sdb()
             domain = sdb.create_domain('countrystockdata')
 
-            if forecast_doses > 0.0 and po_doses == 0.0:
+            if forecast_doses > 0:
+                amount = forecast_doses
                 if approx_date <= date.today():
                     # original CO forecast (CO)
                     allocation_type = 'CO'
@@ -201,7 +213,8 @@ def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
                     # future delivery on forecast (FF)
                     allocation_type = 'FF'
 
-            if forecast_doses == 0.0 and po_doses > 0.0:
+            if po_doses > 0:
+                amount = po_doses
                 if approx_date <= date.today():
                     # unicef deliveries (UN)
                     allocation_type = 'UN'
@@ -209,8 +222,16 @@ def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
                     # future delivery on PO (FP)
                     allocation_type = 'FF'
 
-            # TODO save row number
+            if co_forecast is not None:
+                amount = co_forecast
+                allocation_type = 'CF'
 
+            if allocation_type is None:
+                print 'unknown allocation_type!'
+                print rd
+                continue
+
+            # TODO save row number
             try:
                 item_name = hashlib.md5()
                 item_name.update(str(country.iso2_code))
@@ -231,6 +252,7 @@ def import_allocation_table(file="2010_01 UNICEF SD - All Table Vaccines.xls"):
             except Exception, e:
                 print 'error creating stock level'
                 print e
+                import ipdb;ipdb.set_trace()
 
 
 def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xls"):
