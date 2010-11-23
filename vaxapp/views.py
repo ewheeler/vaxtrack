@@ -177,12 +177,18 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
             def nine_month_buffer(demand_est):
                 return int(float(demand_est) * (float(9.0)/float(12.0)))
 
-            # create dicts mapping year to buffer levels
-            # (according to CO forecast annual demand estimate)
-            three = [three_by_year.update({f['year']:three_month_buffer(f['amount'])})\
-                for f in forecasts]
-            nine = [nine_by_year.update({f['year']:nine_month_buffer(f['amount'])})\
-                for f in forecasts]
+            # get list of years we are dealing with
+            years = values_list(forecasts, 'year')
+            for year in years:
+                annual = []
+                # get list of forecasts for each year
+                fy = filter(forecasts, 'year', year)
+                for f in fy:
+                    # add forecasts for this year to list
+                    annual.append(f['amount'])
+                # create a single key/value pair for each year/sum forecast
+                three_by_year.update({year:three_month_buffer(sum(annual))})
+                nine_by_year.update({year:nine_month_buffer(sum(annual))})
 
             # make a list of corresponding buffer levels for every reported stock level
             first_and_last_days = []
