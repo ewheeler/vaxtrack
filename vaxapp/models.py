@@ -40,6 +40,13 @@ class Country(models.Model):
         ''' Returns a list of 2-tuples for choices field. '''
         return [(c.iso3_code, c.iso3_code + " (" + c.name + ")") for c in klass.objects.all()]
 
+    @classmethod
+    def dump_dict_for_bs(klass):
+        d = {}
+        for c in klass.objects.all():
+            d.update({c.name:c.iso3_code})
+        return d
+
 
 class VaccineGroup(models.Model):
     abbr_en = models.CharField(max_length=160, blank=True, null=True)
@@ -97,6 +104,24 @@ class Vaccine(models.Model):
             print 'BANG'
             print e
 
+    @classmethod
+    def dump_dict_for_bs(klass):
+        d = {}
+        for obj in klass.objects.all():
+            val = obj.slug
+            if val not in ['', ' ', None]:
+                fields = []
+                fields.append(obj.slug)
+                fields.append(obj.abbr_en)
+                fields.append(obj.abbr_en_alt)
+                fields.append(obj.abbr_fr)
+                fields.append(obj.abbr_fr_alt)
+                clean_fields = []
+                for f in fields:
+                    if f not in ['', ' ', None]:
+                        d.update({f.lower(): val})
+        print len(d.keys())
+        return d
 
 class CountryStock(models.Model):
     vaccine = models.ForeignKey(Vaccine)
