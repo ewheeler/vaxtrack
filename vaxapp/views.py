@@ -124,7 +124,8 @@ def generate_all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=Non
         print all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=vaccine_abbr, lang=lang, **params)
 
 def generate_six_charts_country_sdb(country_pk=None, lang=None):
-    for v in ['opv-50', 'measles', 'tt-10', 'dtp-hepbhib-1', 'yf-1', 'bcg-10']:
+    #for v in ['opv-50', 'measles', 'tt-10', 'dtp-hepbhib-1', 'yf-1', 'bcg-10']:
+    for v in ['tt-10', 'dtp-hepbhib-1']:
         print generate_all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=v, lang=lang)
 
 def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwargs):
@@ -167,6 +168,18 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
 
         forecasts = all_forecasts_asc(country_pk, vaccine_abbr)
 
+        annual_demand = {}
+        # get list of years we are dealing with
+        f_years = list(set(values_list(forecasts, 'year')))
+        for year in f_years:
+            annual = []
+            # get list of forecasts for each year
+            fy = filter(forecasts, 'year', year)
+            for f in fy:
+                # add forecasts for this year to list
+                annual.append(f['amount'])
+            annual_demand.update({year:sum(annual)})
+
         if display_buffers:
             three_by_year = dict()
             nine_by_year = dict()
@@ -177,24 +190,16 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
             def nine_month_buffer(demand_est):
                 return int(float(demand_est) * (float(9.0)/float(12.0)))
 
-            # get list of years we are dealing with
-            years = values_list(forecasts, 'year')
-            for year in years:
-                annual = []
-                # get list of forecasts for each year
-                fy = filter(forecasts, 'year', year)
-                for f in fy:
-                    # add forecasts for this year to list
-                    annual.append(f['amount'])
+            for year in f_years:
                 # create a single key/value pair for each year/sum forecast
-                three_by_year.update({year:three_month_buffer(sum(annual))})
-                nine_by_year.update({year:nine_month_buffer(sum(annual))})
+                three_by_year.update({year:three_month_buffer(annual_demand[year])})
+                nine_by_year.update({year:nine_month_buffer(annual_demand[year])})
 
             # make a list of corresponding buffer levels for every reported stock level
             first_and_last_days = []
             for y in sorted(three_by_year.keys()):
                 first_and_last_days.append(datetime.date(y, 1, 1))
-                #first_and_last_days.append(datetime.date(y, 12, 31))
+                first_and_last_days.append(datetime.date(y, 12, 31))
 
             three_month_buffers = [three_by_year[d.year] for d in first_and_last_days]
             nine_month_buffers = [nine_by_year[d.year] for d in first_and_last_days]
@@ -211,10 +216,8 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
 
             def _est_daily_consumption_for_year(year):
                 ''' Return daily consumption based on estimated annual demand '''
-                #forecast = forecast_for_year(country_pk, vaccine_abbr, year)[0]
-                COs = type_for_year(country_pk, vaccine_abbr, year, 'CO')
-                sum_amount = sum([c['amount'] for c in COs])
-                return int(float(sum_amount)/float(365.0))
+                forecast = annual_demand[year]
+                return int(float(forecast)/float(365.0))
 
             # timedelta representing a change of one day
             one_day = datetime.timedelta(days=1)
