@@ -27,6 +27,25 @@ class Country(models.Model):
         verbose_name_plural = "countries"
 
     @classmethod
+    def lookup(klass, term):
+        try:
+            match = None
+            for obj in klass.objects.all():
+                fields = []
+                fields.append(obj.name)
+                fields.append(obj.name_fr)
+                fields.append(obj.iso2_code)
+                fields.append(obj.iso3_code)
+                fields.append(obj.numerical_code)
+                if term.upper() in [f for f in fields if f is not None]:
+                    match = obj
+                    break
+            return match
+        except Exception, e:
+            print 'BANG'
+            print e
+
+    @classmethod
     def all_names(klass):
         ''' Returns a list of all Country names. '''
         return [c.name for c in klass.objects.all()]
