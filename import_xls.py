@@ -277,14 +277,8 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
         year_week = rd['YYYY-WW']
         approx_date = None
 
-        file_type = rd['File Type']
-        if file_type == 'Weekly':
-            yr, week = year_week.split('-')
-            approx_date = first_monday_of_week(yr, week)
-
-        if file_type == 'Monthly':
-            yr, month = year_month.split('-')
-            approx_date = date(int(yr), int(month), 15)
+        yr, month = year_month.split('-')
+        approx_date = date(int(yr), int(month), 15)
 
         if approx_date is not None:
             sdb = boto.connect_sdb()
