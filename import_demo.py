@@ -103,8 +103,13 @@ def import_demo(file=None):
                     if datestr != '':
                         month, day, year = datestr.split('/')
                         real_year = '20' + year
-                        return datetime.date(month=int(month),\
-                            day=int(day), year=int(real_year))
+                        try:
+                            return datetime(month=int(month),\
+                                day=int(day), year=int(real_year)).date()
+                        except Exception, e:
+                            print 'BANG format date'
+                            print e
+                            import ipdb;ipdb.set_trace()
                     else:
                         return None
                 else:
@@ -157,14 +162,14 @@ def import_demo(file=None):
 
                     try:
                         item_name = hashlib.md5()
-                        item_name.update(str(country.iso_code))
+                        item_name.update(str(country.iso2_code))
                         item_name.update(str('BCG'))
                         item_name.update(str(type))
                         item_name.update(str(date_obj))
                         item_name.update(str(clean_amount))
 
                         item = domain.new_item(item_name.hexdigest())
-                        item.add_value("country", str(country.iso_code))
+                        item.add_value("country", str(country.iso2_code))
                         item.add_value("supply", str('BCG'))
                         item.add_value("type", str(type))
                         item.add_value("date", str(date_obj))
