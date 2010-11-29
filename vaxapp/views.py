@@ -128,6 +128,11 @@ def generate_six_charts_country_sdb(country_pk=None, lang=None):
     for v in ['tt-10', 'dtp-hepbhib-1']:
         print generate_all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=v, lang=lang)
 
+def generate_demo_charts():
+    for country in ['ML', 'TD']:
+        for vax in ['BCG']:
+            print generate_all_charts_country_sdb(country_pk=country, vaccine_abbr=vax, lang='en')
+
 def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwargs):
     # string of options (as single characters) in alphabetical order
     # used later for filename
