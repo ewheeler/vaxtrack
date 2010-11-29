@@ -21,6 +21,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerEr
 from django.db.models import Sum
 from django.template import RequestContext
 from django.contrib.auth.decorators import permission_required
+from django.core import serializers
 
 from .models import *
 from . import forms
@@ -59,6 +60,13 @@ def index(req, country_pk=None):
             "vaccines": vaccines,\
             "tab": "dashboard"},\
             context_instance=RequestContext(req))
+
+def alerts(req, country_pk, vaccine_abbr):
+    if req.is_ajax():
+        countrystock = CountryStock.objects.filter(country=country_pk, vaccine__abbr_fr_alt=vaccine_abbr)
+        alerts = Alert.objects.filter(countrystock=countrystock)
+        data = serializers.serialize('json', alerts)
+        return HttpResponse(data, 'application/javascript')
 
 def register(req):
     if req.method == "POST":
