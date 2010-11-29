@@ -115,6 +115,28 @@ def import_demo(file=None):
                 else:
                     return None
 
+            def create_record(country, type, date_obj, clean_amount):
+                try:
+                    item_name = hashlib.md5()
+                    item_name.update(str(country.iso2_code))
+                    item_name.update(str('BCG'))
+                    item_name.update(str(type))
+                    item_name.update(str(date_obj))
+                    item_name.update(str(clean_amount))
+
+                    item = domain.new_item(item_name.hexdigest())
+                    item.add_value("country", str(country.iso2_code))
+                    item.add_value("supply", str('BCG'))
+                    item.add_value("type", str(type))
+                    item.add_value("date", str(date_obj))
+                    item.add_value("year", str(date_obj.year))
+                    item.add_value("amount", str(clean_amount))
+                    item.save()
+                    print item
+                except Exception, e:
+                    print 'error creating record'
+                    print e
+
             if has_datum(row, 'Country'):
                 country = Country.lookup(row['Country'])
 
@@ -133,53 +155,36 @@ def import_demo(file=None):
                             clean_amount = amt
                             if clean_amount is not None:
                                 type = "SL"
-                        else:
-                            continue
+                                create_record(country, type, date_obj, clean_amount)
 
                     if has_datum(row, 'BCG original country forecast'):
                         date_obj = format_date(row['Date'])
                         clean_amount = int(only_digits(row['BCG original country forecast']))
                         if clean_amount is not None:
                             type='CO'
+                            create_record(country, type, date_obj, clean_amount)
 
                     if has_datum(row, 'BCG Unicef deliveries'):
                         date_obj = format_date(row['Date'])
                         clean_amount = int(only_digits(row['BCG Unicef deliveries']))
                         if clean_amount is not None:
                             type='UN'
+                            create_record(country, type, date_obj, clean_amount)
 
                     if has_datum(row, 'BCG future delivery on PO'):
                         date_obj = format_date(row['Date'])
                         clean_amount = int(only_digits(row['BCG future delivery on PO']))
                         if clean_amount is not None:
                             type='FP'
+                            create_record(country, type, date_obj, clean_amount)
 
                     if has_datum(row, 'BCG future delivery on forecast'):
                         date_obj = format_date(row['Date'])
                         clean_amount = int(only_digits(row['BCG future delivery on forecast']))
                         if clean_amount is not None:
                             type='FF'
+                            create_record(country, type, date_obj, clean_amount)
 
-                    try:
-                        item_name = hashlib.md5()
-                        item_name.update(str(country.iso2_code))
-                        item_name.update(str('BCG'))
-                        item_name.update(str(type))
-                        item_name.update(str(date_obj))
-                        item_name.update(str(clean_amount))
-
-                        item = domain.new_item(item_name.hexdigest())
-                        item.add_value("country", str(country.iso2_code))
-                        item.add_value("supply", str('BCG'))
-                        item.add_value("type", str(type))
-                        item.add_value("date", str(date_obj))
-                        item.add_value("year", str(date_obj))
-                        item.add_value("amount", str(clean_amount))
-                        item.save()
-                        print item
-                    except Exception, e:
-                        print 'error creating record'
-                        print e
 
                 else:
                     print 'OOPS. MOVING ON'
