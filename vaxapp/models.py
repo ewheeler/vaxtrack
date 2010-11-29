@@ -155,6 +155,18 @@ class CountryStock(models.Model):
             ("can_upload", "Can upload"),
         )
 
+class Alert(models.Model):
+    ALERT_STATUS = (
+        ('U', 'urgent'),
+        ('R', 'resolved'),
+        ('W', 'warning'),
+    )
+    countrystock = models.ForeignKey(CountryStock)
+    text = models.CharField(max_length=160, blank=True, null=True)
+    status = models.CharField(max_length=2, default='U', choices=ALERT_STATUS, blank=True, null=True)
+
+    def __unicode__(self):
+        return "%s: %s - %s" % (self.countrystock.country.iso2_code, self.countrystock.vaccine, self.text)
 
 class UserProfile(models.Model):
     user = models.ForeignKey(User)
