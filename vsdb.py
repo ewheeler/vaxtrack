@@ -110,8 +110,8 @@ def _type_for_year(country, year, supply, type):
         result = cached_year_results[hashed]
     else:
         sdb = boto.connect_sdb()
-        cs = sdb.get_domain('countrystockdata')
-        query = "SELECT * FROM `countrystockdata` WHERE `country`='%s' AND `year`='%s' AND `supply`='%s' AND `type`='%s'" % (country, year, supply, type)
+        cs = sdb.get_domain('demodata')
+        query = "SELECT * FROM `demodata` WHERE `country`='%s' AND `year`='%s' AND `supply`='%s' AND `type`='%s'" % (country, year, supply, type)
         result = cs.select(query)
         cached_year_results.update({hashed:result})
     return result
@@ -129,8 +129,8 @@ def _get_all_type(country, supply, type):
         result = cached_results[hashed]
     else:
         sdb = boto.connect_sdb()
-        cs = sdb.get_domain('countrystockdata')
-        query = "SELECT * FROM `countrystockdata` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (country, supply, type)
+        cs = sdb.get_domain('demodata')
+        query = "SELECT * FROM `demodata` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (country, supply, type)
         result = cs.select(query)
         cached_results.update({hashed:result})
     return result
