@@ -16,6 +16,7 @@ $(document).ready(function(){
     $("#vaccines :input").val(["BCG"]);
     $("#country").val("ML");
     get_chart();
+    get_alerts();
 
     $("#plot_options :input").click(function(){
         options = new Array();
@@ -37,14 +38,25 @@ $(document).ready(function(){
         country = "";
 	country = $(this).val();
         get_chart();
+	get_alerts();
     });
 
     function get_chart(){
-        chart_opts = options.sort().join("");
+	chart_opts = options.sort().join("");
         vaccine = vaccine.replace(/-/g, "_");
         chart_name = country + "/" + vaccine + "/" + chart_opts + ".png";
         $("#chart").attr('src', "/charts/" + chart_name);
         $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
+    };
+
+    function get_alerts(){
+	$.get("/alerts/" + country + "/" + vaccine, function (data){
+		var alerts;
+		alerts = jQuery.parseJSON(data);
+		for (a in alerts){
+			$("#alerts").append("<li class='" + alerts[a].fields.status + "'>" + alerts[a].fields.text + "</li>");
+		}
+	});
     };
 });
 </script>
@@ -87,6 +99,11 @@ $(document).ready(function(){
         </div>
     </div>
     {% endif %}
+    <div class="module expanded">
+        <h3>Information</h3>
+	<ul id='alerts'>
+	</ul>
+    </div>
 {% endblock %}
 
 {% block right %}
@@ -94,7 +111,6 @@ $(document).ready(function(){
         <h3>Chart</h3>
         <img id="chart" src="">
         <div class="toolbar">
-            <a class="maximize">Zoom</a>
         </div>
     </div>
 {% endblock %}
