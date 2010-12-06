@@ -51,6 +51,7 @@ $(document).ready(function(){
 
     function get_alerts(){
 	$.get("/alerts/" + country + "/" + vaccine, function (data){
+		$("#alerts li").remove();
 		var alerts;
 		alerts = jQuery.parseJSON(data);
 		for (a in alerts){
