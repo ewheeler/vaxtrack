@@ -151,3 +151,20 @@ div.module div.toolbar {
         div.module div.toolbar .add    { background-image: url("../icons/silk/add.png");       }
         div.module div.toolbar .help   { background-image: url("../icons/silk/help.png");      }
         div.module div.toolbar .search { background-image: url("../icons/silk/magnifier.png"); }
+
+        div.module ul#alerts li {
+		display: block;
+		padding-left: 2em;
+		padding-bottom: 1em;
+	}
+        div.module ul#alerts li.U {
+		background-image: url("../icons/silk/exclamation.png");
+		background-repeat: no-repeat;
+		background-position: -1 50%;
+	}
+
+        div.module ul#alerts li.W {
+		background-image: url("../icons/silk/information.png");
+		background-repeat: no-repeat;
+		background-position: -1 50%;
+	}
