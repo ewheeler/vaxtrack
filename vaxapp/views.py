@@ -358,6 +358,7 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
             print e
             import ipdb; ipdb.set_trace()
         try:
+            # TODO make these configurable? same with sdb domain?
             #s3_key = "%s-%s-%s-%s.png" % (lang, country_pk, vaccine_abbr, options_str)
             #s3_path = "%s/%s/%s/" % (lang, country_pk, vaccine_abbr)
             #upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
