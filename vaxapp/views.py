@@ -147,7 +147,8 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
     options_str = ''.join(sorted(kwargs.keys()))
 
     # configuration options
-    save_chart = True
+    save_chart = False
+    analyze = True
 
     # default to false if options are not specified
     display_buffers = kwargs.get('B', False)
@@ -370,4 +371,30 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
             print e
             import ipdb; ipdb.set_trace()
 
+    if analyze:
+        last_s = {}
+        consumed_in_year = {}
+
+        for y in f_years:
+            consumed_in_year.update({y:0})
+            last_s.update({y:0})
+
+        for d in all_stocklevels_asc(country_pk, vaccine_abbr):
+            yr = int(d['year'])
+            s = int(d['amount'])
+            if not yr in f_years:
+                continue
+            if s <= last_s[yr]:
+                consumed_today = last_s[yr] - s
+                consumed_this_year = consumed_in_year[yr] + consumed_today
+                consumed_in_year.update({yr:consumed_this_year})
+
+            last_s[yr] = s
+
+        actual_cons_rate = {}
+        for y in f_years:
+            rate = float(consumed_in_year[y])/float(365)
+            actual_cons_rate.update({y:int(rate)})
+        print actual_cons_rate
+    import ipdb;ipdb.set_trace()
     return 'wat'
