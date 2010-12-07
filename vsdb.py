@@ -84,6 +84,9 @@ def multikeysort(items, columns):
 def all_stocklevels_desc(country, supply):
     return sort_results_desc(decode_results(_get_all_type(country, supply, 'SL')), 'date')
 
+def all_stocklevels_asc(country, supply):
+    return sort_results_asc(decode_results(_get_all_type(country, supply, 'SL')), 'date')
+
 def all_forecasts_asc(country, supply):
     return sort_results_asc(decode_results(_get_all_type(country, supply, 'CF')), 'year')
 
