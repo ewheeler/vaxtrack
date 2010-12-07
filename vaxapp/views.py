@@ -223,7 +223,7 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
         print e
         import ipdb; ipdb.set_trace()
 
-    def _project_future_stock_levels(delivery_type, begin_date, begin_level, end_date=None):
+    def _calc_stock_levels(delivery_type, begin_date, begin_level, end_date=None):
         try:
             filtered_deliveries = all_deliveries_for_type_asc(country_pk, vaccine_abbr, delivery_type)
 
@@ -299,14 +299,14 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
                 color='red', label='9 month buffer')
 
         if display_forecast_projection:
-            projected_ff_dates, projected_ff_levels = _project_future_stock_levels(\
+            projected_ff_dates, projected_ff_levels = _calc_stock_levels(\
                 "FF", stocklevels[0]['date'], stocklevels[0]['amount'])
             ax.plot_date(projected_ff_dates, projected_ff_levels, '--',\
                 drawstyle='steps', color='purple',\
                 label='projected stock based on forecast')
 
         if display_purchased_projection:
-            projected_fp_dates, projected_fp_levels = _project_future_stock_levels(\
+            projected_fp_dates, projected_fp_levels = _calc_stock_levels(\
                 "FP", stocklevels[0]['date'], stocklevels[0]['amount'])
             ax.plot_date(projected_fp_dates, projected_fp_levels, '--',\
             drawstyle='steps', color='blue',\
@@ -314,7 +314,7 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
 
         if display_theoretical_forecast:
             # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
-            projected_co_dates, projected_co_levels = _project_future_stock_levels(\
+            projected_co_dates, projected_co_levels = _calc_stock_levels(\
                 "CO", stocklevels[-2]['date'], stocklevels[-2]['amount'])
             ax.plot_date(projected_co_dates, projected_co_levels, '--',\
             drawstyle='steps', color='green',\
@@ -322,7 +322,7 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
 
         if display_adjusted_theoretical_forecast:
             # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
-            projected_un_dates, projected_un_levels = _project_future_stock_levels(\
+            projected_un_dates, projected_un_levels = _calc_stock_levels(\
                 "UN", stocklevels[-2]['date'], stocklevels[-2]['amount'])
             ax.plot_date(projected_un_dates, projected_un_levels, '--',\
             drawstyle='steps', color='orange',\
