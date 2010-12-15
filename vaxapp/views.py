@@ -396,5 +396,47 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
             rate = float(consumed_in_year[y])/float(365)
             actual_cons_rate.update({y:int(rate)})
         print actual_cons_rate
+
+        # see if there are forecasted deliveries and/or purchased deliveries
+        # scheduled for the near future
+        #today = datetime.datetime.today().date()
+        today = datetime.date(2010, 2, 15)
+        forecasted_this_year = type_for_year(country_pk, vaccine_abbr, "FF", today.year)
+        on_po_this_year = type_for_year(country_pk, vaccine_abbr, "FP", today.year)
+
+        # TODO configurable!
+        lookahead = datetime.timedelta(90)
+        upcoming_on_po = [d for d in on_po_this_year if ((d['date'] - today) <= lookahead)]
+        upcoming_forecasted = [d for d in forecasted_this_year if ((d['date'] - today) <= lookahead)]
+
+        # see how many months worth of supply are in stock
+        latest_stocklevel = stocklevels[0]
+        est_daily_cons = int(float(annual_demand[today.year])/float(365))
+        days_of_stock = int(float(latest_stocklevel['amount'])/float(est_daily_cons))
+
+        # check if there is too much stock
+        if days_of_stock >= 270:
+            # flag if there are any upcoming deliveries (forecasted or purchased)
+            if (len(upcoming_forecasted) > 0) or (len(upcoming_on_po) > 0):
+                print '***FLAG***'
+                print 'delay or reduce shipment'
+
+        # check if there is insufficient stock
+        if days_of_stock <= 90:
+            # check % coverage of annual need
+            first_level_this_year = filter(stocklevels, 'year', today.year)[-1]
+            print first_level_this_year
+            deliveries_this_year = type_for_year(country_pk, vaccine_abbr, "UN", today.year)
+            print deliveries_this_year
+            # TODO XXX pick up here!
+            doses_this_year = reduce(lambda s,d: s + d['amount'], deliveries_this_year)
+            print doses_this_year
+
+            if (len(upcoming_forecasted) > 0):
+                forecasts_next_month = [d for d in upcoming_forecasted if d['date'].month == (today.month + 1)]
+                if len(forecasts_next_month) > 0:
+                    print '***FLAG***'
+                    print 'order immediately'
+
     import ipdb;ipdb.set_trace()
     return 'wat'
