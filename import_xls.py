@@ -220,7 +220,7 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                     allocation_type = 'UN'
                 else:
                     # future delivery on PO (FP)
-                    allocation_type = 'FF'
+                    allocation_type = 'FP'
 
             if co_forecast is not None:
                 amount = co_forecast
