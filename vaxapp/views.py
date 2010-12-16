@@ -401,8 +401,8 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
         # scheduled for the near future
         #today = datetime.datetime.today().date()
         today = datetime.date(2010, 2, 15)
-        forecasted_this_year = type_for_year(country_pk, vaccine_abbr, "FF", today.year)
-        on_po_this_year = type_for_year(country_pk, vaccine_abbr, "FP", today.year)
+        forecasted_this_year = type_for_year_asc(country_pk, vaccine_abbr, "FF", today.year)
+        on_po_this_year = type_for_year_asc(country_pk, vaccine_abbr, "FP", today.year)
 
         # TODO configurable!
         lookahead = datetime.timedelta(90)
@@ -423,20 +423,45 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
 
         # check if there is insufficient stock
         if days_of_stock <= 90:
-            # check % coverage of annual need
-            first_level_this_year = filter(stocklevels, 'year', today.year)[-1]
-            print first_level_this_year
+            first_level_this_year = filter(stocklevels, 'year', today.year)[-1]['amount']
             deliveries_this_year = type_for_year(country_pk, vaccine_abbr, "UN", today.year)
-            print deliveries_this_year
-            # TODO XXX pick up here!
-            doses_this_year = reduce(lambda s,d: s + d['amount'], deliveries_this_year)
-            print doses_this_year
+            doses_delivered_this_year = reduce(lambda s,d: s + d['amount'], deliveries_this_year, 0)
 
-            if (len(upcoming_forecasted) > 0):
+            # calculate % coverage of annual need
+            percent_coverage = float(first_level_this_year + doses_delivered_this_year)/float(annual_demand[today.year])
+            print percent_coverage
+
+            if percent_coverage < (0.25 + float(today.month)/12.0):
+                print '***FLAG***'
+                print 'risk of stock-out'
+
+            if percent_coverage > (0.5 + float(today.month)/12.0):
+                print '***FLAG***'
+                print 'risk of overstocking'
+
+            if (percent_coverage >= (0.25 + float(today.month)/12.0)) and (percent_coverage <= (0.5 + float(today.month)/12.0)):
+                print '---OK---'
+
+            if (len(upcoming_on_po) > 0):
+                doses_on_orders = reduce(lambda s,d: s + d['amount'], upcoming_on_po, 0)
+                print doses_on_orders
+                demand_for_period = lookahead * est_daily_cons
+                if doses_on_orders <= demand_for_period:
+                    print '---OK---'
+
+                if doses_on_orders > demand_for_period:
+                    print '***FLAG***'
+                    print 'delay shipment -- more than enough on upcoming deliveries'
+
+            elif (len(upcoming_forecasted) > 0):
                 forecasts_next_month = [d for d in upcoming_forecasted if d['date'].month == (today.month + 1)]
                 if len(forecasts_next_month) > 0:
                     print '***FLAG***'
-                    print 'order immediately'
+                    print 'order immediately - purchase forecasted delivery'
+
+            else:
+                print '***FLAG***'
+                print 'order immediately - no supply on PO or forecasted for next 3 months'
 
     import ipdb;ipdb.set_trace()
     return 'wat'
