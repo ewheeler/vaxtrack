@@ -399,6 +399,7 @@ def all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, **kwar
 
         # see if there are forecasted deliveries and/or purchased deliveries
         # scheduled for the near future
+        # TODO XXX back to the present!
         #today = datetime.datetime.today().date()
         today = datetime.date(2010, 2, 15)
         forecasted_this_year = type_for_year_asc(country_pk, vaccine_abbr, "FF", today.year)
