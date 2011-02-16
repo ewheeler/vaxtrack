@@ -1,0 +1,4 @@
+get rid of old fixtures
+get rid of old import scripts
+refactor vsdb interfaces
+documentform should accept xls in addition to csv
