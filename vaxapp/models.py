@@ -161,6 +161,8 @@ class CountryStockStats(models.Model):
     reference_date = models.DateField(blank=True, null=True)
 
     # dictionaries stashed using repr/eval
+    # TODO proper serialization or make proper models
+    # TODO also charfields instead of textfields is asking for trouble!
     consumed_in_year = models.CharField(max_length=500, blank=True, null=True)
     actual_cons_rate = models.CharField(max_length=500, blank=True, null=True)
     annual_demand = models.CharField(max_length=500, blank=True, null=True)
