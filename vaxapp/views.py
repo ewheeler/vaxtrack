@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core import serializers
 
 from .models import *
-from .charts import *
+from .analysis import *
 from . import forms
 
 def index_dev(req, country_pk=None):
@@ -93,9 +93,4 @@ def get_chart(req, country_pk=None, vaccine_abbr=None, chart_opts=""):
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s" % (filename)
     print chart_url
     return HttpResponseRedirect(chart_url)
-
-def powerset(iterable):
-    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
-    s = list(iterable)
-    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
