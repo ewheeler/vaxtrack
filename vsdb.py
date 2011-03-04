@@ -61,7 +61,29 @@ def _decode_item(item):
 def decode_results(results):
     ''' Decodes all results from a boto SelectResultSet.
         Returns a list of dicts. '''
-    return [_decode_item(result) for result in results]
+    #return [_decode_item(result) for result in results]
+    decoded_results = []
+    for result in results:
+        dict = {}
+        for field in field_types.iterkeys():
+            if field in result:
+                # use boto's decoding methods to give us proper date objects
+                # instead of strings
+                decoded = sdbmanager.SDBConverter(Vaxtrack._manager).decode_prop(field_types[field], result[field])
+                # boto's models encode integers (and longs) before saving to sdb
+                # by adding the largest possible integer to your value before
+                # saving to sdb
+                # http://github.com/boto/boto/commit/6829e6cb491a8c8d07dbe78ac3ef1d67d6fe89f6
+                # my guess is that this allows one to use order_by on sdb
+                # integer attributes (since all comparisons are lexicographic).
+                # 
+                # since we did not encode our integers in this way (TODO?),
+                # we have to undo the decoding step (subtracting the max int)
+                if field in ['year', 'amount']:
+                    decoded += 2147483648
+                dict.update({field:decoded})
+        decoded_results.append(dict)
+    return decoded_results
 
 def sort_results_asc(list, attr):
     return sorted(list, key=itemgetter(attr))
@@ -69,41 +91,8 @@ def sort_results_asc(list, attr):
 def sort_results_desc(list, attr):
     return sorted(list, key=itemgetter(attr), reverse=True)
 
-def multikeysort(items, columns):
-    from operator import itemgetter
-    comparers = [ ((itemgetter(col[1:].strip()), -1) if col.startswith('-') else (itemgetter(col.strip()), 1)) for col in columns]  
-    def comparer(left, right):
-        for fn, mult in comparers:
-            result = cmp(fn(left), fn(right))
-            if result:
-                return mult * result
-        else:
-            return 0
-    return sorted(items, cmp=comparer)
-
-def all_stocklevels_desc(country, supply):
-    return sort_results_desc(decode_results(_get_all_type(country, supply, 'SL')), 'date')
-
-def all_stocklevels_asc(country, supply):
-    return sort_results_asc(decode_results(_get_all_type(country, supply, 'SL')), 'date')
-
-def all_forecasts_asc(country, supply):
-    return sort_results_asc(decode_results(_get_all_type(country, supply, 'CF')), 'year')
-
-def all_deliveries_for_type_asc(country, supply, type):
-    return sort_results_asc(decode_results(_get_all_type(country, supply, type)), 'date')
-
-def forecast_for_year(country, supply, year):
-    return decode_results(_type_for_year(country, year, supply, 'CF'))
-
-def type_for_year_asc(country, supply, type, year):
-    return sort_results_asc(decode_results(_type_for_year(country, year, supply, type)), 'date')
-
-def type_for_year(country, supply, type, year):
-    return decode_results(_type_for_year(country, year, supply, type))
-
 cached_year_results = {}
-def _type_for_year(country, year, supply, type):
+def sdb_type_for_year(country, year, supply, type):
     # TODO cache results better!
     search = hashlib.md5()
     search.update(str(country))
@@ -120,10 +109,11 @@ def _type_for_year(country, year, supply, type):
         query = "SELECT * FROM `demodata` WHERE `country`='%s' AND `year`='%s' AND `supply`='%s' AND `type`='%s'" % (country, year, supply, type)
         result = cs.select(query)
         cached_year_results.update({hashed:result})
+
     return result
 
 cached_results = {}
-def _get_all_type(country, supply, type):
+def sdb_get_all_type(country, supply, type):
     # TODO cache results better!
     search = hashlib.md5()
     search.update(str(country))
@@ -132,11 +122,48 @@ def _get_all_type(country, supply, type):
     hashed = search.hexdigest()
 
     if hashed in cached_results:
+        print 'USING CACHED'
         result = cached_results[hashed]
     else:
+        print 'FETCHING FRESH'
         sdb = boto.connect_sdb()
         cs = sdb.get_domain('demodata')
         query = "SELECT * FROM `demodata` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (country, supply, type)
         result = cs.select(query)
         cached_results.update({hashed:result})
+
     return result
+
+def multikeysort(items, columns):
+    from operator import itemgetter
+    comparers = [ ((itemgetter(col[1:].strip()), -1) if col.startswith('-') else (itemgetter(col.strip()), 1)) for col in columns]  
+    def comparer(left, right):
+        for fn, mult in comparers:
+            result = cmp(fn(left), fn(right))
+            if result:
+                return mult * result
+        else:
+            return 0
+    return sorted(items, cmp=comparer)
+
+def all_stocklevels_desc(country, supply):
+    return sort_results_desc(decode_results(sdb_get_all_type(country, supply, 'SL')), 'date')
+
+def all_stocklevels_asc(country, supply):
+    return sort_results_asc(decode_results(sdb_get_all_type(country, supply, 'SL')), 'date')
+
+def all_forecasts_asc(country, supply):
+    return sort_results_asc(decode_results(sdb_get_all_type(country, supply, 'CF')), 'year')
+
+def all_deliveries_for_type_asc(country, supply, type):
+    return sort_results_asc(decode_results(sdb_get_all_type(country, supply, type)), 'date')
+
+def forecast_for_year(country, supply, year):
+    return decode_results(sdb_type_for_year(country, year, supply, 'CF'))
+
+def type_for_year_asc(country, supply, type, year):
+    return sorted(decode_results(sdb_type_for_year(country, year, supply, type)), key=itemgetter('date'))
+
+def type_for_year(country, supply, type, year):
+    return decode_results(sdb_type_for_year(country, year, supply, type))
+
