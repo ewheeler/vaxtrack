@@ -3,7 +3,7 @@
 import os
 import json
 import uuid
-from datetime import datetime
+import datetime
 from operator import attrgetter
 
 from django.db import models
@@ -155,6 +155,27 @@ class CountryStock(models.Model):
             ("can_upload", "Can upload"),
         )
 
+class CountryStockStats(models.Model):
+    countrystock = models.ForeignKey(CountryStock)
+    analyzed = models.DateTimeField(blank=True, null=True)
+    reference_date = models.DateField(blank=True, null=True)
+
+    # dictionaries stashed using repr/eval
+    consumed_in_year = models.CharField(max_length=500, blank=True, null=True)
+    actual_cons_rate = models.CharField(max_length=500, blank=True, null=True)
+    annual_demand = models.CharField(max_length=500, blank=True, null=True)
+    three_month_buffers = models.CharField(max_length=500, blank=True, null=True)
+    nine_month_buffers = models.CharField(max_length=500, blank=True, null=True)
+
+    # other values
+    est_daily_cons = models.IntegerField(blank=True, null=True)
+    days_of_stock = models.IntegerField(blank=True, null=True)
+
+    doses_delivered_this_year = models.IntegerField(blank=True, null=True)
+    doses_on_orders = models.IntegerField(blank=True, null=True)
+    demand_for_period = models.IntegerField(blank=True, null=True)
+    percent_coverage = models.FloatField(blank=True, null=True)
+
 class Alert(models.Model):
     ALERT_STATUS = (
         ('U', 'urgent'),
@@ -204,7 +225,7 @@ class Document(models.Model):
     date_process_end = models.DateTimeField(_("Date Process Completed"), null=True, blank=True)
     date_exception = models.DateTimeField(_("Date of Exception"), null=True, blank=True)
 
-    date_created = models.DateTimeField(_("Date Created"), default=datetime.utcnow)
+    date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow)
 
     class Meta:
         verbose_name = _('document')
@@ -228,7 +249,7 @@ class Document(models.Model):
             status = response_data['status']
             now = response_data.get("now", None)
             if now is not None:
-                now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+                now = datetime.datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
             if status == 'E':
                 doc.status = "E"
                 doc.exception = response_data.get('exception', None)

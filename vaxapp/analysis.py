@@ -202,8 +202,8 @@ class Analysis(object):
                         first_and_last_days.append(datetime.date(y, 1, 1))
                     first_and_last_days.append(datetime.date(y, 12, 31))
 
-                three_month_buffers = [three_by_year[d.year] for d in first_and_last_days]
-                nine_month_buffers = [nine_by_year[d.year] for d in first_and_last_days]
+                self.three_month_buffers = [three_by_year[d.year] for d in first_and_last_days]
+                self.nine_month_buffers = [nine_by_year[d.year] for d in first_and_last_days]
 
             except Exception,e:
                 print 'ERROR BUFFERS'
@@ -230,9 +230,9 @@ class Analysis(object):
 
             if self.display_buffers:
                 # plot 3 and 9 month buffer levels as red lines
-                ax.plot_date(first_and_last_days, three_month_buffers, '-', drawstyle='steps',\
+                ax.plot_date(first_and_last_days, self.three_month_buffers, '-', drawstyle='steps',\
                     color='red', label='3 month buffer')
-                ax.plot_date(first_and_last_days, nine_month_buffers, '-', drawstyle='steps',\
+                ax.plot_date(first_and_last_days, self.nine_month_buffers, '-', drawstyle='steps',\
                     color='red', label='9 month buffer')
 
             if self.display_forecast_projection:
@@ -376,7 +376,7 @@ class Analysis(object):
             self.doses_delivered_this_year = reduce(lambda s,d: s + d['amount'], self.deliveries_this_year, 0)
             self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.upcoming_on_po, 0)
 
-            self.demand_for_period = self.lookahead * self.est_daily_cons
+            self.demand_for_period = self.lookahead.days * self.est_daily_cons
 
             # calculate % coverage of annual need
             self.percent_coverage = float(self.first_level_this_year + self.doses_delivered_this_year)/float(self.annual_demand[self.today.year])
@@ -441,6 +441,7 @@ class Analysis(object):
         if cs is None:
             return 'couldnt find countrystock'
         css = CountryStockStats()
+        css.countrystock = cs
         css.analyzed = datetime.datetime.now()
         css.reference_date = self.today
 
