@@ -17,3 +17,8 @@ INSTALLATION:
     optionally:
     sudo apt-get install vim
     sudo pip install ipython ipdb
+
+FIXTURES:
+    ./manage.py loaddata vaxapp/countries_fr.json
+    ./manage.py loaddata vaxapp/vaccines.json
+    ./manage.py loaddata vaxapp/vaccine_groups.json
