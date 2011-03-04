@@ -42,7 +42,6 @@ def generate_all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=Non
         dicts = [params.update({c:True}) for c in p]
         analysis = Analysis(country_pk=country_pk, vaccine_abbr=vaccine_abbr, lang=lang, **params)
         analysis.plot()
-        analysis.analyze()
 
 def generate_six_charts_country_sdb(country_pk=None, lang=None):
     #for v in ['opv-50', 'measles', 'tt-10', 'dtp-hepbhib-1', 'yf-1', 'bcg-10']:
@@ -83,7 +82,7 @@ class Analysis(object):
 
         # configuration options
         self.save_chart = True
-        self.upload_chart_to_s3 = False
+        self.upload_chart_to_s3 = True
         self.lookahead = datetime.timedelta(90)
 
         # TODO XXX back to the present!
@@ -212,7 +211,8 @@ class Analysis(object):
 
         try:
             # documentation sez figsize is in inches (!?)
-            fig = figure(figsize=(15,12))
+            #fig = figure(figsize=(15,12))
+            fig = figure(figsize=(9,6))
 
             # add country name and vaccine as chart title
             title = "%s %s" % (self.country_pk, self.vaccine_abbr)
@@ -276,7 +276,8 @@ class Analysis(object):
             ax.autoscale_view()
 
             ax.grid(True)
-            ax.legend(prop={'size': 'x-small'})
+            #ax.legend(prop={'size': 'x-small'})
+            ax.legend(prop={'size': 'x-small'}, loc='upper right')
 
             fig.autofmt_xdate()
 
