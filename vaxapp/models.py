@@ -217,11 +217,11 @@ class CountryStockStats(models.Model):
 
     @property
     def get_three_by_year(self):
-        return self.three_month_buffers.as_dict
+        return self.three_by_year.as_dict
 
     @property
     def get_nine_by_year(self):
-        return self.nine_month_buffers.as_dict
+        return self.nine_by_year.as_dict
 
 class Alert(models.Model):
     ALERT_STATUS = (
