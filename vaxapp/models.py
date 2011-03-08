@@ -155,19 +155,45 @@ class CountryStock(models.Model):
             ("can_upload", "Can upload"),
         )
 
+class Dicty(models.Model):
+    ''' not pretty, but more useful than stashing dicts
+    as TextFields with repr/eval...
+    These should only be accessed from CountryStockStats,
+    as names are NOT unique.'''
+    name = models.CharField(max_length=160)
+
+    @classmethod
+    def create(klass, name, d):
+        # TODO better handling of other types?
+        assert(isinstance(d, dict))
+        dicty = klass(name=name)
+        dicty.save()
+        for k,v in d.iteritems():
+            kv = KeyVal(dicty=dicty, key=k, val=v)
+            kv.save()
+        return dicty
+
+    @property
+    def as_dict(self):
+        return dict(((kv.key, kv.val) for kv in self.keyval_set.all()))
+
+class KeyVal(models.Model):
+    dicty = models.ForeignKey(Dicty)
+    key = models.CharField(max_length=160)
+    val = models.CharField(max_length=160, blank=True, null=True)
+
 class CountryStockStats(models.Model):
     countrystock = models.ForeignKey(CountryStock)
     analyzed = models.DateTimeField(blank=True, null=True)
     reference_date = models.DateField(blank=True, null=True)
 
-    # dictionaries stashed using repr/eval
-    # TODO proper serialization or make proper models
-    # TODO also charfields instead of textfields is asking for trouble!
-    consumed_in_year = models.CharField(max_length=500, blank=True, null=True)
-    actual_cons_rate = models.CharField(max_length=500, blank=True, null=True)
-    annual_demand = models.CharField(max_length=500, blank=True, null=True)
-    three_month_buffers = models.CharField(max_length=500, blank=True, null=True)
-    nine_month_buffers = models.CharField(max_length=500, blank=True, null=True)
+    consumed_in_year = models.ForeignKey(Dicty, blank=True, null=True, related_name='consumed_in_year')
+    actual_cons_rate = models.ForeignKey(Dicty, blank=True, null=True, related_name='actual_cons_rate')
+    annual_demand = models.ForeignKey(Dicty, blank=True, null=True, related_name='annual_demand')
+    # TODO these are incorrectly named! should be three_by_year
+    # and nine_by_year to reflect the corresponding variable that is stashed here
+    three_month_buffers = models.ForeignKey(Dicty, blank=True, null=True, related_name='three_month_buffers')
+    nine_month_buffers = models.ForeignKey(Dicty, blank=True, null=True, related_name='nine_month_buffers')
 
     # other values
     est_daily_cons = models.IntegerField(blank=True, null=True)
@@ -177,6 +203,29 @@ class CountryStockStats(models.Model):
     doses_on_orders = models.IntegerField(blank=True, null=True)
     demand_for_period = models.IntegerField(blank=True, null=True)
     percent_coverage = models.FloatField(blank=True, null=True)
+
+    # helper properties to return Dicty attributes as dicts
+    @property
+    def get_consumed_in_year(self):
+        return self.consumed_in_year.as_dict
+
+    @property
+    def get_actual_cons_rate(self):
+        return self.actual_cons_rate.as_dict
+
+    @property
+    def get_annual_demand(self):
+        return self.annual_demand.as_dict
+
+    @property
+    def get_three_month_buffers(self):
+        # TODO see above
+        return self.three_month_buffers.as_dict
+
+    @property
+    def get_nine_month_buffers(self):
+        # TODO see above
+        return self.nine_month_buffers.as_dict
 
 class Alert(models.Model):
     ALERT_STATUS = (

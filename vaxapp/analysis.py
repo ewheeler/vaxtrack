@@ -80,9 +80,15 @@ class Analysis(object):
         self.vaccine_abbr = vaccine_abbr
         self.lang = lang
 
+        # loosely keep track of what we've done,
+        # so we don't call save_stats before plotting
+        self.analyzed = False
+        self.plotted = False
+        self.saved = False
+
         # configuration options
         self.save_chart = True
-        self.upload_chart_to_s3 = True
+        self.upload_chart_to_s3 = False
         self.lookahead = datetime.timedelta(90)
 
         # TODO XXX back to the present!
@@ -176,8 +182,8 @@ class Analysis(object):
     def plot(self):
         if self.display_buffers:
             try:
-                three_by_year = dict()
-                nine_by_year = dict()
+                self.three_by_year = dict()
+                self.nine_by_year = dict()
 
                 def three_month_buffer(demand_est):
                     return int(float(demand_est) * (float(3.0)/float(12.0)))
@@ -187,12 +193,12 @@ class Analysis(object):
 
                 for year in self.f_years:
                     # create a single key/value pair for each year/sum forecast
-                    three_by_year.update({year:three_month_buffer(self.annual_demand[year])})
-                    nine_by_year.update({year:nine_month_buffer(self.annual_demand[year])})
+                    self.three_by_year.update({year:three_month_buffer(self.annual_demand[year])})
+                    self.nine_by_year.update({year:nine_month_buffer(self.annual_demand[year])})
 
                 # make a list of corresponding buffer levels for every reported stock level
                 first_and_last_days = []
-                for i, y in enumerate(sorted(three_by_year.keys())):
+                for i, y in enumerate(sorted(self.three_by_year.keys())):
                     if i == 0:
                         # on the first loop, use the earliest stocklevel
                         # instead of january 1 of that year
@@ -201,8 +207,8 @@ class Analysis(object):
                         first_and_last_days.append(datetime.date(y, 1, 1))
                     first_and_last_days.append(datetime.date(y, 12, 31))
 
-                self.three_month_buffers = [three_by_year[d.year] for d in first_and_last_days]
-                self.nine_month_buffers = [nine_by_year[d.year] for d in first_and_last_days]
+                self.three_month_buffers = [self.three_by_year[d.year] for d in first_and_last_days]
+                self.nine_month_buffers = [self.nine_by_year[d.year] for d in first_and_last_days]
 
             except Exception,e:
                 print 'ERROR BUFFERS'
@@ -284,6 +290,8 @@ class Analysis(object):
             # close figure so next call doesn't add to previous call's image
             # and so memory gets gc'ed
             matplotlib.pyplot.close(fig)
+
+            self.plotted = True
 
         except Exception, e:
             print 'ERROR FIGURE'
@@ -429,34 +437,48 @@ class Analysis(object):
                     else:
                         print '---OK---'
 
+            self.analyzed = True
         except Exception, e:
             print 'ERROR ANALYZING'
             print e
             import ipdb; ipdb.set_trace()
 
     def save_stats(self):
+        # ensure that analyze() and plot()
+        # have been called. otherwise, many
+        # of the variables below will have no value
+        if not self.analyzed:
+            self.analyze()
+        if not self.plotted:
+            self.plot()
         v = Vaccine.lookup_slug(self.vaccine_abbr)
         if v is None:
             return 'couldnt find vaccine'
         cs = CountryStock.objects.get(country=self.country_pk, vaccine=v)
         if cs is None:
             return 'couldnt find countrystock'
-        css = CountryStockStats()
-        css.countrystock = cs
-        css.analyzed = datetime.datetime.now()
-        css.reference_date = self.today
+        try:
+            css = CountryStockStats()
+            css.countrystock = cs
+            css.analyzed = datetime.datetime.now()
+            css.reference_date = self.today
 
-        css.consumed_in_year = repr(self.consumed_in_year)
-        css.actual_cons_rate = repr(self.actual_cons_rate)
-        css.annual_demand = repr(self.annual_demand)
-        css.three_month_buffers = repr(self.three_month_buffers)
-        css.nine_month_buffers = repr(self.nine_month_buffers)
+            css.consumed_in_year = Dicty.create('consumed_in_year', self.consumed_in_year)
+            css.actual_cons_rate = Dicty.create('actual_cons_rate', self.actual_cons_rate)
+            css.annual_demand = Dicty.create('annual_demand', self.annual_demand)
+            css.three_month_buffers = Dicty.create('three_month_buffers', self.three_by_year)
+            css.nine_month_buffers = Dicty.create('nine_month_buffers', self.nine_by_year)
 
-        css.est_daily_cons = self.est_daily_cons
-        css.days_of_stock = self.days_of_stock
+            css.est_daily_cons = self.est_daily_cons
+            css.days_of_stock = self.days_of_stock
 
-        css.doses_delivered_this_year = self.doses_delivered_this_year
-        css.doses_on_orders = self.doses_on_orders
-        css.demand_for_period = self.demand_for_period
-        css.percent_coverage = self.percent_coverage
-        css.save()
+            css.doses_delivered_this_year = self.doses_delivered_this_year
+            css.doses_on_orders = self.doses_on_orders
+            css.demand_for_period = self.demand_for_period
+            css.percent_coverage = self.percent_coverage
+            css.save()
+            self.saved = True
+        except Exception, e:
+            print 'ERROR SAVING STATS'
+            print e
+            import ipdb; ipdb.set_trace()
