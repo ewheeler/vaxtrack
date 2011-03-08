@@ -1,4 +1,9 @@
-get rid of old fixtures
+**TODO**
 get rid of old import scripts
 refactor vsdb interfaces
 documentform should accept xls in addition to csv
+rework web ui to use newly improved Alert objs
+show CountryStockStats statistics on web
+
+**DONE**
+get rid of old fixtures
