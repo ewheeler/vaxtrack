@@ -466,8 +466,8 @@ class Analysis(object):
             css.consumed_in_year = Dicty.create('consumed_in_year', self.consumed_in_year)
             css.actual_cons_rate = Dicty.create('actual_cons_rate', self.actual_cons_rate)
             css.annual_demand = Dicty.create('annual_demand', self.annual_demand)
-            css.three_month_buffers = Dicty.create('three_month_buffers', self.three_by_year)
-            css.nine_month_buffers = Dicty.create('nine_month_buffers', self.nine_by_year)
+            css.three_by_year = Dicty.create('three_by_year', self.three_by_year)
+            css.nine_by_year = Dicty.create('nine_by_year', self.nine_by_year)
 
             css.est_daily_cons = self.est_daily_cons
             css.days_of_stock = self.days_of_stock
