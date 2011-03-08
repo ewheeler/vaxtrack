@@ -80,6 +80,14 @@ class Analysis(object):
         self.vaccine_abbr = vaccine_abbr
         self.lang = lang
 
+        v = Vaccine.lookup_slug(self.vaccine_abbr)
+        if v is None:
+            return 'couldnt find vaccine'
+
+        self.cs = CountryStock.objects.get(country=self.country_pk, vaccine=v)
+        if self.cs is None:
+            return 'couldnt find countrystock'
+
         # loosely keep track of what we've done,
         # so we don't call save_stats before plotting
         self.analyzed = False
@@ -376,6 +384,13 @@ class Analysis(object):
                 if (len(self.upcoming_forecasted) > 0) or (len(self.upcoming_on_po) > 0):
                     print '***FLAG***'
                     print 'delay or reduce shipment'
+                    alert = Alert(countrystock=self.cs)
+                    alert.analyzed = datetime.datetime.now()
+                    alert.reference_date = self.today
+                    alert.status = 'U'
+                    alert.risk = 'O'
+                    alert.text = 'delay or reduce shipment'
+                    alert.save()
                 else:
                     print '---OK---'
 
@@ -403,6 +418,13 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of stockout'
                             print 'order immediately -- not enough on upcoming deliveries'
+                            alert = Alert(countrystock=self.cs)
+                            alert.analyzed = datetime.datetime.now()
+                            alert.reference_date = self.today
+                            alert.status = 'U'
+                            alert.risk = 'S'
+                            alert.text = 'order immediately, insufficient doses on upcoming deliveries'
+                            alert.save()
                         else:
                             print '---OK---'
 
@@ -410,11 +432,25 @@ class Analysis(object):
                         print '***FLAG***'
                         print 'risk of stockout'
                         print 'order immediately - purchase forecasted delivery'
+                        alert = Alert(countrystock=self.cs)
+                        alert.analyzed = datetime.datetime.now()
+                        alert.reference_date = self.today
+                        alert.status = 'U'
+                        alert.risk = 'S'
+                        alert.text = 'order immediately, purchase forecasted delivery'
+                        alert.save()
 
                     else:
                         print '***FLAG***'
                         print 'risk of stockout'
                         print 'order immediately - no supply on PO or forecasted for next 3 months'
+                        alert = Alert(countrystock=self.cs)
+                        alert.analyzed = datetime.datetime.now()
+                        alert.reference_date = self.today
+                        alert.status = 'U'
+                        alert.risk = 'S'
+                        alert.text = 'order immediately, no doses on PO or forecasted in next 3 months'
+                        alert.save()
 
                 if self.percent_coverage > (0.5 + float(self.today.month)/12.0):
 
@@ -426,6 +462,13 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of overstocking'
                             print 'delay shipment -- more than enough on upcoming deliveries'
+                            alert = Alert(countrystock=self.cs)
+                            alert.analyzed = datetime.datetime.now()
+                            alert.reference_date = self.today
+                            alert.status = 'U'
+                            alert.risk = 'O'
+                            alert.text = 'delay shipment, excessive doses on upcoming deliveries'
+                            alert.save()
 
                     elif (len(self.upcoming_forecasted) > 0):
                         self.forecasts_next_month = [d for d in self.upcoming_forecasted if d['date'].month == (self.today.month + 1)]
@@ -433,6 +476,13 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of overstocking'
                             print 'delay order - delay purchase of forecasted delivery'
+                            alert = Alert(countrystock=self.cs)
+                            alert.analyzed = datetime.datetime.now()
+                            alert.reference_date = self.today
+                            alert.status = 'U'
+                            alert.risk = 'O'
+                            alert.text = 'delay order, delay purchase of forecasted delivery'
+                            alert.save()
 
                     else:
                         print '---OK---'
@@ -451,15 +501,9 @@ class Analysis(object):
             self.analyze()
         if not self.plotted:
             self.plot()
-        v = Vaccine.lookup_slug(self.vaccine_abbr)
-        if v is None:
-            return 'couldnt find vaccine'
-        cs = CountryStock.objects.get(country=self.country_pk, vaccine=v)
-        if cs is None:
-            return 'couldnt find countrystock'
         try:
             css = CountryStockStats()
-            css.countrystock = cs
+            css.countrystock = self.cs
             css.analyzed = datetime.datetime.now()
             css.reference_date = self.today
 

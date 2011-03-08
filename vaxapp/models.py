@@ -155,6 +155,14 @@ class CountryStock(models.Model):
             ("can_upload", "Can upload"),
         )
 
+    @property
+    def latest_stats(self):
+        css = self.countrystockstats_set.all().order_by('-analyzed')
+        if css.count() > 0:
+            return css[0]
+        else:
+            return None
+
 class Dicty(models.Model):
     ''' not pretty, but more useful than stashing dicts
     as TextFields with repr/eval...
@@ -229,9 +237,18 @@ class Alert(models.Model):
         ('R', 'resolved'),
         ('W', 'warning'),
     )
+    RISK_TYPE = (
+        ('O', 'risk of overstock'),
+        ('S', 'risk of stockout'),
+        ('U', 'unknown'),
+    )
     countrystock = models.ForeignKey(CountryStock)
+    analyzed = models.DateTimeField(blank=True, null=True)
+    reference_date = models.DateField(blank=True, null=True)
+
     text = models.CharField(max_length=160, blank=True, null=True)
     status = models.CharField(max_length=2, default='U', choices=ALERT_STATUS, blank=True, null=True)
+    risk = models.CharField(max_length=2, default='U', choices=RISK_TYPE, blank=True, null=True)
 
     def __unicode__(self):
         return "%s: %s - %s" % (self.countrystock.country.iso2_code, self.countrystock.vaccine, self.text)
