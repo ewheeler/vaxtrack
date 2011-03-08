@@ -190,10 +190,8 @@ class CountryStockStats(models.Model):
     consumed_in_year = models.ForeignKey(Dicty, blank=True, null=True, related_name='consumed_in_year')
     actual_cons_rate = models.ForeignKey(Dicty, blank=True, null=True, related_name='actual_cons_rate')
     annual_demand = models.ForeignKey(Dicty, blank=True, null=True, related_name='annual_demand')
-    # TODO these are incorrectly named! should be three_by_year
-    # and nine_by_year to reflect the corresponding variable that is stashed here
-    three_month_buffers = models.ForeignKey(Dicty, blank=True, null=True, related_name='three_month_buffers')
-    nine_month_buffers = models.ForeignKey(Dicty, blank=True, null=True, related_name='nine_month_buffers')
+    three_by_year = models.ForeignKey(Dicty, blank=True, null=True, related_name='three_by_year')
+    nine_by_year = models.ForeignKey(Dicty, blank=True, null=True, related_name='nine_by_year')
 
     # other values
     est_daily_cons = models.IntegerField(blank=True, null=True)
@@ -218,13 +216,11 @@ class CountryStockStats(models.Model):
         return self.annual_demand.as_dict
 
     @property
-    def get_three_month_buffers(self):
-        # TODO see above
+    def get_three_by_year(self):
         return self.three_month_buffers.as_dict
 
     @property
-    def get_nine_month_buffers(self):
-        # TODO see above
+    def get_nine_by_year(self):
         return self.nine_month_buffers.as_dict
 
 class Alert(models.Model):
