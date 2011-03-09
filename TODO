@@ -1,5 +1,5 @@
 **TODO**
-show CountryStockStats statistics on web
+update analyze() so Alerts are not duplicated
 update url so charts are linkable
 i18n (!)
 documentform should accept xls in addition to csv
@@ -18,3 +18,4 @@ email notification when processing of uploads is complete (i.e., when new charts
 **DONE**
 get rid of old fixtures
 rework web ui to use newly improved Alert objs
+show CountryStockStats statistics on web
