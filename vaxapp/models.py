@@ -213,23 +213,28 @@ class CountryStockStats(models.Model):
     # helper properties to return Dicty attributes as dicts
     @property
     def get_consumed_in_year(self):
-        return self.consumed_in_year.as_dict
+        if self.consumed_in_year is not None:
+            return self.consumed_in_year.as_dict
 
     @property
     def get_actual_cons_rate(self):
-        return self.actual_cons_rate.as_dict
+        if self.actual_cons_rate is not None:
+            return self.actual_cons_rate.as_dict
 
     @property
     def get_annual_demand(self):
-        return self.annual_demand.as_dict
+        if self.annual_demand is not None:
+            return self.annual_demand.as_dict
 
     @property
     def get_three_by_year(self):
-        return self.three_by_year.as_dict
+        if self.three_by_year is not None:
+            return self.three_by_year.as_dict
 
     @property
     def get_nine_by_year(self):
-        return self.nine_by_year.as_dict
+        if self.nine_by_year is not None:
+            return self.nine_by_year.as_dict
 
 class Alert(models.Model):
     ALERT_STATUS = (
