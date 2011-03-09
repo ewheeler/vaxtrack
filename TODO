@@ -1,9 +1,20 @@
 **TODO**
+show CountryStockStats statistics on web
+update url so charts are linkable
+i18n (!)
+documentform should accept xls in addition to csv
+progress bar for uploads
+add WHO logo
 get rid of old import scripts
 refactor vsdb interfaces
-documentform should accept xls in addition to csv
-rework web ui to use newly improved Alert objs
-show CountryStockStats statistics on web
+download button to download all charts for vaccine/country or country
+
+**PUNT**
+print button that opens image in new window
+date range selection
+only allow registration by @unicef.org and @who.int email addresses
+email notification when processing of uploads is complete (i.e., when new charts are available)
 
 **DONE**
 get rid of old fixtures
+rework web ui to use newly improved Alert objs
