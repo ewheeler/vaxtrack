@@ -170,9 +170,8 @@ div.module div.toolbar {
 	}
 
 	div.module table {
-		border-left: 1px dotted #0099ff;
+		z-index: 99;
 	}
 	div.module table td{
-		border-right: 1px dotted #0099ff;
-		border-bottom: 1px dotted #0099ff;
+		border: 1px dotted #0099ff;
 	}

@@ -6,6 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerEr
 from django.template import RequestContext
 from django.contrib.auth.decorators import permission_required
 from django.core import serializers
+from django.utils import simplejson
 
 from .models import *
 from .analysis import *
@@ -52,10 +53,45 @@ def alerts(req, country_pk, vaccine_abbr):
 def stats(req, country_pk, vaccine_abbr):
     if req.is_ajax():
         countrystock = CountryStock.objects.filter(country=country_pk, vaccine__abbr_fr_alt=vaccine_abbr)
-        # TODO fix this
-        stats = [countrystock[0].latest_stats]
-        data = serializers.serialize('json', stats)
-        return HttpResponse(data, 'application/javascript')
+        if countrystock.count() > 0:
+            css = countrystock[0].latest_stats
+            stats = {}
+            # TODO this is insane
+            # instead of the fields, i'd like the properties that return
+            # a dict of the related obj rather than pks of related obj
+            props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year']
+            years = []
+            for prop in props_to_get:
+                #stats[prop] = getattr(css, 'get_' + prop)
+                prop_dict = getattr(css, 'get_' + prop)
+                prop_list = []
+                if prop_dict is not None:
+                    for year in sorted(prop_dict.iterkeys()):
+                        years.append(str(year))
+                        prop_list.append(prop_dict[year])
+                    stats[prop] = prop_list
+            stats['years'] = sorted(list(set(years)))
+
+            attrs_to_get = ['est_daily_cons','days_of_stock','doses_delivered_this_year','doses_on_orders','demand_for_period']
+            for attr in attrs_to_get:
+                stats[attr] = getattr(css, attr)
+
+            stats['percent_coverage'] = str(int(css.percent_coverage*100.0)) + '%'
+
+            # need isoformat because dates/datetimes aren't serializable
+            date_attrs = ['analyzed', 'reference_date']
+            for date_attr in date_attrs:
+                # analyzed is a datetime, so use the isoformat of its date
+                temp = getattr(css, date_attr)
+                if isinstance(temp, datetime.datetime):
+                    stats[date_attr] = getattr(css, date_attr).date().isoformat()
+                    continue
+                # otherwise, assume we have a datetime.date...
+                stats[date_attr] = getattr(css, date_attr).isoformat()
+
+            #data = serializers.serialize('json', stats)
+            data = simplejson.dumps([stats])
+            return HttpResponse(data, 'application/javascript')
 
 def register(req):
     if req.method == "POST":
