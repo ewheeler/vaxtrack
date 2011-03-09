@@ -168,3 +168,11 @@ div.module div.toolbar {
 		background-repeat: no-repeat;
 		background-position: -1 50%;
 	}
+
+	div.module table {
+		border-left: 1px dotted #0099ff;
+	}
+	div.module table td{
+		border-right: 1px dotted #0099ff;
+		border-bottom: 1px dotted #0099ff;
+	}

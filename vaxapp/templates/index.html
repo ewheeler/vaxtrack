@@ -79,9 +79,9 @@ $(document).ready(function(){
 		for (s in stats){
 			$("#stats > tbody:last").append("<tr><td>" + 'est. daily cons.:</td><td>' + stats[s].fields.est_daily_cons+ "</td></tr>");
 			$("#stats > tbody:last").append("<tr><td>" + 'days of stock:</td><td>' + stats[s].fields.days_of_stock + "</td></tr>");
-			$("#stats > tbody:last").append("<tr><td>" + '% coverage:</td><td>' + stats[s].fields.percent_coverage + "</td></tr>");
-			$("#stats > tbody:last").append("<tr><td>" + " doses this year:</td><td>" + stats[s].fields.doses_delivered_this_year + "</td></tr>");
-			$("#stats > tbody:last").append("<tr><td>" + " doses on order:</td><td>" + stats[s].fields.doses_on_orders + "</td></tr>");
+			$("#stats > tbody:last").append("<tr><td>" + 'coverage of annual need:</td><td>' + stats[s].fields.percent_coverage + "</td></tr>");
+			$("#stats > tbody:last").append("<tr><td>" + "doses this year:</td><td>" + stats[s].fields.doses_delivered_this_year + "</td></tr>");
+			$("#stats > tbody:last").append("<tr><td>" + "doses on order:</td><td>" + stats[s].fields.doses_on_orders + "</td></tr>");
 		}
 	});
     };
