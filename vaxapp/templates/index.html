@@ -54,6 +54,11 @@ $(document).ready(function(){
 		$("#alerts li").remove();
 		var alerts;
 		alerts = jQuery.parseJSON(data);
+		if (alerts.length < 1){
+			$("#module-info").hide();
+		} else {
+			$("#module-info").show();
+		}
 		for (a in alerts){
 			$("#alerts").append("<li class='" + alerts[a].fields.status + "'>" + alerts[a].fields.text + "</li>");
 		}
@@ -100,7 +105,7 @@ $(document).ready(function(){
         </div>
     </div>
     {% endif %}
-    <div class="module expanded">
+    <div class="module expanded" id="module-info">
         <h3>Information</h3>
 	<ul id='alerts'>
 	</ul>
