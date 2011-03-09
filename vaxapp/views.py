@@ -49,6 +49,14 @@ def alerts(req, country_pk, vaccine_abbr):
         data = serializers.serialize('json', alerts)
         return HttpResponse(data, 'application/javascript')
 
+def stats(req, country_pk, vaccine_abbr):
+    if req.is_ajax():
+        countrystock = CountryStock.objects.filter(country=country_pk, vaccine__abbr_fr_alt=vaccine_abbr)
+        # TODO fix this
+        stats = [countrystock[0].latest_stats]
+        data = serializers.serialize('json', stats)
+        return HttpResponse(data, 'application/javascript')
+
 def register(req):
     if req.method == "POST":
         form = forms.RegisterForm(req.POST)

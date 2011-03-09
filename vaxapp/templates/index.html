@@ -17,6 +17,7 @@ $(document).ready(function(){
     $("#country").val("ML");
     get_chart();
     get_alerts();
+    get_stats();
 
     $("#plot_options :input").click(function(){
         options = new Array();
@@ -39,6 +40,7 @@ $(document).ready(function(){
 	country = $(this).val();
         get_chart();
 	get_alerts();
+	get_stats();
     });
 
     function get_chart(){
@@ -61,6 +63,25 @@ $(document).ready(function(){
 		}
 		for (a in alerts){
 			$("#alerts").append("<li class='" + alerts[a].fields.status + "'>" + alerts[a].fields.text + "</li>");
+		}
+	});
+    };
+    function get_stats(){
+	$.get("/stats/" + country + "/" + vaccine, function (data){
+		$("#stats tbody tr").remove();
+		var stats;
+		stats = jQuery.parseJSON(data);
+		if (stats.length < 1){
+			$("#module-stats").hide();
+		} else {
+			$("#module-stats").show();
+		}
+		for (s in stats){
+			$("#stats > tbody:last").append("<tr><td>" + 'est. daily cons.:</td><td>' + stats[s].fields.est_daily_cons+ "</td></tr>");
+			$("#stats > tbody:last").append("<tr><td>" + 'days of stock:</td><td>' + stats[s].fields.days_of_stock + "</td></tr>");
+			$("#stats > tbody:last").append("<tr><td>" + '% coverage:</td><td>' + stats[s].fields.percent_coverage + "</td></tr>");
+			$("#stats > tbody:last").append("<tr><td>" + " doses this year:</td><td>" + stats[s].fields.doses_delivered_this_year + "</td></tr>");
+			$("#stats > tbody:last").append("<tr><td>" + " doses on order:</td><td>" + stats[s].fields.doses_on_orders + "</td></tr>");
 		}
 	});
     };
@@ -106,9 +127,16 @@ $(document).ready(function(){
     </div>
     {% endif %}
     <div class="module expanded" id="module-info">
-        <h3>Information</h3>
+        <h3>Alerts</h3>
 	<ul id='alerts'>
 	</ul>
+    </div>
+    <div class="module expanded" id="module-stats">
+        <h3>Details</h3>
+	<table id='stats'>
+		<tbody>
+		</tbody>
+	</table>
     </div>
 {% endblock %}
 
