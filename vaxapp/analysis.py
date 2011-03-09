@@ -53,6 +53,11 @@ def generate_demo_charts():
         for vax in ['BCG']:
             print generate_all_charts_country_sdb(country_pk=country, vaccine_abbr=vax, lang='en')
 
+def analyze_demo():
+    for country in ['ML', 'TD']:
+        analysis = Analysis(country_pk=country, vaccine_abbr='BCG', lang='EN', B=True, F=True, P=True, C=True, U=True)
+        print analysis.save_stats()
+
 class Analysis(object):
     # helper methods
     @staticmethod
