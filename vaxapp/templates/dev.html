@@ -3,51 +3,7 @@
 {% block title %}Dashboard{% endblock %}
 {% block javascripts %}
 {{ block.super }}
-<script type="text/javascript">
-
-$(document).ready(function(){
-
-    var options = new Array();
-    var vaccine = "bcg-10";
-    var country = "SN";
-    var chart_name = "";
-
-    $("#plot_options :input").val([]);
-    $("#vaccines :input").val(["bcg-10"]);
-    $("#country").val("SN");
-    get_chart();
-
-    $("#plot_options :input").click(function(){
-        options = new Array();
-	$("#plot_options :input:checked").each(function() {
-	    options.push( $(this).val() );
-	});
-        get_chart();
-    });
-
-    $("#vaccines :input").click(function(){
-        vaccine = ""; 
-	$("#vaccines :input:radio:checked").each(function() {
-	    vaccine = $(this).val();
-	});
-        get_chart();
-    });
-
-    $("#country").change(function(){
-        country = "";
-	country = $(this).val();
-        get_chart();
-    });
-
-    function get_chart(){
-        chart_opts = options.sort().join("");
-        vaccine = vaccine.replace(/-/g, "_");
-        chart_name = country + "/" + vaccine + "/" + chart_opts + ".png";
-        $("#chart").attr('src', "dev/charts/" + chart_name);
-        $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
-    };
-});
-</script>
+<script src="/assets/js/vax.js"></script>
 {% endblock %}
 
 {% block left %}
