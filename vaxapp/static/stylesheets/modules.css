@@ -174,7 +174,8 @@ div.module div.toolbar {
 	}
 
 	div.module table tbody tr td{
-		border: 1px dotted #0099ff;
-		padding: 2px;
-		margin: -2px;
+		border-bottom: 1px dotted #0099ff;
+		border-right: 1px dotted #0099ff;
+		border-left: 1px dotted #0099ff;
+		padding: .33em;
 	}

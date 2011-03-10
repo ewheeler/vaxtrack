@@ -89,7 +89,7 @@ $(document).ready(function(){
 			$("#stats > tbody:last").append("<tr><td>" + "analysis date:</td><td>" + stats[s].analyzed + "</td></tr>");
 
 			var first_row;
-			first_row = "<tr><td></td>"
+			first_row = "<tr><td style='font-size:.66em;'><em>Note: first and last year totals may not reflect full 12 months</em></td>"
 			for (y in stats[s].years){
 				first_row = first_row + "<td>" + stats[s].years[y] + "</td>"	
 			}
