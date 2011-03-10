@@ -24,7 +24,8 @@ class Country(models.Model):
         return self.printable_name
 
     class Meta:
-        verbose_name_plural = "countries"
+        verbose_name = _("country")
+        verbose_name_plural = _("countries")
 
     @classmethod
     def lookup(klass, term):
@@ -93,6 +94,10 @@ class Vaccine(models.Model):
             return "%s (%s)" % (self.slug, ",".join(alternates))
         else:
             return self.slug
+
+    class Meta:
+        verbose_name = _("vaccine")
+        verbose_name_plural = _("vaccines")
 
     @property
     def abbr(self):
@@ -238,20 +243,30 @@ class CountryStockStats(models.Model):
 
 class Alert(models.Model):
     ALERT_STATUS = (
-        ('U', 'urgent'),
-        ('R', 'resolved'),
-        ('W', 'warning'),
+        ('U', _('urgent')),
+        ('R', _('resolved')),
+        ('W', _('warning')),
     )
     RISK_TYPE = (
-        ('O', 'risk of overstock'),
-        ('S', 'risk of stockout'),
-        ('U', 'unknown'),
+        ('O', _('risk of overstock')),
+        ('S', _('risk of stockout')),
+        ('U', _('unknown')),
     )
+    ADVICE = (
+        ('D', _('delay or reduce shipment')),
+        ('I', _('order immediately, insufficient doses on upcoming deliveries')),
+        ('F', _('order immediately, purchase forecasted delivery')),
+        ('P', _('order immediately, no doses on PO or forecasted in next 3 months')),
+        ('E', _('delay shipment, excessive doses on upcoming deliveries')),
+        ('O', _('delay order, delay purchase of forecasted delivery')),
+        ('U', _('unknown or error')),
+    )
+
     countrystock = models.ForeignKey(CountryStock)
     analyzed = models.DateTimeField(blank=True, null=True)
     reference_date = models.DateField(blank=True, null=True)
 
-    text = models.CharField(max_length=160, blank=True, null=True)
+    text = models.CharField(max_length=2, default='U', choices=ADVICE, blank=True, null=True)
     status = models.CharField(max_length=2, default='U', choices=ALERT_STATUS, blank=True, null=True)
     risk = models.CharField(max_length=2, default='U', choices=RISK_TYPE, blank=True, null=True)
 

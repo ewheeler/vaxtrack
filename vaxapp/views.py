@@ -46,15 +46,26 @@ def index(req, country_pk=None):
 def alerts(req, country_pk, vaccine_abbr):
     if req.is_ajax():
         countrystock = CountryStock.objects.filter(country=country_pk, vaccine__abbr_fr_alt=vaccine_abbr)
+        print countrystock
         alerts = Alert.objects.filter(countrystock=countrystock)
-        data = serializers.serialize('json', alerts)
-        return HttpResponse(data, 'application/javascript')
+        print alerts
+        if len(alerts) == 0:
+            return HttpResponse([], 'application/javascript')
+        alerts_text = {}
+        for alert in alerts:
+            print alert.get_text_display()
+            alerts_text.update({'text':alert.get_text_display(), 'status':alert.status})
+        print alerts_text
+        #data = serializers.serialize('json', alerts)
+        return HttpResponse(simplejson.dumps([alerts_text]), 'application/javascript')
 
 def stats(req, country_pk, vaccine_abbr):
     if req.is_ajax():
         countrystock = CountryStock.objects.filter(country=country_pk, vaccine__abbr_fr_alt=vaccine_abbr)
         if countrystock.count() > 0:
             css = countrystock[0].latest_stats
+            if css is None:
+                return HttpResponse([], 'application/javascript')
             stats = {}
             # TODO this is insane
             # instead of the fields, i'd like the properties that return
@@ -91,6 +102,9 @@ def stats(req, country_pk, vaccine_abbr):
 
             #data = serializers.serialize('json', stats)
             data = simplejson.dumps([stats])
+            return HttpResponse(data, 'application/javascript')
+        else:
+            data = simplejson.dumps([{}])
             return HttpResponse(data, 'application/javascript')
 
 def register(req):

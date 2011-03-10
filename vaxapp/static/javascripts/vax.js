@@ -81,23 +81,24 @@ $(document).ready(function(){
 		$("#alerts li").remove();
 		var alerts;
 		alerts = jQuery.parseJSON(data);
-		if (alerts.length < 1){
+		if (alerts==null){
 			$("#module-info").hide();
 		} else {
 			$("#module-info").show();
 		}
 		for (a in alerts){
-			$("#alerts").append("<li class='" + alerts[a].fields.status + "'>" + alerts[a].fields.text + "</li>");
+			$("#alerts").append("<li class='" + alerts[a].status + "'>" + alerts[a].text + "</li>");
 		}
 	});
     };
+
     function get_stats(){
 	$.get("/stats/" + country + "/" + vaccine, function (data){
 		$("#stats tbody tr").remove();
 		$("#hist tbody tr").remove();
 		var stats;
 		stats = jQuery.parseJSON(data);
-		if (stats.length < 1){
+		if (stats==null){
 			$("#module-stats").hide();
 			$("#module-hist").hide();
 		} else {
