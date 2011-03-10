@@ -7,13 +7,13 @@ $(document).ready(function(){
     var chart_name = "";
 
     window.onhashchange = function(event){
-	var path_parts = new Array();
-	path_parts = document.location.hash.split('/')
-	country = path_parts[1].replace(/[\#\-\!]/g,"");
-	vaccine = path_parts[2]
+	var hash_parts = new Array();
+	hash_parts = document.location.hash.split('/')
+	country = hash_parts[1].replace(/[\#\-\!]/g,"");
+	vaccine = hash_parts[2]
 	options = new Array();
-	for (i=0; i< path_parts[3].length; i++){
-	    options.push(path_parts[3].charAt(i));
+	for (i=0; i< hash_parts[3].length; i++){
+	    options.push(hash_parts[3].charAt(i));
 	}
 	$("#plot_options :input").val(options);
 	$("#vaccines :input").val(vaccine);
