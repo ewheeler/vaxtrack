@@ -169,6 +169,10 @@ div.module div.toolbar {
 		background-position: -1 50%;
 	}
 
+	div.module table {
+		border-collapse: collapse;
+	}
+
 	div.module table tbody tr td{
 		border: 1px dotted #0099ff;
 		padding: 2px;
