@@ -1,11 +1,14 @@
 {% extends "layout.html" %}
-{% block title %}Goodbye{% endblock %}
+{% block title %}
+    {% load i18n %}
+    Goodbye
+{% endblock %}
 {% block content %}
 
-<h1>Thanks for visiting Vaxtrack!</h1>
+<h1>{% trans "Thanks for visiting Vaxtrack!" noop %}</h1>
 
-<p>Please come again.</p>
+<p>{% trans "Please come again." noop %}</p>
 
-<a href="{% url login %}">Log in again</a>
+<a href="{% url login %}">{% trans "Log in again" noop %}</a>
 
 {% endblock %}

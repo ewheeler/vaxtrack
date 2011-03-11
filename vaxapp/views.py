@@ -46,16 +46,12 @@ def index(req, country_pk=None):
 def alerts(req, country_pk, vaccine_abbr):
     if req.is_ajax():
         countrystock = CountryStock.objects.filter(country=country_pk, vaccine__abbr_fr_alt=vaccine_abbr)
-        print countrystock
         alerts = Alert.objects.filter(countrystock=countrystock)
-        print alerts
         if len(alerts) == 0:
             return HttpResponse([], 'application/javascript')
         alerts_text = {}
         for alert in alerts:
-            print alert.get_text_display()
             alerts_text.update({'text':alert.get_text_display(), 'status':alert.status})
-        print alerts_text
         #data = serializers.serialize('json', alerts)
         return HttpResponse(simplejson.dumps([alerts_text]), 'application/javascript')
 

@@ -1,18 +1,22 @@
 {% extends "layout-split-2.html" %}
-{% block title %}Login{% endblock %}
+{% block title %}
+    {% load i18n %}
+    {% trans "Login" noop %}
+{% endblock %}
 {% block right%}
+{% load i18n %}
 <div class="module">
     <div id="vaxform">
         {% if form.errors %}
-        <p>Oops. Your username and password didn't match. Please try again.</p>
+        <p>{% trans "Oops. Your username and password didn't match. Please try again." noop %}</p>
         {% endif %}
 
         {% if user.is_authenticated %}
-        <p>Oops. You may not have permission to view the page you requested.</p>
+        <p>{% trans "Oops. You may not have permission to view the page you requested." noop %}</p>
 
         {% else %}
 
-        <h3>Please log in to Vaxtrack</h3>
+        <h3>{% trans "Please log in to Vaxtrack" noop %}</h3>
 
 
         <form method="post" action="{% url django.contrib.auth.views.login %}">
@@ -27,7 +31,7 @@
         </tr>
         </table>
         {% csrf_token %}
-        <input type="submit" value="login" />
+        <input type="submit" value="{% trans "login" noop %}" />
         <input type="hidden" name="next" value="{{ next }}" />
         </form>
         {% endif %}
