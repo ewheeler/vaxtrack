@@ -26,7 +26,17 @@ LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/'
 
 TIME_ZONE = 'America/New_York'
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
+USE_I18N = True
+USE_L10N = True
+LANGUAGE_COOKIE_NAME = 'vaxtrack_lang'
+
+gettext = lambda s: s
+
+LANGUAGES = (
+    ('fr', gettext('French')),
+    ('en', gettext('English')),
+)
 
 SITE_ID = 1
 
@@ -55,11 +65,26 @@ TEMPLATE_LOADERS = (
 #     'django.template.loaders.eggs.load_template_source',
 )
 
+# for debug_toolbar
+INTERNAL_IPS = ('127.0.0.1',)
+DEBUG_TOOLBAR_CONFIG = {
+    'INTERCEPT_REDIRECTS': False,
+    'HIDE_DJANGO_SQL': False,
+    'TAG': 'div',
+}
+
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
+)
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.core.context_processors.i18n",
+    "django.contrib.auth.context_processors.auth",
 )
 
 ROOT_URLCONF = 'vaxapp.urls'
@@ -73,4 +98,5 @@ INSTALLED_APPS = (
     'vax.vaxapp',
     'south',
     'djcelery',
+    #'debug_toolbar',
 )
