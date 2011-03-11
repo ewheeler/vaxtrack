@@ -32,4 +32,5 @@ urlpatterns = patterns('',
     url(r'^login/$', 'django.contrib.auth.views.login', {'template_name':'login.html'}, name="login"),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'template_name':'loggedout.html'}, name="logout"),
     url(r'^register/$', views.register, name='register'),
+    url(r'^i18n/', include('django.conf.urls.i18n')),
 )

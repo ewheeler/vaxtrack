@@ -17,10 +17,20 @@
 		<div id="header">
 			<div id="auth">
 			    {% if user.is_authenticated %}
-				<p>Logged in as {{ user.username }}. <a href="{% url logout %}">Logout</a></p>
+				<p>{% trans "Logged in as" noop %} {{ user.username }}. <a href="{% url logout %}">{% trans "Logout" noop %}</a></p>
 			    {% else %}
-				<p>Welcome, please <a href="{% url login %}">log in</a> or <a href="{% url register %}">register</a>.</p>
+				<p>{% trans "Welcome, please" noop %} <a href="{% url login %}">{% trans "log in" noop %}</a> or <a href="{% url register %}">{% trans "register" noop %}</a>.</p>
 			    {% endif %}
+			    <form action="/i18n/setlang/" method="post">
+				<select name="language">
+				{% for lang in LANGUAGES %}
+				    <option value="{{ lang.0 }}" {% ifequal LANGUAGE_CODE lang.0 %} SELECTED {% endifequal %}>
+				    {{ lang.1 }}</option>
+				{% endfor %}
+				</select>
+			    {% csrf_token %}
+			    <input type="submit" value="{% trans "Go" noop %}" />
+			    </form>
 			</div>
                         <div id="branding">
                                 <h1>
@@ -37,6 +47,7 @@
 				{% load i18n %}
 			{% endblock %}
 		</div>
+
 		<div id="footer">
 			<p class="rights">
 				Copyright &copy; 2011 <a href="http://unicef.org">UNICEF</a> &amp; <a href="http://who.int">WHO</a>.
