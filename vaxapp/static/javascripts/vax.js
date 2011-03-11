@@ -5,15 +5,17 @@ $(document).ready(function(){
     var vaccine = "BCG";
     var country = "ML";
     var chart_name = "";
+    var lang;
 
     window.onhashchange = function(event){
 	var hash_parts = new Array();
 	hash_parts = document.location.hash.split('/')
-	country = hash_parts[1].replace(/[\#\-\!]/g,"");
-	vaccine = hash_parts[2]
+	lang = hash_parts[1];
+	country = hash_parts[2].replace(/[\#\-\!]/g,"");
+	vaccine = hash_parts[3]
 	options = new Array();
-	for (i=0; i< hash_parts[3].length; i++){
-	    options.push(hash_parts[3].charAt(i));
+	for (i=0; i< hash_parts[4].length; i++){
+	    options.push(hash_parts[4].charAt(i));
 	}
 	$("#plot_options :input").val(options);
 	$("#vaccines :input").val(vaccine);
@@ -27,10 +29,15 @@ $(document).ready(function(){
     $("#plot_options :input").val(options);
     $("#vaccines :input").val(vaccine);
     $("#country").val(country);
+    update_lang();
     get_chart();
     get_alerts();
     get_stats();
     update_url();
+
+    $("#auth select").change(function(){
+	update_lang();
+    });
 
     $("#plot_options :input").click(function(){
         options = new Array();
@@ -59,13 +66,22 @@ $(document).ready(function(){
 	update_url();
     });
 
+    function update_lang(){
+	$("#auth select option:selected").each(function(){
+	    lang = "";
+	    lang = $(this).val();
+	});
+	//$.post("/i18n/setlang/", {"language": lang});
+	update_url();
+    }
+
     function update_url(){
 	chart_opts = options.sort().join("");
         vaccine = vaccine.replace(/-/g, "_");
     	var path;
-	path = "#!/" + country + "/" + vaccine + "/" + chart_opts
+	path = "#!/" + lang + "/" + country + "/" + vaccine + "/" + chart_opts
 	//saved_history.pushState("", path, path)
-	document.location.hash = path
+	document.location.hash = path;
     }
 
     function get_chart(){
