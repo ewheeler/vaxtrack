@@ -19,3 +19,4 @@ logs/*
 *.csv
 *.xls
 *.sql
+*.mo
