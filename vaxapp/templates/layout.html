@@ -17,9 +17,9 @@
 		<div id="header">
 			<div id="auth">
 			    {% if user.is_authenticated %}
-				<p>{% trans "Logged in as" noop %} {{ user.username }}. <a href="{% url logout %}">{% trans "Logout" noop %}</a></p>
+				<p>{% trans "Logged in as" %} {{ user.username }}. <a href="{% url logout %}">{% trans "Logout" %}</a></p>
 			    {% else %}
-				<p>{% trans "Welcome, please" noop %} <a href="{% url login %}">{% trans "log in" noop %}</a> or <a href="{% url register %}">{% trans "register" noop %}</a>.</p>
+				<p>{% trans "Welcome, please" %} <a href="{% url login %}">{% trans "log in" %}</a> or <a href="{% url register %}">{% trans "register" %}</a>.</p>
 			    {% endif %}
 			    <form action="/i18n/setlang/" method="post">
 				<select name="language">
@@ -29,7 +29,7 @@
 				{% endfor %}
 				</select>
 			    {% csrf_token %}
-			    <input type="submit" value="{% trans "Go" noop %}" />
+			    <input type="submit" value="{% trans "Go" %}" />
 			    </form>
 			</div>
                         <div id="branding">
@@ -38,8 +38,8 @@
                                 </h1>
                         </div>
 			<ul id=tabs>
-				<li{% ifequal tab "dashboard" %} class="active"{% endifequal %}><a href="/">Dashboard</a></li>
-				<li{% ifequal tab "upload" %} class="active"{% endifequal %}><a href="{% url upload %}">Upload data</a></li>
+				<li{% ifequal tab "dashboard" %} class="active"{% endifequal %}><a href="/">{% trans "Dashboard" %}</a></li>
+				<li{% ifequal tab "upload" %} class="active"{% endifequal %}><a href="{% url upload %}">{% trans "Upload data" %}</a></li>
 			</ul>
 		</div>
 		<div id="inner">

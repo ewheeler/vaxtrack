@@ -2,7 +2,7 @@
 
 {% block title %}
 {% load i18n %}
-	{% trans "Dashboard" noop %}
+	{% trans "Dashboard" %}
 {% endblock %}
 {% block javascripts %}
 {{ block.super }}
@@ -13,9 +13,9 @@
 {% load i18n %}
     {% if countries %}
     <div class="module expanded">
-        <h3>{% trans "Chart options" noop %}</h3>
+        <h3>{% trans "Chart options" %}</h3>
         <div id="vaxform">
-            <h5>{% trans "Country" noop %}</h5>
+            <h5>{% trans "Country" %}</h5>
             <form id="countries" action="">
                 <select id="country">
                 {% for c in countries %}
@@ -24,23 +24,23 @@
                 </select>
                 <img id="flag" src="">
             </form>
-            <h5>{% trans "Vaccine" noop %}</h5>
+            <h5>{% trans "Vaccine" %}</h5>
             <form id="vaccines" action="">
                 {% for v in vaccines %}
                         <input type="radio" name="vax" id="radio-{{ v.slug }}" value="{{ v.slug }}"/>
                         <label for="radio-{{ v.slug }}"> {{ v.abbr }} </label><br />
                 {% endfor %}
             </form>
-            <h5>{% trans "Plot" noop %}</h5>
+            <h5>{% trans "Plot" %}</h5>
             <form id="plot_options" action="">
                 <input type="checkbox" id="checkbox-B" value="B" checked="checked" />
-                <label for="checkbox-B">{% trans "buffer stock  &amp; overstock indicators" noop %}</label><br />
+                <label for="checkbox-B">{% trans "buffer stock  &amp; overstock indicators" %}</label><br />
                 <input type="checkbox" id="checkbox-F" value="F" checked="checked" />
-                <label for="checkbox-F">{% trans "forecasted stock level (CO forecast)" noop %}</label><br />
+                <label for="checkbox-F">{% trans "forecasted stock level (CO forecast)" %}</label><br />
                 <input type="checkbox" id="checkbox-P" value="P" checked="checked" />
-                <label for="checkbox-P">{% trans "forecasted stock level (with POs)" noop %}</label><br />
+                <label for="checkbox-P">{% trans "forecasted stock level (with POs)" %}</label><br />
                 <input type="checkbox" id="checkbox-C" value="C" checked="checked" />
-                <label for="checkbox-C">{% trans "projected stock level (CO forecast)" noop %}</label><br />
+                <label for="checkbox-C">{% trans "projected stock level (CO forecast)" %}</label><br />
                 <input type="checkbox" id="checkbox-U" value="U" checked="checked" />
                 <label for="checkbox-U">{% trans "projected stock level (with deliveries)" %}</label><br />
             </form>
@@ -48,19 +48,19 @@
     </div>
     {% endif %}
     <div class="module expanded" id="module-info">
-        <h3>{% trans "Alerts" noop %}</h3>
+        <h3>{% trans "Alerts" %}</h3>
 	<ul id='alerts'>
 	</ul>
     </div>
     <div class="module expanded" id="module-stats">
-        <h3>{% trans "Details" noop %}</h3>
+        <h3>{% trans "Details" %}</h3>
 	<table id='stats' border='0' cellpadding='0' cellspacing='0'>
 		<tbody>
 		</tbody>
 	</table>
     </div>
     <div class="module expanded" id="module-hist">
-        <h3>{% trans "Historical" noop %}</h3>
+        <h3>{% trans "Historical" %}</h3>
 	<table id='hist' border='0' cellpadding='0' cellspacing='0'>
 		<tbody>
 		</tbody>
@@ -71,7 +71,7 @@
 {% block right %}
 {% load i18n %}
     <div class="module">
-        <h3>{% trans "Chart" noop %}</h3>
+        <h3>{% trans "Chart" %}</h3>
         <img id="chart" src="">
         <div class="toolbar">
         </div>
