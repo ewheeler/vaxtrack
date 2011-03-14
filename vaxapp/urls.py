@@ -9,6 +9,10 @@ import views
 
 admin.autodiscover()
 
+js_info_dict = {
+    'packages': ('vax.vaxapp',),
+}
+
 urlpatterns = patterns('',
     # serve assets via django, during development
     url(r'^assets/js/(?P<path>.*)$', "django.views.static.serve",
@@ -33,4 +37,5 @@ urlpatterns = patterns('',
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'template_name':'loggedout.html'}, name="logout"),
     url(r'^register/$', views.register, name='register'),
     url(r'^i18n/', include('django.conf.urls.i18n')),
+    url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
 )

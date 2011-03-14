@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-14 15:20-0400\n"
+"POT-Creation-Date: 2011-03-14 15:36-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -210,7 +210,7 @@ msgstr "documents"
 msgid "%s's uploaded document."
 msgstr ""
 
-#: templates/index.html:5 templates/layout.html:41
+#: templates/index.html:5 templates/layout.html:42
 msgid "Dashboard"
 msgstr ""
 
@@ -266,35 +266,35 @@ msgstr ""
 msgid "Chart"
 msgstr ""
 
-#: templates/layout.html:20
+#: templates/layout.html:21
 msgid "Logged in as"
 msgstr ""
 
-#: templates/layout.html:20
+#: templates/layout.html:21
 msgid "Logout"
 msgstr ""
 
-#: templates/layout.html:22
+#: templates/layout.html:23
 msgid "Welcome, please"
 msgstr ""
 
-#: templates/layout.html:22
+#: templates/layout.html:23
 msgid "log in"
 msgstr ""
 
-#: templates/layout.html:22 templates/register.html:25
+#: templates/layout.html:23 templates/register.html:25
 msgid "register"
 msgstr ""
 
-#: templates/layout.html:32
+#: templates/layout.html:33
 msgid "Go"
 msgstr ""
 
-#: templates/layout.html:37
+#: templates/layout.html:38
 msgid "Return to the Dashboard"
 msgstr ""
 
-#: templates/layout.html:42 templates/upload.html:4 templates/upload.html.py:9
+#: templates/layout.html:43 templates/upload.html:4 templates/upload.html.py:9
 msgid "Upload data"
 msgstr ""
 
