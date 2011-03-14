@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-14 15:14-0400\n"
+"POT-Creation-Date: 2011-03-14 15:20-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,23 +51,23 @@ msgstr ""
 
 #: models.py:27
 msgid "country"
-msgstr ""
+msgstr "pays"
 
 #: models.py:28
 msgid "countries"
-msgstr ""
+msgstr "pays"
 
 #: models.py:99
 msgid "vaccine"
-msgstr ""
+msgstr "vaccin"
 
 #: models.py:100
 msgid "vaccines"
-msgstr ""
+msgstr "vaccins"
 
 #: models.py:246
 msgid "urgent"
-msgstr ""
+msgstr "urgent"
 
 #: models.py:247
 msgid "resolved"
@@ -75,7 +75,7 @@ msgstr ""
 
 #: models.py:248
 msgid "warning"
-msgstr ""
+msgstr "urgences"
 
 #: models.py:251
 msgid "risk of overstock"
@@ -87,7 +87,7 @@ msgstr ""
 
 #: models.py:253
 msgid "unknown"
-msgstr ""
+msgstr "inconnu"
 
 #: models.py:256
 msgid "delay or reduce shipment"
@@ -135,7 +135,7 @@ msgstr ""
 
 #: models.py:285
 msgid "Finished"
-msgstr ""
+msgstr "fini"
 
 #: models.py:286
 msgid "Processing Error"
@@ -191,19 +191,19 @@ msgstr ""
 
 #: models.py:310
 msgid "Date of Exception"
-msgstr ""
+msgstr "date d'exception"
 
 #: models.py:312
 msgid "Date Created"
-msgstr ""
+msgstr "date de creation"
 
 #: models.py:315
 msgid "document"
-msgstr ""
+msgstr "document"
 
 #: models.py:316
 msgid "documents"
-msgstr ""
+msgstr "documents"
 
 #: models.py:319
 #, python-format
@@ -220,11 +220,11 @@ msgstr ""
 
 #: templates/index.html:18
 msgid "Country"
-msgstr ""
+msgstr "Pays"
 
 #: templates/index.html:27
 msgid "Vaccine"
-msgstr ""
+msgstr "Vaccin"
 
 #: templates/index.html:34
 msgid "Plot"
