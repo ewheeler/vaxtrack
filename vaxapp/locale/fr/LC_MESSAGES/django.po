@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-14 15:36-0400\n"
+"POT-Creation-Date: 2011-03-15 14:11-0400\n"
 "PO-Revision-Date: 2011-03-15 12:39\n"
 "Last-Translator: <m@m.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,31 +18,31 @@ msgstr ""
 "X-Translated-Using: django-rosetta 0.5.6\n"
 "Plural-Forms: nplurals=2; plural=n>1;\n"
 
-#: analysis.py:249
+#: analysis.py:248
 msgid "actual stock"
 msgstr "stock réel"
 
-#: analysis.py:254
+#: analysis.py:253
 msgid "3 month buffer"
 msgstr ""
 
-#: analysis.py:256
+#: analysis.py:255
 msgid "9 month buffer"
 msgstr ""
 
-#: analysis.py:263
+#: analysis.py:262
 msgid "projected stock based on forecast"
 msgstr "stock des prévisions fondées sur les prévisions"
 
-#: analysis.py:270
+#: analysis.py:269
 msgid "projected stock based on placed POs"
 msgstr "stock des prévisions fondées sur les OP placé"
 
-#: analysis.py:278
+#: analysis.py:277
 msgid "theoretical stock based on forecast"
 msgstr "stock théorique basé sur les prévisions"
 
-#: analysis.py:286
+#: analysis.py:285
 msgid "theoretical stock adjusted with deliveries"
 msgstr "stock théorique ajusté avec des livraisons"
 
@@ -104,7 +104,9 @@ msgstr "commande immédiatement, achat prévu de livraison"
 
 #: models.py:259
 msgid "order immediately, no doses on PO or forecasted in next 3 months"
-msgstr "commande immédiatement, aucune dose sur les PO ou prévus dans les 3 prochains mois"
+msgstr ""
+"commande immédiatement, aucune dose sur les PO ou prévus dans les 3 "
+"prochains mois"
 
 #: models.py:260
 msgid "delay shipment, excessive doses on upcoming deliveries"
@@ -211,7 +213,7 @@ msgstr "documents"
 msgid "%s's uploaded document."
 msgstr ""
 
-#: templates/index.html:5 templates/layout.html:42
+#: templates/index.html:5 templates/layout.html:50
 msgid "Dashboard"
 msgstr ""
 
@@ -279,23 +281,35 @@ msgstr "Déconnexion"
 msgid "Welcome, please"
 msgstr "Bienvenue, s'il vous plaît"
 
-#: templates/layout.html:23
+#: templates/layout.html:23 templates/login.html:34
 msgid "log in"
 msgstr "Connectez-vous"
+
+#: templates/layout.html:23
+msgid "or"
+msgstr ""
 
 #: templates/layout.html:23 templates/register.html:25
 msgid "register"
 msgstr "s'inscrire"
 
-#: templates/layout.html:33
+#: templates/layout.html:27
+msgid "Edit translations"
+msgstr ""
+
+#: templates/layout.html:30
+msgid "Site admin"
+msgstr ""
+
+#: templates/layout.html:41
 msgid "Go"
 msgstr "Go"
 
-#: templates/layout.html:38
+#: templates/layout.html:46
 msgid "Return to the Dashboard"
 msgstr ""
 
-#: templates/layout.html:43 templates/upload.html:4 templates/upload.html.py:9
+#: templates/layout.html:51 templates/upload.html:4 templates/upload.html.py:9
 msgid "Upload data"
 msgstr ""
 
@@ -312,7 +326,8 @@ msgid "Log in again"
 msgstr ""
 
 #: templates/login.html:4
-msgid "Login"
+#, fuzzy
+msgid "Log in"
 msgstr "Connectez-vous"
 
 #: templates/login.html:11 templates/register.html:11
@@ -326,10 +341,6 @@ msgstr ""
 #: templates/login.html:19
 msgid "Please log in to Vaxtrack"
 msgstr ""
-
-#: templates/login.html:34
-msgid "login"
-msgstr "connexion"
 
 #: templates/register.html:4
 msgid "Register"
@@ -346,3 +357,6 @@ msgstr ""
 #: templates/upload.html:15
 msgid "Upload"
 msgstr ""
+
+#~ msgid "login"
+#~ msgstr "connexion"
