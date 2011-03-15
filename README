@@ -9,10 +9,14 @@ DEPENDENCIES:
     matplotlib (http://matplotlib.sourceforge.net)
     boto
     celery
+    django-rosetta
+
+DATA IMPORT/EXPORT SCRIPT DEPENDENCIES:
+    sudo pip install xlrd xlwt
 
 DEBIAN-BASED INSTALLATION:
     sudo apt-get install python-pip python-dev mysql-server git-core python-mysqldb python-matplotlib rabbitmq-server
-    sudo pip install setuptools boto django=1.2.3 south celery django-celery
+    sudo pip install setuptools boto django=1.2.3 south celery django-celery django-rosetta
 
     optionally:
     sudo apt-get install vim
