@@ -10,6 +10,7 @@ import views
 admin.autodiscover()
 
 js_info_dict = {
+    'domain': 'djangojs',
     'packages': ('vax.vaxapp',),
 }
 
