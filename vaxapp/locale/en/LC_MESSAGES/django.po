@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-15 14:11-0400\n"
+"POT-Creation-Date: 2011-03-15 17:56-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,31 +16,31 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: analysis.py:248
+#: analysis.py:256
 msgid "actual stock"
 msgstr ""
 
-#: analysis.py:253
+#: analysis.py:261
 msgid "3 month buffer"
 msgstr ""
 
-#: analysis.py:255
+#: analysis.py:263
 msgid "9 month buffer"
 msgstr ""
 
-#: analysis.py:262
+#: analysis.py:270
 msgid "projected stock based on forecast"
 msgstr ""
 
-#: analysis.py:269
+#: analysis.py:277
 msgid "projected stock based on placed POs"
 msgstr ""
 
-#: analysis.py:277
+#: analysis.py:285
 msgid "theoretical stock based on forecast"
 msgstr ""
 
-#: analysis.py:285
+#: analysis.py:293
 msgid "theoretical stock adjusted with deliveries"
 msgstr ""
 
@@ -56,155 +56,155 @@ msgstr ""
 msgid "countries"
 msgstr ""
 
-#: models.py:99
+#: models.py:115
 msgid "vaccine"
 msgstr ""
 
-#: models.py:100
+#: models.py:116
 msgid "vaccines"
 msgstr ""
 
-#: models.py:246
+#: models.py:272
 msgid "urgent"
 msgstr ""
 
-#: models.py:247
+#: models.py:273
 msgid "resolved"
 msgstr ""
 
-#: models.py:248
+#: models.py:274
 msgid "warning"
 msgstr ""
 
-#: models.py:251
+#: models.py:277
 msgid "risk of overstock"
 msgstr ""
 
-#: models.py:252
+#: models.py:278
 msgid "risk of stockout"
 msgstr ""
 
-#: models.py:253
+#: models.py:279
 msgid "unknown"
 msgstr ""
 
-#: models.py:256
+#: models.py:282
 msgid "delay or reduce shipment"
 msgstr ""
 
-#: models.py:257
+#: models.py:283
 msgid "order immediately, insufficient doses on upcoming deliveries"
 msgstr ""
 
-#: models.py:258
+#: models.py:284
 msgid "order immediately, purchase forecasted delivery"
 msgstr ""
 
-#: models.py:259
+#: models.py:285
 msgid "order immediately, no doses on PO or forecasted in next 3 months"
 msgstr ""
 
-#: models.py:260
+#: models.py:286
 msgid "delay shipment, excessive doses on upcoming deliveries"
 msgstr ""
 
-#: models.py:261
+#: models.py:287
 msgid "delay order, delay purchase of forecasted delivery"
 msgstr ""
 
-#: models.py:262
+#: models.py:288
 msgid "unknown or error"
 msgstr ""
 
-#: models.py:281
+#: models.py:307
 msgid "Uploaded"
 msgstr ""
 
-#: models.py:282
+#: models.py:308
 msgid "Stored Remotely"
 msgstr ""
 
-#: models.py:283
+#: models.py:309
 msgid "Queued"
 msgstr ""
 
-#: models.py:284
+#: models.py:310
 msgid "Processing"
 msgstr ""
 
-#: models.py:285
+#: models.py:311
 msgid "Finished"
 msgstr ""
 
-#: models.py:286
+#: models.py:312
 msgid "Processing Error"
 msgstr ""
 
-#: models.py:297
+#: models.py:323
 msgid "user"
 msgstr ""
 
-#: models.py:298
+#: models.py:324
 msgid "Title"
 msgstr ""
 
-#: models.py:299
+#: models.py:325
 msgid "Unique Identifier"
 msgstr ""
 
-#: models.py:300
+#: models.py:326
 msgid "Local Document"
 msgstr ""
 
-#: models.py:301
+#: models.py:327
 msgid "Remote Document"
 msgstr ""
 
-#: models.py:302
+#: models.py:328
 msgid "Remote Processing Status"
 msgstr ""
 
-#: models.py:303
+#: models.py:329
 msgid "Processing Exception"
 msgstr ""
 
-#: models.py:305
+#: models.py:331
 msgid "Date Uploaded"
 msgstr ""
 
-#: models.py:306
+#: models.py:332
 msgid "Date Stored Remotely"
 msgstr ""
 
-#: models.py:307
+#: models.py:333
 msgid "Date Queued"
 msgstr ""
 
-#: models.py:308
+#: models.py:334
 msgid "Date Process Started"
 msgstr ""
 
-#: models.py:309
+#: models.py:335
 msgid "Date Process Completed"
 msgstr ""
 
-#: models.py:310
+#: models.py:336
 msgid "Date of Exception"
 msgstr ""
 
-#: models.py:312
+#: models.py:338
 msgid "Date Created"
 msgstr ""
 
-#: models.py:315
+#: models.py:341
 msgid "document"
 msgstr ""
 
-#: models.py:316
+#: models.py:342
 msgid "documents"
 msgstr ""
 
-#: models.py:319
+#: models.py:345
 #, python-format
 msgid "%s's uploaded document."
 msgstr ""
@@ -213,92 +213,92 @@ msgstr ""
 msgid "Dashboard"
 msgstr ""
 
-#: templates/index.html:16
+#: templates/index.html:18
 msgid "Chart options"
 msgstr ""
 
-#: templates/index.html:18
+#: templates/index.html:20
 msgid "Country"
 msgstr ""
 
-#: templates/index.html:27
+#: templates/index.html:29
 msgid "Vaccine"
 msgstr ""
 
-#: templates/index.html:34
+#: templates/index.html:36
 msgid "Plot"
 msgstr ""
 
-#: templates/index.html:37
+#: templates/index.html:39
 msgid "buffer stock  &amp; overstock indicators"
 msgstr ""
 
-#: templates/index.html:39
+#: templates/index.html:41
 msgid "forecasted stock level (CO forecast)"
 msgstr ""
 
-#: templates/index.html:41
+#: templates/index.html:43
 msgid "forecasted stock level (with POs)"
 msgstr ""
 
-#: templates/index.html:43
+#: templates/index.html:45
 msgid "projected stock level (CO forecast)"
 msgstr ""
 
-#: templates/index.html:45
+#: templates/index.html:47
 msgid "projected stock level (with deliveries)"
 msgstr ""
 
-#: templates/index.html:51
+#: templates/index.html:53
 msgid "Alerts"
 msgstr ""
 
-#: templates/index.html:56
+#: templates/index.html:58
 msgid "Details"
 msgstr ""
 
-#: templates/index.html:63
+#: templates/index.html:65
 msgid "Historical"
 msgstr ""
 
-#: templates/index.html:74
+#: templates/index.html:76
 msgid "Chart"
 msgstr ""
 
-#: templates/layout.html:21
+#: templates/layout.html:28
+msgid "Go"
+msgstr ""
+
+#: templates/layout.html:31
 msgid "Logged in as"
 msgstr ""
 
-#: templates/layout.html:21
+#: templates/layout.html:31
 msgid "Logout"
 msgstr ""
 
-#: templates/layout.html:23
+#: templates/layout.html:33
 msgid "Welcome, please"
 msgstr ""
 
-#: templates/layout.html:23 templates/login.html:34
+#: templates/layout.html:33 templates/login.html:34
 msgid "log in"
 msgstr ""
 
-#: templates/layout.html:23
+#: templates/layout.html:33
 msgid "or"
 msgstr ""
 
-#: templates/layout.html:23 templates/register.html:25
+#: templates/layout.html:33 templates/register.html:25
 msgid "register"
 msgstr ""
 
-#: templates/layout.html:27
+#: templates/layout.html:37
 msgid "Edit translations"
 msgstr ""
 
-#: templates/layout.html:30
+#: templates/layout.html:40
 msgid "Site admin"
-msgstr ""
-
-#: templates/layout.html:41
-msgid "Go"
 msgstr ""
 
 #: templates/layout.html:46
@@ -307,6 +307,22 @@ msgstr ""
 
 #: templates/layout.html:51 templates/upload.html:4 templates/upload.html.py:9
 msgid "Upload data"
+msgstr ""
+
+#: templates/layout.html:62
+msgid "Copyright"
+msgstr ""
+
+#: templates/layout.html:63
+msgid "All Rights Reserved"
+msgstr ""
+
+#: templates/layout.html:64
+msgid "software is available under"
+msgstr ""
+
+#: templates/layout.html:65
+msgid "the BSD license"
 msgstr ""
 
 #: templates/loggedout.html:8

@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-15 17:13-0400\n"
+"POT-Creation-Date: 2011-03-15 17:55-0400\n"
 "PO-Revision-Date: 2011-03-15 17:15\n"
 "Last-Translator: <m@m.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,7 +48,9 @@ msgstr "date d'analyse"
 
 #: static/javascripts/vax.js:19
 msgid "Note: first and last year totals may not reflect full 12 months"
-msgstr "Note: les totaux première et dernière année peuvent ne pas refléter l'ensemble des 12 mois"
+msgstr ""
+"Note: les totaux première et dernière année peuvent ne pas refléter "
+"l'ensemble des 12 mois"
 
 #: static/javascripts/vax.js:20
 msgid "total consumed"
