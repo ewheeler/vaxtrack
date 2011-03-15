@@ -19,7 +19,6 @@ import matplotlib.pyplot
 from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 
-from vax import import_data
 from vax.vsdb import *
 from vax.vs3 import upload_file
 from .tasks import process_file
