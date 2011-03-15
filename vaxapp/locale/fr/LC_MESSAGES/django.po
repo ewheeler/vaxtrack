@@ -2,24 +2,25 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-03-14 15:36-0400\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2011-03-15 12:39\n"
+"Last-Translator: <m@m.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Translated-Using: django-rosetta 0.5.6\n"
 "Plural-Forms: nplurals=2; plural=n>1;\n"
 
 #: analysis.py:249
 msgid "actual stock"
-msgstr ""
+msgstr "stock réel"
 
 #: analysis.py:254
 msgid "3 month buffer"
@@ -31,19 +32,19 @@ msgstr ""
 
 #: analysis.py:263
 msgid "projected stock based on forecast"
-msgstr ""
+msgstr "stock des prévisions fondées sur les prévisions"
 
 #: analysis.py:270
 msgid "projected stock based on placed POs"
-msgstr ""
+msgstr "stock des prévisions fondées sur les OP placé"
 
 #: analysis.py:278
 msgid "theoretical stock based on forecast"
-msgstr ""
+msgstr "stock théorique basé sur les prévisions"
 
 #: analysis.py:286
 msgid "theoretical stock adjusted with deliveries"
-msgstr ""
+msgstr "stock théorique ajusté avec des livraisons"
 
 #: forms.py:16
 msgid "Only CSV files are valid uploads."
@@ -71,27 +72,27 @@ msgstr "urgent"
 
 #: models.py:247
 msgid "resolved"
-msgstr ""
+msgstr "résolu"
 
 #: models.py:248
 msgid "warning"
-msgstr "urgences"
+msgstr "d'alerte"
 
 #: models.py:251
 msgid "risk of overstock"
-msgstr ""
+msgstr "risque de surstock"
 
 #: models.py:252
 msgid "risk of stockout"
-msgstr ""
+msgstr "risque de rupture de stock"
 
 #: models.py:253
 msgid "unknown"
-msgstr "inconnu"
+msgstr "inconnue"
 
 #: models.py:256
 msgid "delay or reduce shipment"
-msgstr ""
+msgstr "retarder ou réduire l'expédition"
 
 #: models.py:257
 msgid "order immediately, insufficient doses on upcoming deliveries"
@@ -99,23 +100,23 @@ msgstr ""
 
 #: models.py:258
 msgid "order immediately, purchase forecasted delivery"
-msgstr ""
+msgstr "commande immédiatement, achat prévu de livraison"
 
 #: models.py:259
 msgid "order immediately, no doses on PO or forecasted in next 3 months"
-msgstr ""
+msgstr "commande immédiatement, aucune dose sur les PO ou prévus dans les 3 prochains mois"
 
 #: models.py:260
 msgid "delay shipment, excessive doses on upcoming deliveries"
-msgstr ""
+msgstr "expédition de retard, des doses excessives sur les livraisons à venir"
 
 #: models.py:261
 msgid "delay order, delay purchase of forecasted delivery"
-msgstr ""
+msgstr "Afin délai, l'achat retard de livraison prévu"
 
 #: models.py:262
 msgid "unknown or error"
-msgstr ""
+msgstr "inconnu ou d'une erreur"
 
 #: models.py:281
 msgid "Uploaded"
@@ -143,11 +144,11 @@ msgstr ""
 
 #: models.py:297
 msgid "user"
-msgstr ""
+msgstr "l'utilisateur"
 
 #: models.py:298
 msgid "Title"
-msgstr ""
+msgstr "Titre"
 
 #: models.py:299
 msgid "Unique Identifier"
@@ -191,11 +192,11 @@ msgstr ""
 
 #: models.py:310
 msgid "Date of Exception"
-msgstr "date d'exception"
+msgstr "Date d'exception"
 
 #: models.py:312
 msgid "Date Created"
-msgstr "date de creation"
+msgstr "Date de création"
 
 #: models.py:315
 msgid "document"
@@ -216,7 +217,7 @@ msgstr ""
 
 #: templates/index.html:16
 msgid "Chart options"
-msgstr ""
+msgstr "Graphique options"
 
 #: templates/index.html:18
 msgid "Country"
@@ -228,7 +229,7 @@ msgstr "Vaccin"
 
 #: templates/index.html:34
 msgid "Plot"
-msgstr ""
+msgstr "Graphique"
 
 #: templates/index.html:37
 msgid "buffer stock  &amp; overstock indicators"
@@ -252,43 +253,43 @@ msgstr ""
 
 #: templates/index.html:51
 msgid "Alerts"
-msgstr ""
+msgstr "Alertes"
 
 #: templates/index.html:56
 msgid "Details"
-msgstr ""
+msgstr "Détails"
 
 #: templates/index.html:63
 msgid "Historical"
-msgstr ""
+msgstr "Historique"
 
 #: templates/index.html:74
 msgid "Chart"
-msgstr ""
+msgstr "Graphique"
 
 #: templates/layout.html:21
 msgid "Logged in as"
-msgstr ""
+msgstr "Connecté en tant que"
 
 #: templates/layout.html:21
 msgid "Logout"
-msgstr ""
+msgstr "Déconnexion"
 
 #: templates/layout.html:23
 msgid "Welcome, please"
-msgstr ""
+msgstr "Bienvenue, s'il vous plaît"
 
 #: templates/layout.html:23
 msgid "log in"
-msgstr ""
+msgstr "Connectez-vous"
 
 #: templates/layout.html:23 templates/register.html:25
 msgid "register"
-msgstr ""
+msgstr "s'inscrire"
 
 #: templates/layout.html:33
 msgid "Go"
-msgstr ""
+msgstr "Go"
 
 #: templates/layout.html:38
 msgid "Return to the Dashboard"
@@ -312,7 +313,7 @@ msgstr ""
 
 #: templates/login.html:4
 msgid "Login"
-msgstr ""
+msgstr "Connectez-vous"
 
 #: templates/login.html:11 templates/register.html:11
 msgid "Oops. Your username and password didn't match. Please try again."
@@ -328,15 +329,15 @@ msgstr ""
 
 #: templates/login.html:34
 msgid "login"
-msgstr ""
+msgstr "connexion"
 
 #: templates/register.html:4
 msgid "Register"
-msgstr ""
+msgstr "S'inscrire"
 
 #: templates/register.html:15
 msgid "You're already logged in!"
-msgstr ""
+msgstr "Vous êtes déjà connecté!"
 
 #: templates/register.html:19
 msgid "Register for Vaxtrack"
