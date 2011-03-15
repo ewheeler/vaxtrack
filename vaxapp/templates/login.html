@@ -1,7 +1,7 @@
 {% extends "layout-split-2.html" %}
 {% block title %}
     {% load i18n %}
-    {% trans "Login" %}
+    {% trans "Log in" %}
 {% endblock %}
 {% block right%}
 {% load i18n %}
@@ -31,7 +31,7 @@
         </tr>
         </table>
         {% csrf_token %}
-        <input type="submit" value="{% trans "login" %}" />
+        <input type="submit" value="{% trans "log in" %}" />
         <input type="hidden" name="next" value="{{ next }}" />
         </form>
         {% endif %}
