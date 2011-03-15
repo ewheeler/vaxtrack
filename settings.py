@@ -98,5 +98,6 @@ INSTALLED_APPS = (
     'vax.vaxapp',
     'south',
     'djcelery',
+    'rosetta',
     #'debug_toolbar',
 )
