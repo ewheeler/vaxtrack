@@ -11,6 +11,8 @@
 
 {% block left %}
 {% load i18n %}
+{% load getattribute %}
+
     {% if countries %}
     <div class="module expanded">
         <h3>{% trans "Chart options" %}</h3>
@@ -19,7 +21,7 @@
             <form id="countries" action="">
                 <select id="country">
                 {% for c in countries %}
-                        <option value="{{c.pk}}">{{c.printable_name}}</option>
+                        <option value="{{c.pk}}">{{ c|getattribute:LANGUAGE_CODE }}</option>
                 {% endfor %}
                 </select>
                 <img id="flag" src="">

@@ -27,6 +27,14 @@ class Country(models.Model):
         verbose_name = _("country")
         verbose_name_plural = _("countries")
 
+    @property
+    def en(self):
+        return self.name
+
+    @property
+    def fr(self):
+        return self.name_fr
+
     @classmethod
     def lookup(klass, term):
         try:
