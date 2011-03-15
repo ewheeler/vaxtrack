@@ -20,8 +20,16 @@
 			    {% if user.is_authenticated %}
 				<p>{% trans "Logged in as" %} {{ user.username }}. <a href="{% url logout %}">{% trans "Logout" %}</a></p>
 			    {% else %}
-				<p>{% trans "Welcome, please" %} <a href="{% url login %}">{% trans "log in" %}</a> or <a href="{% url register %}">{% trans "register" %}</a>.</p>
+				<p>{% trans "Welcome, please" %} <a href="{% url login %}">{% trans "log in" %}</a> {% trans "or" %} <a href="{% url register %}">{% trans "register" %}</a>.</p>
 			    {% endif %}
+			    <p>
+			    {% if user.is_superuser %}
+				<a href="/translations/pick/">{% trans "Edit translations" %}</a>
+			    {% endif %}
+			    {% if user.is_staff %}
+				<a href="/admin/">{% trans "Site admin" %}</a>
+			    {% endif %}
+			    </p>
 			    <form action="/i18n/setlang/" method="post">
 				<select name="language">
 				{% for lang in LANGUAGES %}
