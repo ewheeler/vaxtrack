@@ -17,6 +17,16 @@
 	<body>
 		<div id="header">
 			<div id="auth">
+			    <form action="/i18n/setlang/" method="post">
+				<select name="language">
+				{% for lang in LANGUAGES %}
+				    <option value="{{ lang.0 }}" {% ifequal LANGUAGE_CODE lang.0 %} SELECTED {% endifequal %}>
+				    {{ lang.1 }}</option>
+				{% endfor %}
+				</select>
+			    {% csrf_token %}
+			    <input type="submit" value="{% trans "Go" %}" />
+			    </form>
 			    {% if user.is_authenticated %}
 				<p>{% trans "Logged in as" %} {{ user.username }}. <a href="{% url logout %}">{% trans "Logout" %}</a></p>
 			    {% else %}
@@ -30,16 +40,6 @@
 				<a href="/admin/">{% trans "Site admin" %}</a>
 			    {% endif %}
 			    </p>
-			    <form action="/i18n/setlang/" method="post">
-				<select name="language">
-				{% for lang in LANGUAGES %}
-				    <option value="{{ lang.0 }}" {% ifequal LANGUAGE_CODE lang.0 %} SELECTED {% endifequal %}>
-				    {{ lang.1 }}</option>
-				{% endfor %}
-				</select>
-			    {% csrf_token %}
-			    <input type="submit" value="{% trans "Go" %}" />
-			    </form>
 			</div>
                         <div id="branding">
                                 <h1>

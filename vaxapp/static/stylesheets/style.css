@@ -169,6 +169,10 @@ div.clear-hack {
             padding: 0.5em;
         }
 
+        #header #auth form {
+            padding: 0.5em;
+        }
+
     #branding {
         padding: 0 10px;
         background-color: #FEFFC8;
@@ -178,8 +182,8 @@ div.clear-hack {
     /* align in the middle of the unicef blue stripe of header bg, and
      * display logo on the right. TODO: extract the unicef branding */
     #branding h1 {
-        background: url("../images/unicef-logo.png") no-repeat 100% 50%;
-        height: 65px;
+        /*background: url("../images/unicef-logo.png") no-repeat 100% 50%;*/
+        height: 3.5em;
         color: #fff;
         margin: 0;
     }
