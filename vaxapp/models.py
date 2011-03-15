@@ -84,6 +84,14 @@ class VaccineGroup(models.Model):
     def __unicode__(self):
         return self.abbr_en
 
+    @property
+    def en(self):
+        return self.abbr_en
+
+    @property
+    def fr(self):
+        return self.abbr_fr
+
 
 class Vaccine(models.Model):
     name = models.CharField(max_length=160, blank=True, null=True)
@@ -110,6 +118,16 @@ class Vaccine(models.Model):
     @property
     def abbr(self):
         return self.abbr_en
+
+    @property
+    def en(self):
+        if self.abbr_en is not None:
+            return self.abbr_en
+
+    @property
+    def fr(self):
+        if self.abbr_fr is not None:
+            return self.abbr_fr
 
     @classmethod
     def lookup_slug(klass, term):
