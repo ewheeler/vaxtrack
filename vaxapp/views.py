@@ -50,9 +50,7 @@ def alerts(req, country_pk, vaccine_abbr):
         if len(alerts) == 0:
             return HttpResponse([], 'application/javascript')
         alerts_text = {}
-        for alert in alerts:
-            alerts_text.update({'text':alert.get_text_display(), 'status':alert.status})
-        #data = serializers.serialize('json', alerts)
+        map(lambda alert: alerts_text.update({'text':alert.get_text_display(), 'status':alert.status}), alerts)
         return HttpResponse(simplejson.dumps([alerts_text]), 'application/javascript')
 
 def stats(req, country_pk, vaccine_abbr):
@@ -69,7 +67,6 @@ def stats(req, country_pk, vaccine_abbr):
             props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year']
             years = []
             for prop in props_to_get:
-                #stats[prop] = getattr(css, 'get_' + prop)
                 prop_dict = getattr(css, 'get_' + prop)
                 prop_list = []
                 if prop_dict is not None:
@@ -80,8 +77,7 @@ def stats(req, country_pk, vaccine_abbr):
             stats['years'] = sorted(list(set(years)))
 
             attrs_to_get = ['est_daily_cons','days_of_stock','doses_delivered_this_year','doses_on_orders','demand_for_period']
-            for attr in attrs_to_get:
-                stats[attr] = getattr(css, attr)
+            map(lambda attr: stats.update({'attr': getattr(css, attr)}), attrs_to_get)
 
             stats['percent_coverage'] = str(int(css.percent_coverage*100.0)) + '%'
 
@@ -96,7 +92,6 @@ def stats(req, country_pk, vaccine_abbr):
                 # otherwise, assume we have a datetime.date...
                 stats[date_attr] = getattr(css, date_attr).isoformat()
 
-            #data = serializers.serialize('json', stats)
             data = simplejson.dumps([stats])
             return HttpResponse(data, 'application/javascript')
         else:
@@ -129,7 +124,7 @@ def upload(req):
     else:
         form = forms.DocumentForm()
     return render_to_response("upload.html",\
-            {"country_form": form,
+            {"document_form": form,
             "tab": "upload"},\
             context_instance=RequestContext(req))
 

@@ -13,17 +13,19 @@ from .models import UserProfile
 
 class DocumentValidationError(forms.ValidationError):
     def __init__(self):
-        msg = _(u'Only CSV files are valid uploads.')
+        msg = _(u'Only .csv and .xls files are valid uploads.')
         super(DocumentValidationError, self).__init__(msg)
 
 
 class DocumentField(forms.FileField):
-    """A validating CSV document upload field"""
+    """A validating document upload field"""
 
     def clean(self, data, initial=None):
         f = super(DocumentField, self).clean(data, initial)
         ext = os.path.splitext(f.name)[1][1:].lower()
-        if ext == 'csv' and f.content_type == 'text/csv':
+        extensions = ['csv', 'xls']
+        content_types = ['text/csv', 'application/vnd.ms-excel']
+        if ext in extensions and f.content_type in content_types:
             return f
         raise DocumentValidationError()
 
