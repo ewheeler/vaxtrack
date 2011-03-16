@@ -107,7 +107,6 @@ div.module h3 {
 
 
 
-
 /* modules can (optionally) include help text, to explain how they can
  * be used. this is hidden by module-help.js, if it's available, but
  * shouldn't be too verbose, in case it isn't */
@@ -155,7 +154,11 @@ div.module div.toolbar {
         div.module ul#alerts li {
 		display: block;
 		padding-left: 2em;
-		padding-bottom: 1em;
+		padding-bottom: .33em;
+		padding-top: .33em;
+		border-bottom: 1px dotted #0099ff;
+		border-right: 1px dotted #0099ff;
+		border-left: 1px dotted #0099ff;
 	}
         div.module ul#alerts li.U {
 		background-image: url("../icons/silk/exclamation.png");
@@ -171,6 +174,7 @@ div.module div.toolbar {
 
 	div.module table {
 		border-collapse: collapse;
+		width: 100%;
 	}
 
 	div.module table tbody tr td{
