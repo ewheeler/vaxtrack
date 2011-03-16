@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
+import itertools
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
@@ -49,9 +50,12 @@ def alerts(req, country_pk, vaccine_abbr):
         alerts = Alert.objects.filter(countrystock=countrystock)
         if len(alerts) == 0:
             return HttpResponse([], 'application/javascript')
-        alerts_text = {}
-        map(lambda alert: alerts_text.update({'text':alert.get_text_display(), 'status':alert.status}), alerts)
-        return HttpResponse(simplejson.dumps([alerts_text]), 'application/javascript')
+        alerts_text = []
+        # instead of a for loop, using this strategy: http://news.ycombinator.com/item?id=2320298
+        # basically, this avoids having the for loop translated into
+        # bytecode by the interpreter and runs in straight c instead.
+        any(itertools.imap(lambda alert: alerts_text.append({'text':alert.get_text_display(), 'status':alert.status}), alerts))
+        return HttpResponse(simplejson.dumps(alerts_text), 'application/javascript')
 
 def stats(req, country_pk, vaccine_abbr):
     if req.is_ajax():
@@ -60,12 +64,14 @@ def stats(req, country_pk, vaccine_abbr):
             css = countrystock[0].latest_stats
             if css is None:
                 return HttpResponse([], 'application/javascript')
-            stats = {}
             # TODO this is insane
             # instead of the fields, i'd like the properties that return
             # a dict of the related obj rather than pks of related obj
             props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year']
             years = []
+
+            #t1 = os.times()
+            stats = {}
             for prop in props_to_get:
                 prop_dict = getattr(css, 'get_' + prop)
                 prop_list = []
@@ -75,9 +81,34 @@ def stats(req, country_pk, vaccine_abbr):
                         prop_list.append(prop_dict[year])
                     stats[prop] = prop_list
             stats['years'] = sorted(list(set(years)))
+            #t2 = os.times()
+            ## print result
+            #utime = t2[0] - t1[0] # user time
+            #stime = t2[1] - t1[1] # system time
+            #print "utime=%s, stime=%s" % (utime, stime)
+            #print stats
+
+            # in this case, the for loop is comparable in speed
+            # and much much more legible. caveat: os.times() is not best measure
+            # could be faster if theres a way to get rid of the list comps
+            #
+            #test = {}
+            #t1 =  os.times()
+            #props = dict(((prop, getattr(css, 'get_' + prop)) for prop in props_to_get))
+            #test.update({'years': sorted(props['annual_demand'].keys())})
+            #any(itertools.imap(lambda prop: test.update({prop: [props[prop][y] for y in test['years']]}), props_to_get))
+            #t2 = os.times()
+            ## print result
+            #utime = t2[0] - t1[0] # user time
+            #stime = t2[1] - t1[1] # system time
+            #print "utime=%s, stime=%s" % (utime, stime)
+            #print test
 
             attrs_to_get = ['est_daily_cons','days_of_stock','doses_delivered_this_year','doses_on_orders','demand_for_period']
-            map(lambda attr: stats.update({'attr': getattr(css, attr)}), attrs_to_get)
+            # instead of a for loop, using this strategy: http://news.ycombinator.com/item?id=2320298
+            # basically, this avoids having the for loop translated into
+            # bytecode by the interpreter and runs in straight c instead
+            any(itertools.imap(lambda attr: stats.update({attr: getattr(css, attr)}), attrs_to_get))
 
             stats['percent_coverage'] = str(int(css.percent_coverage*100.0)) + '%'
 
