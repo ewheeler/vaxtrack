@@ -397,12 +397,9 @@ class Analysis(object):
                 if (len(self.upcoming_forecasted) > 0) or (len(self.upcoming_on_po) > 0):
                     print '***FLAG***'
                     print 'delay or reduce shipment'
-                    alert = Alert(countrystock=self.cs)
+                    alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                        reference_date=self.today, status='U', risk='O', text='D')
                     alert.analyzed = datetime.datetime.now()
-                    alert.reference_date = self.today
-                    alert.status = 'U'
-                    alert.risk = 'O'
-                    alert.text = 'D'
                     alert.save()
                 else:
                     print '---OK---'
@@ -431,12 +428,9 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of stockout'
                             print 'order immediately -- not enough on upcoming deliveries'
-                            alert = Alert(countrystock=self.cs)
+                            alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                                reference_date=self.today, status='U', risk='S', text='I')
                             alert.analyzed = datetime.datetime.now()
-                            alert.reference_date = self.today
-                            alert.status = 'U'
-                            alert.risk = 'S'
-                            alert.text = 'I'
                             alert.save()
                         else:
                             print '---OK---'
@@ -445,24 +439,18 @@ class Analysis(object):
                         print '***FLAG***'
                         print 'risk of stockout'
                         print 'order immediately - purchase forecasted delivery'
-                        alert = Alert(countrystock=self.cs)
+                        alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                            reference_date=self.today, status='U', risk='S', text='F')
                         alert.analyzed = datetime.datetime.now()
-                        alert.reference_date = self.today
-                        alert.status = 'U'
-                        alert.risk = 'S'
-                        alert.text = 'F'
                         alert.save()
 
                     else:
                         print '***FLAG***'
                         print 'risk of stockout'
                         print 'order immediately - no supply on PO or forecasted for next 3 months'
-                        alert = Alert(countrystock=self.cs)
+                        alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                            reference_date=self.today, status='U', risk='S', text='P')
                         alert.analyzed = datetime.datetime.now()
-                        alert.reference_date = self.today
-                        alert.status = 'U'
-                        alert.risk = 'S'
-                        alert.text = 'P'
                         alert.save()
 
                 if self.percent_coverage > (0.5 + float(self.today.month)/12.0):
@@ -475,12 +463,9 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of overstocking'
                             print 'delay shipment -- more than enough on upcoming deliveries'
-                            alert = Alert(countrystock=self.cs)
+                            alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                                reference_date=self.today, status='U', risk='O', text='E')
                             alert.analyzed = datetime.datetime.now()
-                            alert.reference_date = self.today
-                            alert.status = 'U'
-                            alert.risk = 'O'
-                            alert.text = 'E'
                             alert.save()
 
                     elif (len(self.upcoming_forecasted) > 0):
@@ -489,12 +474,9 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of overstocking'
                             print 'delay order - delay purchase of forecasted delivery'
-                            alert = Alert(countrystock=self.cs)
+                            alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                                reference_date=self.today, status='U', risk='O', text='O')
                             alert.analyzed = datetime.datetime.now()
-                            alert.reference_date = self.today
-                            alert.status = 'U'
-                            alert.risk = 'O'
-                            alert.text = 'O'
                             alert.save()
 
                     else:
