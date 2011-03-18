@@ -79,6 +79,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'vax.vaxapp.startup.StartupMiddlewareHack',
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
