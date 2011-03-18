@@ -4,6 +4,7 @@ import os
 import json
 import uuid
 import datetime
+import hashlib
 from operator import attrgetter
 
 from django.db import models
@@ -177,6 +178,7 @@ class Vaccine(models.Model):
 class CountryStock(models.Model):
     vaccine = models.ForeignKey(Vaccine)
     country = models.ForeignKey(Country)
+    md5_hash = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
         return "%s: %s" % (self.country.printable_name, self.vaccine)
@@ -193,6 +195,14 @@ class CountryStock(models.Model):
             return css[0]
         else:
             return None
+
+    @property
+    def get_md5(self):
+        return self.md5_hash
+
+    def set_md5(self):
+        self.md5_hash = hashlib.md5(self.country.iso2_code + self.vaccine.slug).hexdigest()
+        self.save()
 
 class Dicty(models.Model):
     ''' not pretty, but more useful than stashing dicts
