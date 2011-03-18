@@ -105,7 +105,15 @@ def import_who(file=None):
                         print 'error creating stock level'
                         print e
 
+                    cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
+                    cs_item = domain.new_item(cs_item_name)
+                    cs_item.add_value("country", str(country.iso2_code))
+                    cs_item.add_value("supply", str(vax_slug))
+                    cs_item.add_value("type", "CS")
+                    cs_item.save()
                     cs, csc = CountryStock.objects.get_or_create(vaccine=vaccine, country=country)
+                    cs.md5_hash = cs_item_name
+                    cs.save()
                 else:
                     titles.append(values)
             print len(titles)
@@ -253,6 +261,20 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                 print 'error creating stock level'
                 print e
                 import ipdb;ipdb.set_trace()
+            try:
+                cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
+                cs_item = domain.new_item(cs_item_name)
+                cs_item.add_value("country", str(country.iso2_code))
+                cs_item.add_value("supply", str(vax_slug))
+                cs_item.add_value("type", "CS")
+                cs_item.save()
+                cs, csc = CountryStock.objects.get_or_create(vaccine=vaccine, country=country)
+                cs.md5_hash = cs_item_name
+                cs.save()
+            except Exception, e:
+                print 'error creating countrystock item'
+                print e
+                import ipdb;ipdb.set_trace()
 
 
 def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xls"):
@@ -335,3 +357,17 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
                 print 'error creating stock level'
                 print e
 
+            try:
+                cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
+                cs_item = domain.new_item(cs_item_name)
+                cs_item.add_value("country", str(country.iso2_code))
+                cs_item.add_value("supply", str(vax_slug))
+                cs_item.add_value("type", "CS")
+                cs_item.save()
+                cs, csc = CountryStock.objects.get_or_create(vaccine=vaccine, country=country)
+                cs.md5_hash = cs_item_name
+                cs.save()
+            except Exception, e:
+                print 'error creating countrystock item'
+                print e
+                import ipdb;ipdb.set_trace()
