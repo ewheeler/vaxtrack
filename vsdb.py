@@ -134,6 +134,14 @@ def sdb_get_all_type(country, supply, type):
 
     return result
 
+def sdb_get_all_cs():
+    sdb = boto.connect_sdb()
+    cs = sdb.get_domain('demodata')
+    query = "SELECT * FROM `demodata` WHERE `type`='CS'"
+    result = cs.select(query)
+    return decode_results(result)
+
+
 def multikeysort(items, columns):
     from operator import itemgetter
     comparers = [ ((itemgetter(col[1:].strip()), -1) if col.startswith('-') else (itemgetter(col.strip()), 1)) for col in columns]  
