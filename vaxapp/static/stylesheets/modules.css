@@ -183,3 +183,15 @@ div.module div.toolbar {
 		border-left: 1px dotted #0099ff;
 		padding: .33em;
 	}
+
+/* tooltip styling. by default the element to be styled is .tooltip  */
+.tooltip {
+	display:none;
+	background:transparent url("../images/white_arrow.png");
+	background-repeat: no-repeat;
+	font-size:9px;
+	height:70px;
+	width:160px;
+	padding:25px;
+	color:#111;
+}

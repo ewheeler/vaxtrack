@@ -23,6 +23,8 @@ $(document).ready(function(){
     var buffer_stock_level_txt = gettext("buffer stock level");
     var overstock_level_txt = gettext("overstock level");
 
+    $("#plot_options label[title]").tooltip();
+
     window.onhashchange = function(event){
 	var hash_parts = new Array();
 	hash_parts = document.location.hash.split('/');
@@ -138,7 +140,7 @@ $(document).ready(function(){
 			$("#module-hist").show();
 		}
 		for (s in stats){
-			$("#stats > tbody:last").append("<tr><td>" + est_daily_cons_txt + ":</td><td>" + stats[s].est_daily_cons+ "</td></tr>");
+			$("#stats > tbody:last").append("<tr><td>" + est_daily_cons_txt + ":</td><td>" + stats[s].est_daily_cons + "</td></tr>");
 			$("#stats > tbody:last").append("<tr><td>" + days_of_stock_txt + ":</td><td>" + stats[s].days_of_stock + "</td></tr>");
 			$("#stats > tbody:last").append("<tr><td>" + coverage_of_annual_need_txt + ":</td><td>" + stats[s].percent_coverage + "</td></tr>");
 			$("#stats > tbody:last").append("<tr><td>" + doses_delivered_this_year_txt + ":</td><td>" + stats[s].doses_delivered_this_year + "</td></tr>");
