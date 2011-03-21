@@ -1,16 +1,13 @@
 **TODO**
-i18n (!)
-update analyze() so Alerts are not duplicated
-documentform should accept xls in addition to csv
-progress bar for uploads
+switch to final s3 hierarchy and hookup i18n charts
+progress bar for uploads (http://www.laurentluce.com/?p=93)
 add WHO logo
-get rid of old import scripts
 refactor vsdb interfaces
 download button to download all charts for vaccine/country or country
 
 **PUNT**
 print button that opens image in new window
-date range selection
+date range selection for charts
 only allow registration by @unicef.org and @who.int email addresses
 email notification when processing of uploads is complete (i.e., when new charts are available)
 
@@ -19,3 +16,8 @@ get rid of old fixtures
 rework web ui to use newly improved Alert objs
 show CountryStockStats statistics on web
 update url so charts are linkable
+i18n (!)
+get rid of old import scripts
+update analyze() so Alerts are not duplicated
+documentform should accept xls in addition to csv
+also save countrystocks in cloud!!!
