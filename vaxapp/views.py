@@ -164,13 +164,10 @@ def get_chart_dev(req, country_pk=None, vaccine_abbr=None, chart_opts=""):
     path = "%s/%s/%s/" % ('en', country_pk, vaccine_abbr)
     filename = "en-%s-%s-%s.png" % (country_pk, vaccine_abbr, chart_opts)
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s%s" % (path, filename)
-    print chart_url
     return HttpResponseRedirect(chart_url)
 
 def get_chart(req, country_pk=None, vaccine_abbr=None, chart_opts=""):
     vaccine_abbr = 'BCG'
     filename = "%s-%s-%s.png" % (country_pk, vaccine_abbr, chart_opts)
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s" % (filename)
-    print chart_url
     return HttpResponseRedirect(chart_url)
-
