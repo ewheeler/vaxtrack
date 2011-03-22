@@ -15,7 +15,7 @@ $(document).ready(function(){
     var days_of_stock_tip = gettext("Number of days worth of doses currently in stock based on est daily cons");
 
     var coverage_of_annual_need_txt = gettext("coverage of annual need");
-    var coverage_of_annual_need_tip= gettext("Percent coverage of annual need delivered to date");
+    var coverage_of_annual_need_tip= gettext("Percent coverage of annual need delivered to date, based on stock at beginning of year plus deliveries and forecasted annual demand");
 
     var doses_delivered_this_year_txt = gettext("doses delivered this year");
     var doses_delivered_this_year_tip = gettext("Total doses delivered this year to date");
@@ -74,7 +74,6 @@ $(document).ready(function(){
     get_alerts();
     get_stats();
     update_url();
-    $("#plot_options label").tooltip();
 
 
     $("#auth select").change(function(){
@@ -164,13 +163,13 @@ $(document).ready(function(){
 			$("#module-hist").show();
 		}
 		for (s in stats){
-			$("#stats > tbody:last").append("<tr title='" + est_daily_cons_tip + "'><td>" + est_daily_cons_txt + ":</td><td>" + stats[s].est_daily_cons + "</td></tr>");
-			$("#stats > tbody:last").append("<tr title='" + days_of_stock_tip + "'><td>" + days_of_stock_txt + ":</td><td>" + stats[s].days_of_stock + "</td></tr>");
-			$("#stats > tbody:last").append("<tr title='" + coverage_of_annual_need_tip + "'><td>" + coverage_of_annual_need_txt + ":</td><td>" + stats[s].percent_coverage + "</td></tr>");
-			$("#stats > tbody:last").append("<tr title='" + doses_delivered_this_year_tip + "'><td>" + doses_delivered_this_year_txt + ":</td><td>" + stats[s].doses_delivered_this_year + "</td></tr>");
-			$("#stats > tbody:last").append("<tr title='" + doses_on_order_tip + "'><td>" + doses_on_order_txt + ":</td><td>" + stats[s].doses_on_orders + "</td></tr>");
-			$("#stats > tbody:last").append("<tr title='" + reference_date_tip + "'><td>" + reference_date_txt + ":</td><td>" + stats[s].reference_date + "</td></tr>");
-			$("#stats > tbody:last").append("<tr title='" + analysis_date_tip + "'><td>" + analysis_date_txt + ":</td><td>" + stats[s].analyzed + "</td></tr>");
+			$("#stats > tbody:last").append("<tr class='tipoff' title='" + est_daily_cons_tip + "'><td>" + est_daily_cons_txt + ":</td><td>" + stats[s].est_daily_cons + "</td></tr>");
+			$("#stats > tbody:last").append("<tr class='tipoff' title='" + days_of_stock_tip + "'><td>" + days_of_stock_txt + ":</td><td>" + stats[s].days_of_stock + "</td></tr>");
+			$("#stats > tbody:last").append("<tr class='tipoff' title='" + coverage_of_annual_need_tip + "'><td>" + coverage_of_annual_need_txt + ":</td><td>" + stats[s].percent_coverage + "</td></tr>");
+			$("#stats > tbody:last").append("<tr class='tipoff' title='" + doses_delivered_this_year_tip + "'><td>" + doses_delivered_this_year_txt + ":</td><td>" + stats[s].doses_delivered_this_year + "</td></tr>");
+			$("#stats > tbody:last").append("<tr class='tipoff' title='" + doses_on_order_tip + "'><td>" + doses_on_order_txt + ":</td><td>" + stats[s].doses_on_orders + "</td></tr>");
+			$("#stats > tbody:last").append("<tr class='tipoff' title='" + reference_date_tip + "'><td>" + reference_date_txt + ":</td><td>" + stats[s].reference_date + "</td></tr>");
+			$("#stats > tbody:last").append("<tr class='tipoff' title='" + analysis_date_tip + "'><td>" + analysis_date_txt + ":</td><td>" + stats[s].analyzed + "</td></tr>");
 
 			var first_row;
 			first_row = "<tr><td style='font-size:.66em;'><em>" + historical_note_txt + "</em></td>";
@@ -180,41 +179,42 @@ $(document).ready(function(){
 			$("#hist > tbody:last").append(first_row + "</tr>");
 
 			var consumed_in_year_row;
-			consumed_in_year_row = "<tr title='" + total_consumed_tip + "'><td>" + total_consumed_txt + "</td>";
+			consumed_in_year_row = "<tr class='tipoff' title='" + total_consumed_tip + "'><td>" + total_consumed_txt + "</td>";
 			for (y in stats[s].years){
 				consumed_in_year_row = consumed_in_year_row + "<td>" + stats[s].consumed_in_year[y] + "</td>";
 			}
 			$("#hist > tbody:last").append(consumed_in_year_row + "</tr>");
 
 			var annual_demand;
-			annual_demand = "<tr title='" + annual_demand_tip + "'><td>" + annual_demand_txt + "</td>";
+			annual_demand = "<tr class='tipoff' title='" + annual_demand_tip + "'><td>" + annual_demand_txt + "</td>";
 			for (y in stats[s].years){
 				annual_demand = annual_demand + "<td>" + stats[s].annual_demand[y] + "</td>";
 			}
 			$("#hist > tbody:last").append(annual_demand + "</tr>");
 
 			var actual_cons_rate;
-			actual_cons_rate = "<tr title='" + actual_daily_cons_rate_tip + "'><td>" + actual_daily_cons_rate_txt + "</td>";
+			actual_cons_rate = "<tr class='tipoff' title='" + actual_daily_cons_rate_tip + "'><td>" + actual_daily_cons_rate_txt + "</td>";
 			for (y in stats[s].years){
 				actual_cons_rate = actual_cons_rate + "<td>" + stats[s].actual_cons_rate[y] + "</td>";
 			}
 			$("#hist > tbody:last").append(actual_cons_rate + "</tr>");
 
 			var three_by_year;
-			three_by_year = "<tr title='" + buffer_stock_level_tip + "'><td>" + buffer_stock_level_txt + "</td>";
+			three_by_year = "<tr class='tipoff' title='" + buffer_stock_level_tip + "'><td>" + buffer_stock_level_txt + "</td>";
 			for (y in stats[s].years){
 				three_by_year = three_by_year + "<td>" + stats[s].three_by_year[y] + "</td>";
 			}
 			$("#hist > tbody:last").append(three_by_year + "</tr>");
 
 			var nine_by_year;
-			nine_by_year = "<tr title='" + overstock_level_tip + "'><td>" + overstock_level_txt + "</td>";
+			nine_by_year = "<tr class='tipoff' title='" + overstock_level_tip + "'><td>" + overstock_level_txt + "</td>";
 			for (y in stats[s].years){
 				nine_by_year = nine_by_year + "<td>" + stats[s].nine_by_year[y] + "</td>";
 			}
 			$("#hist > tbody:last").append(nine_by_year + "</tr>");
 
 			}
+            $(".tipoff").tooltip();
 	});
     };
 });
