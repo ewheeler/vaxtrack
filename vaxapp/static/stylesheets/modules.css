@@ -198,7 +198,7 @@ div.module div.toolbar {
 	color:black;
 }
 
-.tipoff :hover {
+.tipoff:hover {
     background: #FEFFC8;
     border: 1px solid #0099ff;
 }
