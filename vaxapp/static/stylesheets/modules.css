@@ -187,11 +187,18 @@ div.module div.toolbar {
 /* tooltip styling. by default the element to be styled is .tooltip  */
 .tooltip {
 	display:none;
-	background:transparent url("../images/white_arrow.png");
-	background-repeat: no-repeat;
+	/*background:transparent url("../images/white_arrow.png");
+	background-repeat: no-repeat;*/
+        background: #FEFFC8;
+        border: 1px solid #0099ff;
 	font-size:9px;
 	height:70px;
 	width:160px;
 	padding:25px;
-	color:#111;
+	color:black;
+}
+
+.tipoff :hover {
+    background: #FEFFC8;
+    border: 1px solid #0099ff;
 }

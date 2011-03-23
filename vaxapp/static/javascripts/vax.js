@@ -103,8 +103,8 @@ $(document).ready(function(){
 	country = $(this).val();
         get_chart();
 	get_alerts();
-	get_stats();
 	update_url();
+	get_stats();
     });
 
     function update_lang(){
@@ -112,18 +112,16 @@ $(document).ready(function(){
 	    lang = "";
 	    lang = $(this).val();
 	});
-	//$.post("/i18n/setlang/", {"language": lang});
 	update_url();
-    }
+    };
 
     function update_url(){
 	chart_opts = options.sort().join("");
         vaccine = vaccine.replace(/-/g, "_");
     	var path;
-	path = "#!/" + lang + "/" + country + "/" + vaccine + "/" + chart_opts
-	//saved_history.pushState("", path, path)
+	path = "#!/" + lang + "/" + country + "/" + vaccine + "/" + chart_opts;
 	document.location.hash = path;
-    }
+    };
 
     function get_chart(){
 	chart_opts = options.sort().join("");
@@ -214,7 +212,7 @@ $(document).ready(function(){
 			$("#hist > tbody:last").append(nine_by_year + "</tr>");
 
 			}
-            $(".tipoff").tooltip();
+            $(".tipoff").tooltip({opacity: 0.9});
 	});
     };
 });
