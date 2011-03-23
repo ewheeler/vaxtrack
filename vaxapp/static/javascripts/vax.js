@@ -46,8 +46,7 @@ $(document).ready(function(){
     var overstock_level_txt = gettext("overstock level");
     var overstock_level_tip = gettext("Nine month overstock level, based on annual demand.");
 
-
-    window.onhashchange = function(event){
+    $(window).bind("hashchange",  function(event){
 	var hash_parts = new Array();
 	hash_parts = document.location.hash.split('/');
 	lang = hash_parts[1];
@@ -60,24 +59,26 @@ $(document).ready(function(){
 	$("#plot_options :input").val(options);
 	$("#vaccines :input").val(vaccine);
 	$("#country").val(country);
-	get_chart();
-	get_alerts();
-	get_stats();
-	return false;
-    }
+	$("#auth select").val(lang);
+    });
 
     $("#plot_options :input").val(options);
     $("#vaccines :input").val(vaccine);
     $("#country").val(country);
-    update_lang();
+    lang = $("#auth select").val();
+    update_url();
     get_chart();
     get_alerts();
     get_stats();
-    update_url();
 
 
+    /* TODO comment this shit */
     $("#auth select").change(function(){
-	update_lang();
+	lang = $("#auth select").val();
+	update_url();
+        get_chart();
+	get_alerts();
+	get_stats();
     });
 
     $("#plot_options :input").click(function(){
@@ -85,8 +86,8 @@ $(document).ready(function(){
 	$("#plot_options :input:checked").each(function() {
 	    options.push( $(this).val() );
 	});
-        get_chart();
 	update_url();
+        get_chart();
     });
 
     $("#vaccines :input").click(function(){
@@ -94,26 +95,19 @@ $(document).ready(function(){
 	$("#vaccines :input:radio:checked").each(function() {
 	    vaccine = $(this).val();
 	});
-        get_chart();
 	update_url();
+        get_chart();
     });
 
     $("#country").change(function(){
         country = "";
 	country = $(this).val();
+	update_url();
         get_chart();
 	get_alerts();
-	update_url();
 	get_stats();
     });
 
-    function update_lang(){
-	$("#auth select option:selected").each(function(){
-	    lang = "";
-	    lang = $(this).val();
-	});
-	update_url();
-    };
 
     function update_url(){
 	chart_opts = options.sort().join("");
@@ -212,7 +206,7 @@ $(document).ready(function(){
 			$("#hist > tbody:last").append(nine_by_year + "</tr>");
 
 			}
-            $(".tipoff").tooltip({opacity: 0.9});
+	$(".tipoff").tooltip({opacity: 0.9});
 	});
     };
 });
