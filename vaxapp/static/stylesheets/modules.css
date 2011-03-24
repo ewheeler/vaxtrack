@@ -211,3 +211,8 @@ div.module div.toolbar {
 .note {
     font-size:.66em;
 }
+
+.headings {
+    font-style: italic;
+    background: #ddd;
+}

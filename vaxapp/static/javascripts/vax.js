@@ -164,7 +164,7 @@ $(document).ready(function(){
 			$("#stats > tbody:last").append("<tr class='tipoff' title='" + analysis_date_tip + "'><td>" + analysis_date_txt + ":</td><td>" + stats[s].analyzed + "</td></tr>");
 
 			var first_row;
-			first_row = "<tr><td class='note'><em>" + historical_note_txt + "</em></td>";
+			first_row = "<tr class='headings'><td class='note'><em>" + historical_note_txt + "</em></td>";
 			for (y in stats[s].years){
 				first_row = first_row + "<td>" + stats[s].years[y] + "</td>";
 			}
