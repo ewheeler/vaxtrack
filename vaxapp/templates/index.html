@@ -28,10 +28,8 @@
             </form>
             <h5>{% trans "Vaccine" %}</h5>
             <form id="vaccines" action="">
-                {% for v in vaccines %}
-                        <input type="radio" name="vax" id="radio-{{ v.slug }}" value="{{ v.slug }}"/>
-                        <label for="radio-{{ v.slug }}"> {{ v.abbr }} </label><br />
-                {% endfor %}
+		<input type="radio" checked="yes" name="vax" id="radio-BCG" value="BCG"/>
+		<label for="radio-BCG"> BCG </label><br />
             </form>
             <h5>{% trans "Plot" %}</h5>
             <form id="plot_options" action="">
