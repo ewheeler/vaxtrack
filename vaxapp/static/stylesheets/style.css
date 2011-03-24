@@ -13,6 +13,7 @@ h1,h2,h3,h4,h5 {
 body {
   font: 9pt verdana, sans-serif;
   margin: 2em;
+  background: #eee url("../images/body-bg.png");
 }
 
   #wrapper {
@@ -100,9 +101,9 @@ h2 {
         width: 100%; }
 
 #vaxform {
-    border-left: 1px dotted #0099FF;
+   /* border-left: 1px dotted #0099FF;
     border-right: 1px dotted #0099FF;
-    border-bottom: 1px dotted #0099FF;
+    border-bottom: 1px dotted #0099FF;*/
 }
 
     #vaxform h5 {
@@ -148,6 +149,7 @@ div.clear-hack {
 #inner {
     padding: 1em;
     position: relative;
+    background: white;
 }
 
     #header #auth {

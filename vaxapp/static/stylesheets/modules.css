@@ -2,6 +2,9 @@
 
 div.module {
     margin-top: 2em;
+    box-shadow:0 2px 5px rgba(0, 0, 0, 0.4);
+    -webkit-box-shadow:0 2px 5px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow:0 2px 5px rgba(0, 0, 0, 0.4);
     position: relative;
 }
 
@@ -156,9 +159,9 @@ div.module div.toolbar {
 		padding-left: 2em;
 		padding-bottom: .33em;
 		padding-top: .33em;
-		border-bottom: 1px dotted #0099ff;
+		/*border-bottom: 1px dotted #0099ff;
 		border-right: 1px dotted #0099ff;
-		border-left: 1px dotted #0099ff;
+		border-left: 1px dotted #0099ff;*/
 	}
         div.module ul#alerts li.U {
 		background-image: url("../icons/silk/exclamation.png");
@@ -178,9 +181,9 @@ div.module div.toolbar {
 	}
 
 	div.module table tbody tr td{
-		border-bottom: 1px dotted #0099ff;
-		border-right: 1px dotted #0099ff;
-		border-left: 1px dotted #0099ff;
+		border-bottom: 1px solid #aaa;
+		border-right: 1px solid #aaa;
+		border-left: 1px solid #aaa;
 		padding: .33em;
 	}
 
@@ -196,6 +199,9 @@ div.module div.toolbar {
 	width:160px;
 	padding:25px;
 	color:black;
+	box-shadow:0 2px 5px rgba(0, 0, 0, 0.4);
+	-webkit-box-shadow:0 2px 5px rgba(0, 0, 0, 0.4);
+	-moz-box-shadow:0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
 .tipoff:hover {
