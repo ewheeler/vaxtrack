@@ -134,6 +134,7 @@ h2 {
 
         #plot_options label{
             margin-left: 0.25em;
+            border: 1px solid white;
         }
 
 /* this is not okay. but it is, unfortunately, the least error-prone way
