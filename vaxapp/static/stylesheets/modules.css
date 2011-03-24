@@ -187,7 +187,7 @@ div.module div.toolbar {
 		padding: .33em;
 	}
 
-	#module-options {
+	#module-options, #module-chart {
 	    border-bottom: 1px solid #aaa;
 	    border-right: 1px solid #aaa;
 	    border-left: 1px solid #aaa;
