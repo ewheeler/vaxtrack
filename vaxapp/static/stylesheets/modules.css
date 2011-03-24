@@ -5,6 +5,10 @@ div.module {
     box-shadow:0 2px 5px rgba(0, 0, 0, 0.4);
     -webkit-box-shadow:0 2px 5px rgba(0, 0, 0, 0.4);
     -moz-box-shadow:0 2px 5px rgba(0, 0, 0, 0.4);
+    /* For IE 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#000000')";
+    /* For IE 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#000000');
     position: relative;
 }
 
