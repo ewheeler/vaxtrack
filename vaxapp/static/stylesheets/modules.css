@@ -159,9 +159,9 @@ div.module div.toolbar {
 		padding-left: 2em;
 		padding-bottom: .33em;
 		padding-top: .33em;
-		/*border-bottom: 1px dotted #0099ff;
-		border-right: 1px dotted #0099ff;
-		border-left: 1px dotted #0099ff;*/
+		border-bottom: 1px solid #aaa;
+		border-right: 1px solid #aaa;
+		border-left: 1px solid #aaa;
 	}
         div.module ul#alerts li.U {
 		background-image: url("../icons/silk/exclamation.png");
@@ -185,6 +185,12 @@ div.module div.toolbar {
 		border-right: 1px solid #aaa;
 		border-left: 1px solid #aaa;
 		padding: .33em;
+	}
+
+	#module-options {
+	    border-bottom: 1px solid #aaa;
+	    border-right: 1px solid #aaa;
+	    border-left: 1px solid #aaa;
 	}
 
 /* tooltip styling. by default the element to be styled is .tooltip  */
