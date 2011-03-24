@@ -50,11 +50,9 @@ def alerts(req, country_pk, vaccine_abbr):
         alerts = Alert.objects.filter(countrystock=countrystock)
         if len(alerts) == 0:
             return HttpResponse([], 'application/javascript')
-        alerts_text = []
-        # instead of a for loop, using this strategy: http://news.ycombinator.com/item?id=2320298
-        # basically, this avoids having the for loop translated into
-        # bytecode by the interpreter and runs in straight c instead.
-        any(itertools.imap(lambda alert: alerts_text.append({'text':alert.get_text_display(), 'status':alert.status}), alerts))
+        #alerts_text = []
+        #any(itertools.imap(lambda alert: alerts_text.append({'text':alert.get_text_display(), 'status':alert.status}), alerts))
+        alerts_text = [{'text':alert.get_text_display(), 'status':alert.status} for alert in alerts]
         return HttpResponse(simplejson.dumps(alerts_text), 'application/javascript')
 
 def stats(req, country_pk, vaccine_abbr):

@@ -180,6 +180,7 @@ div.clear-hack {
         padding: 0 10px;
         background-color: #FEFFC8;
         border-bottom: 1px solid #0099FF;
+        /*background: url("../images/header-bg.png") repeat-x;*/
     }
 
     /* align in the middle of the unicef blue stripe of header bg, and
