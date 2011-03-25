@@ -65,7 +65,7 @@ def stats(req, country_pk, vaccine_abbr):
             # TODO this is insane
             # instead of the fields, i'd like the properties that return
             # a dict of the related obj rather than pks of related obj
-            props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year']
+            props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year', 'days_of_stock_data']
             years = []
 
             #t1 = os.times()

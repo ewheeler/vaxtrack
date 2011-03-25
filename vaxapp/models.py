@@ -278,6 +278,11 @@ class CountryStockStats(models.Model):
         if self.nine_by_year is not None:
             return self.nine_by_year.as_dict
 
+    @property
+    def get_days_of_stock_data(self):
+        if self.days_of_stock_data is not None:
+            return self.days_of_stock_data.as_dict
+
 class Alert(models.Model):
     ALERT_STATUS = (
         ('U', _('urgent')),

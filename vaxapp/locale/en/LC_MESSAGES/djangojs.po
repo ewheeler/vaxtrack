@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-21 17:13-0400\n"
+"POT-Creation-Date: 2011-03-25 15:48-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -40,7 +40,9 @@ msgid "coverage of annual need"
 msgstr ""
 
 #: static/javascripts/vax.js:18
-msgid "Percent coverage of annual need delivered to date"
+msgid ""
+"Percent coverage of annual need delivered to date, based on stock at "
+"beginning of year plus deliveries and forecasted annual demand"
 msgstr ""
 
 #: static/javascripts/vax.js:20
@@ -118,4 +120,14 @@ msgstr ""
 
 #: static/javascripts/vax.js:47
 msgid "Nine month overstock level, based on annual demand."
+msgstr ""
+
+#: static/javascripts/vax.js:49
+msgid "number of days"
+msgstr ""
+
+#: static/javascripts/vax.js:50
+msgid ""
+"Number of days included between the first stock level datapoint of the year "
+"and the last stock level datapoint of the year"
 msgstr ""

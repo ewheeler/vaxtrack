@@ -46,6 +46,9 @@ $(document).ready(function(){
     var overstock_level_txt = gettext("overstock level");
     var overstock_level_tip = gettext("Nine month overstock level, based on annual demand.");
 
+    var days_of_stock_data_txt = gettext("number of days");
+    var days_of_stock_data_tip = gettext("Number of days included between the first stock level datapoint of the year and the last stock level datapoint of the year");
+
     $(window).bind("hashchange",  function(event){
 	var hash_parts = new Array();
 	hash_parts = document.location.hash.split('/');
@@ -204,6 +207,13 @@ $(document).ready(function(){
 				nine_by_year = nine_by_year + "<td>" + stats[s].nine_by_year[y] + "</td>";
 			}
 			$("#hist > tbody:last").append(nine_by_year + "</tr>");
+
+			var days_of_stock_data;
+			days_of_stock_data = "<tr class='tipoff' title='" + days_of_stock_data_tip + "'><td>" + days_of_stock_data_txt + "</td>";
+			for (y in stats[s].years){
+				days_of_stock_data = days_of_stock_data + "<td>" + stats[s].days_of_stock_data[y] + "</td>";
+			}
+			$("#hist > tbody:last").append(days_of_stock_data + "</tr>");
 
 			}
 	$(".tipoff").tooltip({opacity: 0.9});
