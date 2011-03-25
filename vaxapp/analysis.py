@@ -372,8 +372,13 @@ class Analysis(object):
                 last_s[yr] = s
 
             self.actual_cons_rate = {}
+            self.days_of_stock_data = {}
             for y in self.f_years:
-                rate = float(self.consumed_in_year[y])/float(365)
+                # get all stocklevel datapoints from year
+                stocklevels_in_year = type_for_year_asc(self.country_pk, self.vaccine_abbr, 'SL', y)
+                # find number of days enclosed between first stocklevel entry of year and last
+                self.days_of_stock_data.update({y:(stocklevels_in_year[-1]['date'] - stocklevels_in_year[0]['date']).days})
+                rate = float(self.consumed_in_year[y])/float(self.days_of_stock_data[y])
                 self.actual_cons_rate.update({y:int(rate)})
 
             # see if there are forecasted deliveries and/or purchased deliveries
@@ -507,6 +512,7 @@ class Analysis(object):
             css.annual_demand = Dicty.create('annual_demand', self.annual_demand)
             css.three_by_year = Dicty.create('three_by_year', self.three_by_year)
             css.nine_by_year = Dicty.create('nine_by_year', self.nine_by_year)
+            css.days_of_stock_data = Dicty.create('days_of_stock_data', self.days_of_stock_data)
 
             css.est_daily_cons = self.est_daily_cons
             css.days_of_stock = self.days_of_stock

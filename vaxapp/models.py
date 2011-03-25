@@ -241,6 +241,7 @@ class CountryStockStats(models.Model):
     annual_demand = models.ForeignKey(Dicty, blank=True, null=True, related_name='annual_demand')
     three_by_year = models.ForeignKey(Dicty, blank=True, null=True, related_name='three_by_year')
     nine_by_year = models.ForeignKey(Dicty, blank=True, null=True, related_name='nine_by_year')
+    days_of_stock_data = models.ForeignKey(Dicty, blank=True, null=True, related_name='days_of_stock_data')
 
     # other values
     est_daily_cons = models.IntegerField(blank=True, null=True)
