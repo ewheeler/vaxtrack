@@ -38,7 +38,7 @@ $(document).ready(function(){
     var annual_demand_tip = gettext("Annual demand as estimated in UNICEF forecasts.");
 
     var actual_daily_cons_rate_txt = gettext("actual daily cons. rate");
-    var actual_daily_cons_rate_tip = gettext("Average daily consumption rate, based on annual consumption.");
+    var actual_daily_cons_rate_tip = gettext("Average daily consumption rate, based on total consumption during number of days included in stocklevel datapoints.");
 
     var buffer_stock_level_txt = gettext("buffer stock level");
     var buffer_stock_level_tip = gettext("Three month buffer stock level, based on annual demand.");
