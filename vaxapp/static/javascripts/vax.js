@@ -1,54 +1,78 @@
 $(document).ready(function(){
     var saved_history = window.history;
 
+    /*	default chart options, vax, and country */
     var options = new Array("B","F","P");
     var vaccine = "BCG";
     var country = "ML";
     var chart_name = "";
     var lang;
 
-    /* strings for jsi18n */
-    var est_daily_cons_txt = gettext("est. daily cons.");
-    var est_daily_cons_tip = gettext("Estimated daily consumption based on annual demand provided in UNICEF forecasts");
+    /*	dictionary for jsi18n strings */
+    var strings = {};
 
-    var days_of_stock_txt = gettext("days of stock");
-    var days_of_stock_tip = gettext("Number of days worth of doses currently in stock based on est daily cons");
+    /* 	strings for stats jsi18n */
+    strings["est_daily_cons_txt"] = gettext("est. daily cons.");
+    strings["est_daily_cons_tip"] = gettext("Estimated daily consumption based on annual demand provided in UNICEF forecasts");
 
-    var coverage_of_annual_need_txt = gettext("coverage of annual need");
-    var coverage_of_annual_need_tip= gettext("Percent coverage of annual need delivered to date, based on stock at beginning of year plus deliveries and forecasted annual demand");
+    strings["days_of_stock_txt"] = gettext("days of stock");
+    strings["days_of_stock_tip"] = gettext("Number of days worth of doses currently in stock based on est daily cons");
 
-    var doses_delivered_this_year_txt = gettext("doses delivered this year");
-    var doses_delivered_this_year_tip = gettext("Total doses delivered this year to date");
+    strings["percent_coverage_txt"] = gettext("coverage of annual need");
+    strings["percent_coverage_tip"] = gettext("Percent coverage of annual need delivered to date, based on stock at beginning of year plus deliveries and forecasted annual demand");
 
-    var doses_on_order_txt = gettext("doses on order");
-    var doses_on_order_tip = gettext("Total number of doses to be delivered on any purchased orders.");
+    strings["doses_delivered_this_year_txt"] = gettext("doses delivered this year");
+    strings["doses_delivered_this_year_tip"] = gettext("Total doses delivered this year to date");
 
-    var reference_date_txt = gettext("reference date");
-    var reference_date_tip = gettext("Reference date that is the basis for chart, alerts, and statistical analysis.");
+    strings["doses_on_orders_txt"] = gettext("doses on order");
+    strings["doses_on_orders_tip"] = gettext("Total number of doses to be delivered on any purchased orders.");
 
-    var analysis_date_txt = gettext("analysis date");
-    var analysis_date_tip = gettext("Date statistical analysis was performed.");
+    strings["reference_date_txt"] = gettext("reference date");
+    strings["reference_date_tip"] = gettext("Reference date that is the basis for chart, alerts, and statistical analysis.");
 
-    var historical_note_txt = gettext("Note: first and last year totals may not reflect full 12 months");
+    strings["analyzed_txt"] = gettext("analysis date");
+    strings["analyzed_tip"] = gettext("Date statistical analysis was performed.");
 
-    var total_consumed_txt = gettext("total consumed");
-    var total_consumed_tip = gettext("Total number of doses issued from national store.");
+    /* strings for hist jsi18n */
+    strings["historical_note_txt"] = gettext("Note: first and last year totals may not reflect full 12 months");
 
-    var annual_demand_txt = gettext("annual demand");
-    var annual_demand_tip = gettext("Annual demand as estimated in UNICEF forecasts.");
+    strings["consumed_in_year_txt"] = gettext("total consumed");
+    strings["consumed_in_year_tip"] = gettext("Total number of doses issued from national store.");
 
-    var actual_daily_cons_rate_txt = gettext("actual daily cons. rate");
-    var actual_daily_cons_rate_tip = gettext("Average daily consumption rate, based on total consumption during number of days included in stocklevel datapoints.");
+    strings["annual_demand_txt"] = gettext("annual demand");
+    strings["annual_demand_tip"] = gettext("Annual demand as estimated in UNICEF forecasts.");
 
-    var buffer_stock_level_txt = gettext("buffer stock level");
-    var buffer_stock_level_tip = gettext("Three month buffer stock level, based on annual demand.");
+    strings["actual_cons_rate_txt"] = gettext("actual daily cons. rate");
+    strings["actual_cons_rate_tip"] = gettext("Average daily consumption rate, based on total consumption during number of days included in stocklevel datapoints.");
 
-    var overstock_level_txt = gettext("overstock level");
-    var overstock_level_tip = gettext("Nine month overstock level, based on annual demand.");
+    strings["three_by_year_txt"] = gettext("buffer stock level");
+    strings["three_by_year_tip"] = gettext("Three month buffer stock level, based on annual demand.");
 
-    var days_of_stock_data_txt = gettext("number of days");
-    var days_of_stock_data_tip = gettext("Number of days included between the first stock level datapoint of the year and the last stock level datapoint of the year");
+    strings["nine_by_year_txt"] = gettext("overstock level");
+    strings["nine_by_year_tip"] = gettext("Nine month overstock level, based on annual demand.");
 
+    strings["days_of_stock_data_txt"] = gettext("number of days");
+    strings["days_of_stock_data_tip"] = gettext("Number of days included between the first stock level datapoint of the year and the last stock level datapoint of the year");
+
+    /*	set inputs to values of global variables */
+    $("#plot_options :input").val(options);
+    $("#vaccines :input").val(vaccine);
+    $("#country").val(country);
+
+    /*	set lang global variable to selected lang
+    (which is decided by django i18n based on
+    browser's default lang or django cookie) */
+    lang = $("#auth select").val();
+
+    /*	update url hash, fetch chart & tables based on globals */
+    update_url();
+    get_chart();
+    get_alerts();
+    get_stats();
+
+
+    /* 	whenever url hash is changed, update global variables
+	to reflect these changes, and set inputs accordingly */
     $(window).bind("hashchange",  function(event){
 	var hash_parts = new Array();
 	hash_parts = document.location.hash.split('/');
@@ -65,17 +89,10 @@ $(document).ready(function(){
 	$("#auth select").val(lang);
     });
 
-    $("#plot_options :input").val(options);
-    $("#vaccines :input").val(vaccine);
-    $("#country").val(country);
-    lang = $("#auth select").val();
-    update_url();
-    get_chart();
-    get_alerts();
-    get_stats();
 
-
-    /* TODO comment this shit */
+    /* 	whenever language dropdown is changed,
+	set global lang to new language,
+	update url hash, fetch new chart & tables */
     $("#auth select").change(function(){
 	lang = $("#auth select").val();
 	update_url();
@@ -84,6 +101,9 @@ $(document).ready(function(){
 	get_stats();
     });
 
+    /* 	whenever a plot option checkbox is clicked,
+	reset global options to currently checked
+	options, update url hash, and fetch new chart */
     $("#plot_options :input").click(function(){
         options = new Array();
 	$("#plot_options :input:checked").each(function() {
@@ -93,6 +113,9 @@ $(document).ready(function(){
         get_chart();
     });
 
+    /* 	whenever a vaccine radio button is clicked,
+	reset global vaccine variable to currently checked
+	vaccine, update url hash, fetch new chart and tables */
     $("#vaccines :input").click(function(){
         vaccine = ""; 
 	$("#vaccines :input:radio:checked").each(function() {
@@ -100,8 +123,13 @@ $(document).ready(function(){
 	});
 	update_url();
         get_chart();
+	get_alerts();
+	get_stats();
     });
 
+    /* 	whenever country dropdown is changed,
+	reset global country variable to current selection,
+	update url hash, fetch new chart and tables */
     $("#country").change(function(){
         country = "";
 	country = $(this).val();
@@ -112,6 +140,7 @@ $(document).ready(function(){
     });
 
 
+    /*	alter url hash to reflect current values of global variables */
     function update_url(){
 	chart_opts = options.sort().join("");
         vaccine = vaccine.replace(/-/g, "_");
@@ -120,6 +149,8 @@ $(document).ready(function(){
 	document.location.hash = path;
     };
 
+    /* 	fetch url for appropriate chart (based on current globals)
+	and country flag */
     function get_chart(){
 	chart_opts = options.sort().join("");
         vaccine = vaccine.replace(/-/g, "_");
@@ -128,6 +159,7 @@ $(document).ready(function(){
         $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
     };
 
+    /* 	fetch alerts for current country/vax and build table rows if needed */
     function get_alerts(){
 	$.get("/alerts/" + country + "/" + vaccine, function (data){
 		$("#alerts li").remove();
@@ -137,85 +169,53 @@ $(document).ready(function(){
 			$("#module-info").hide();
 		} else {
 			$("#module-info").show();
-		}
+		};
 		for (a in alerts){
 			$("#alerts").append("<li class='" + alerts[a].status + "'>" + alerts[a].text + "</li>");
-		}
+		};
 	});
     };
 
+    /* 	fetch stats and historical info for current country/vax
+	and build table rows if needed */
     function get_stats(){
 	$.get("/stats/" + country + "/" + vaccine, function (data){
-		$("#stats tbody tr").remove();
-		$("#hist tbody tr").remove();
+		$("#stats tbody tr, #hist tbody tr").remove();
 		var stats;
 		stats = jQuery.parseJSON(data);
 		if (stats==null){
-			$("#module-stats").hide();
-			$("#module-hist").hide();
+			$("#module-stats, #module-hist").hide();
 		} else {
-			$("#module-stats").show();
-			$("#module-hist").show();
-		}
+			$("#module-stats, #module-hist").show();
+		};
 		for (s in stats){
-			$("#stats > tbody:last").append("<tr class='tipoff' title='" + est_daily_cons_tip + "'><td>" + est_daily_cons_txt + ":</td><td>" + stats[s].est_daily_cons + "</td></tr>");
-			$("#stats > tbody:last").append("<tr class='tipoff' title='" + days_of_stock_tip + "'><td>" + days_of_stock_txt + ":</td><td>" + stats[s].days_of_stock + "</td></tr>");
-			$("#stats > tbody:last").append("<tr class='tipoff' title='" + coverage_of_annual_need_tip + "'><td>" + coverage_of_annual_need_txt + ":</td><td>" + stats[s].percent_coverage + "</td></tr>");
-			$("#stats > tbody:last").append("<tr class='tipoff' title='" + doses_delivered_this_year_tip + "'><td>" + doses_delivered_this_year_txt + ":</td><td>" + stats[s].doses_delivered_this_year + "</td></tr>");
-			$("#stats > tbody:last").append("<tr class='tipoff' title='" + doses_on_order_tip + "'><td>" + doses_on_order_txt + ":</td><td>" + stats[s].doses_on_orders + "</td></tr>");
-			$("#stats > tbody:last").append("<tr class='tipoff' title='" + reference_date_tip + "'><td>" + reference_date_txt + ":</td><td>" + stats[s].reference_date + "</td></tr>");
-			$("#stats > tbody:last").append("<tr class='tipoff' title='" + analysis_date_tip + "'><td>" + analysis_date_txt + ":</td><td>" + stats[s].analyzed + "</td></tr>");
+			/* build a row for each of these variables */
+			var stat_rows = ['est_daily_cons', 'days_of_stock', 'percent_coverage', 'doses_delivered_this_year', 'doses_on_orders', 'reference_date', 'analyzed'];
+			for (row_index in stat_rows){
+				var row_name = stat_rows[row_index];
+				$("#stats > tbody:last").append("<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td>" + strings[row_name + "_txt"] + ":</td><td>" + stats[s][row_name] + "</td></tr>");
+			};
 
-			var first_row;
-			first_row = "<tr class='headings'><td class='note'><em>" + historical_note_txt + "</em></td>";
+			/* build first row of hist table */
+			var first_row = "<tr class='headings'><td class='note'><em>" + strings["historical_note_txt"] + "</em></td>";
 			for (y in stats[s].years){
 				first_row = first_row + "<td>" + stats[s].years[y] + "</td>";
-			}
+			};
 			$("#hist > tbody:last").append(first_row + "</tr>");
 
-			var consumed_in_year_row;
-			consumed_in_year_row = "<tr class='tipoff' title='" + total_consumed_tip + "'><td>" + total_consumed_txt + "</td>";
-			for (y in stats[s].years){
-				consumed_in_year_row = consumed_in_year_row + "<td>" + stats[s].consumed_in_year[y] + "</td>";
-			}
-			$("#hist > tbody:last").append(consumed_in_year_row + "</tr>");
-
-			var annual_demand;
-			annual_demand = "<tr class='tipoff' title='" + annual_demand_tip + "'><td>" + annual_demand_txt + "</td>";
-			for (y in stats[s].years){
-				annual_demand = annual_demand + "<td>" + stats[s].annual_demand[y] + "</td>";
-			}
-			$("#hist > tbody:last").append(annual_demand + "</tr>");
-
-			var actual_cons_rate;
-			actual_cons_rate = "<tr class='tipoff' title='" + actual_daily_cons_rate_tip + "'><td>" + actual_daily_cons_rate_txt + "</td>";
-			for (y in stats[s].years){
-				actual_cons_rate = actual_cons_rate + "<td>" + stats[s].actual_cons_rate[y] + "</td>";
-			}
-			$("#hist > tbody:last").append(actual_cons_rate + "</tr>");
-
-			var three_by_year;
-			three_by_year = "<tr class='tipoff' title='" + buffer_stock_level_tip + "'><td>" + buffer_stock_level_txt + "</td>";
-			for (y in stats[s].years){
-				three_by_year = three_by_year + "<td>" + stats[s].three_by_year[y] + "</td>";
-			}
-			$("#hist > tbody:last").append(three_by_year + "</tr>");
-
-			var nine_by_year;
-			nine_by_year = "<tr class='tipoff' title='" + overstock_level_tip + "'><td>" + overstock_level_txt + "</td>";
-			for (y in stats[s].years){
-				nine_by_year = nine_by_year + "<td>" + stats[s].nine_by_year[y] + "</td>";
-			}
-			$("#hist > tbody:last").append(nine_by_year + "</tr>");
-
-			var days_of_stock_data;
-			days_of_stock_data = "<tr class='tipoff' title='" + days_of_stock_data_tip + "'><td>" + days_of_stock_data_txt + "</td>";
-			for (y in stats[s].years){
-				days_of_stock_data = days_of_stock_data + "<td>" + stats[s].days_of_stock_data[y] + "</td>";
-			}
-			$("#hist > tbody:last").append(days_of_stock_data + "</tr>");
-
-			}
+			/* build a row for each of these variables */
+			var hist_rows = ['consumed_in_year', 'annual_demand', 'actual_cons_rate', 'three_by_year', 'nine_by_year', 'days_of_stock_data'];
+			for (row_index in hist_rows){
+				var row_name = hist_rows[row_index];
+				var row;
+				row = "<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td>" + strings[row_name + "_txt"] + "</td>";
+				for (y in stats[s].years){
+					row = row + "<td>" + stats[s][row_name][y] + "</td>";
+				};
+				$("#hist > tbody:last").append(row + "</tr>");
+			};
+		};
+	/* add tooltips at end of $.get callback */
 	$(".tipoff").tooltip({opacity: 0.9});
 	});
     };
