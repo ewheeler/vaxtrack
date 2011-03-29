@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-21 17:13-0400\n"
+"POT-Creation-Date: 2011-03-29 15:52-0400\n"
 "PO-Revision-Date: 2011-03-15 12:39\n"
 "Last-Translator: <m@m.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,31 +18,31 @@ msgstr ""
 "X-Translated-Using: django-rosetta 0.5.6\n"
 "Plural-Forms: nplurals=2; plural=n>1;\n"
 
-#: analysis.py:256
+#: analysis.py:257
 msgid "actual stock"
 msgstr "stock réel"
 
-#: analysis.py:261
+#: analysis.py:262
 msgid "3 month buffer"
 msgstr ""
 
-#: analysis.py:263
+#: analysis.py:264
 msgid "9 month buffer"
 msgstr ""
 
-#: analysis.py:270
+#: analysis.py:271
 msgid "projected stock based on forecast"
 msgstr "stock des prévisions fondées sur les prévisions"
 
-#: analysis.py:277
+#: analysis.py:278
 msgid "projected stock based on placed POs"
 msgstr "stock des prévisions fondées sur les OP placé"
 
-#: analysis.py:285
+#: analysis.py:286
 msgid "theoretical stock based on forecast"
 msgstr "stock théorique basé sur les prévisions"
 
-#: analysis.py:293
+#: analysis.py:294
 msgid "theoretical stock adjusted with deliveries"
 msgstr "stock théorique ajusté avec des livraisons"
 
@@ -66,149 +66,157 @@ msgstr "vaccin"
 msgid "vaccines"
 msgstr "vaccins"
 
-#: models.py:282
+#: models.py:288
 msgid "urgent"
 msgstr "urgent"
 
-#: models.py:283
+#: models.py:289
 msgid "resolved"
 msgstr "résolu"
 
-#: models.py:284
+#: models.py:290
 msgid "warning"
 msgstr "d'alerte"
 
-#: models.py:287
+#: models.py:293
 msgid "risk of overstock"
 msgstr "risque de surstock"
 
-#: models.py:288
+#: models.py:294
 msgid "risk of stockout"
 msgstr "risque de rupture de stock"
 
-#: models.py:289
+#: models.py:295
+msgid "further analysis needed"
+msgstr ""
+
+#: models.py:296
 msgid "unknown"
 msgstr "inconnue"
 
-#: models.py:292
+#: models.py:299
 msgid "delay or reduce shipment"
 msgstr "retarder ou réduire l'expédition"
 
-#: models.py:293
+#: models.py:300
 msgid "order immediately, insufficient doses on upcoming deliveries"
 msgstr ""
 
-#: models.py:294
+#: models.py:301
 msgid "order immediately, purchase forecasted delivery"
 msgstr "commande immédiatement, achat prévu de livraison"
 
-#: models.py:295
+#: models.py:302
 msgid "order immediately, no doses on PO or forecasted in next 3 months"
 msgstr ""
 "commande immédiatement, aucune dose sur les PO ou prévus dans les 3 "
 "prochains mois"
 
-#: models.py:296
+#: models.py:303
 msgid "delay shipment, excessive doses on upcoming deliveries"
 msgstr "expédition de retard, des doses excessives sur les livraisons à venir"
 
-#: models.py:297
+#: models.py:304
 msgid "delay order, delay purchase of forecasted delivery"
 msgstr "Afin délai, l'achat retard de livraison prévu"
 
-#: models.py:298
+#: models.py:305
+msgid "major difference between forecast and actual consumption rates"
+msgstr ""
+
+#: models.py:306
 msgid "unknown or error"
 msgstr "inconnu ou d'une erreur"
 
-#: models.py:317
+#: models.py:325
 msgid "Uploaded"
 msgstr ""
 
-#: models.py:318
+#: models.py:326
 msgid "Stored Remotely"
 msgstr ""
 
-#: models.py:319
+#: models.py:327
 msgid "Queued"
 msgstr ""
 
-#: models.py:320
+#: models.py:328
 msgid "Processing"
 msgstr ""
 
-#: models.py:321
+#: models.py:329
 msgid "Finished"
 msgstr "fini"
 
-#: models.py:322
+#: models.py:330
 msgid "Processing Error"
 msgstr ""
 
-#: models.py:333
+#: models.py:341
 msgid "user"
 msgstr "l'utilisateur"
 
-#: models.py:334
+#: models.py:342
 msgid "Title"
 msgstr "Titre"
 
-#: models.py:335
+#: models.py:343
 msgid "Unique Identifier"
 msgstr ""
 
-#: models.py:336
+#: models.py:344
 msgid "Local Document"
 msgstr ""
 
-#: models.py:337
+#: models.py:345
 msgid "Remote Document"
 msgstr ""
 
-#: models.py:338
+#: models.py:346
 msgid "Remote Processing Status"
 msgstr ""
 
-#: models.py:339
+#: models.py:347
 msgid "Processing Exception"
 msgstr ""
 
-#: models.py:341
+#: models.py:349
 msgid "Date Uploaded"
 msgstr ""
 
-#: models.py:342
+#: models.py:350
 msgid "Date Stored Remotely"
 msgstr ""
 
-#: models.py:343
+#: models.py:351
 msgid "Date Queued"
 msgstr ""
 
-#: models.py:344
+#: models.py:352
 msgid "Date Process Started"
 msgstr ""
 
-#: models.py:345
+#: models.py:353
 msgid "Date Process Completed"
 msgstr ""
 
-#: models.py:346
+#: models.py:354
 msgid "Date of Exception"
 msgstr "Date d'exception"
 
-#: models.py:348
+#: models.py:356
 msgid "Date Created"
 msgstr "Date de création"
 
-#: models.py:351
+#: models.py:359
 msgid "document"
 msgstr "document"
 
-#: models.py:352
+#: models.py:360
 msgid "documents"
 msgstr "documents"
 
-#: models.py:355
+#: models.py:363
 #, python-format
 msgid "%s's uploaded document."
 msgstr ""
@@ -217,89 +225,89 @@ msgstr ""
 msgid "Dashboard"
 msgstr ""
 
-#: templates/index.html:18
+#: templates/index.html:19
 msgid "Chart options"
 msgstr "Graphique options"
 
-#: templates/index.html:20
+#: templates/index.html:21
 msgid "Country"
 msgstr "Pays"
 
-#: templates/index.html:29
+#: templates/index.html:30
 msgid "Vaccine"
 msgstr "Vaccin"
 
-#: templates/index.html:36
+#: templates/index.html:35
 msgid "Plot"
 msgstr "Graphique"
 
-#: templates/index.html:39
+#: templates/index.html:38
 msgid ""
 "Show 3 month buffer stock (minimum stock level) and 9 month overstock "
 "(maximum stock level)."
 msgstr ""
 
-#: templates/index.html:39
+#: templates/index.html:38
 msgid "buffer stock  &amp; overstock indicators"
 msgstr ""
 
-#: templates/index.html:41
+#: templates/index.html:40
 msgid ""
 "Show forecasted stock level for the future based on planned deliveries from  "
 "UNICEF country office's annual forecasts."
 msgstr ""
 
-#: templates/index.html:41
+#: templates/index.html:40
 msgid "forecasted stock level (CO forecast)"
 msgstr ""
 
-#: templates/index.html:43
+#: templates/index.html:42
 msgid ""
 "Show forecasted stock level for the future based on planned deliveries that "
 "are on purchase order (payment has been made, though delivery date may vary)."
 msgstr ""
 
-#: templates/index.html:43
+#: templates/index.html:42
 msgid "forecasted stock level (with POs)"
 msgstr ""
 
-#: templates/index.html:45
+#: templates/index.html:44
 msgid ""
 "Show projected stock level for past and future based on planned deliveries "
 "from UNICEF country office's annual forecasts (theoretical, intended as tool "
 "to examine past forecasting)."
 msgstr ""
 
-#: templates/index.html:45
+#: templates/index.html:44
 msgid "projected stock level (CO forecast)"
 msgstr ""
 
-#: templates/index.html:47
+#: templates/index.html:46
 msgid ""
 "Show projected stock level for past and future based on planned deliveries "
 "adjusted to include actual deliveries to date (theoretical, intended as tool "
 "to examine past forecasting)."
 msgstr ""
 
-#: templates/index.html:47
+#: templates/index.html:46
 msgid "projected stock level (with deliveries)"
 msgstr ""
 
-#: templates/index.html:53
+#: templates/index.html:52
 msgid "Alerts"
 msgstr "Alertes"
 
-#: templates/index.html:60
+#: templates/index.html:59
 msgid "Details"
 msgstr "Détails"
 
-#: templates/index.html:69
-msgid "Historical"
-msgstr "Historique"
-
-#: templates/index.html:82
+#: templates/index.html:72
 msgid "Chart"
 msgstr "Graphique"
+
+#: templates/index.html:78
+msgid "Historical"
+msgstr "Historique"
 
 #: templates/layout.html:29
 msgid "Go"
