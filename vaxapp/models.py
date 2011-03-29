@@ -315,7 +315,8 @@ class Alert(models.Model):
     risk = models.CharField(max_length=2, default='U', choices=RISK_TYPE, blank=True, null=True)
 
     def __unicode__(self):
-        return "%s: %s - %s" % (self.countrystock.country.iso2_code, self.countrystock.vaccine, self.text)
+        return "%s: %s - %s" % (self.countrystock.country.iso2_code,\
+            self.countrystock.vaccine, self.get_text_display())
 
 class UserProfile(models.Model):
     user = models.ForeignKey(User)
