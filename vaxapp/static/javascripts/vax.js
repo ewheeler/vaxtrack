@@ -197,22 +197,29 @@ $(document).ready(function(){
 			};
 
 			/* build first row of hist table */
-			var first_row = "<tr class='headings'><td class='note'><em>" + strings["historical_note_txt"] + "</em></td>";
+			var first_row = "<tr class='headings'><td class='note'><em>" + strings["historical_note_txt"] + "</em></td><td class='spark'></td>";
 			for (y in stats[s].years){
 				first_row = first_row + "<td>" + stats[s].years[y] + "</td>";
 			};
 			$("#hist > tbody:last").append(first_row + "</tr>");
 
 			/* build a row for each of these variables */
-			var hist_rows = ['consumed_in_year', 'annual_demand', 'actual_cons_rate', 'three_by_year', 'nine_by_year', 'days_of_stock_data'];
+			var hist_rows = ['consumed_in_year', 'annual_demand', 'three_by_year', 'nine_by_year', 'actual_cons_rate', 'days_of_stock_data'];
 			for (row_index in hist_rows){
 				var row_name = hist_rows[row_index];
 				var row;
+				var data = new Array();
 				row = "<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td>" + strings[row_name + "_txt"] + "</td>";
+				row = row + "<td class='spark' id='" + row_name + "'</td>";
 				for (y in stats[s].years){
 					row = row + "<td>" + stats[s][row_name][y] + "</td>";
+					data.push(stats[s][row_name][y]);
 				};
 				$("#hist > tbody:last").append(row + "</tr>");
+				if (row_name != 'actual_cons_rate' & row_name != 'days_of_stock_data'){
+				    var td_id = "#" + row_name;
+				    $(td_id).sparkline(data, { type:'line', width:'8em', height:'2em', spotRadius:'0', chartRangeMin:'0', chartRangeMax:'1000000' });
+				};
 			};
 		};
 	/* add tooltips at end of $.get callback */

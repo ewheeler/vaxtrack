@@ -222,3 +222,7 @@ div.module div.toolbar {
     font-style: italic;
     background: #ddd;
 }
+
+.spark {
+    width: 8em;
+}
