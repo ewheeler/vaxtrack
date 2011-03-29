@@ -106,6 +106,7 @@ class Analysis(object):
         self.save_chart = True
         self.upload_chart_to_s3 = False
         self.lookahead = datetime.timedelta(90)
+        self.cons_rate_diff_threshold = 0.25
 
         # TODO XXX back to the present!
         #self.today = datetime.datetime.today().date()
@@ -381,6 +382,20 @@ class Analysis(object):
                 rate = float(self.consumed_in_year[y])/float(self.days_of_stock_data[y])
                 self.actual_cons_rate.update({y:int(rate)})
 
+            # "Query 1" Forecast Accuracy
+            # for this year, see how actual consumption rate compares to estimated daily rate
+            est_cons_rate = int(float(self.annual_demand[self.today.year])/float(365))
+            rate_difference = float(abs(est_cons_rate - self.actual_cons_rate[self.today.year]))/float(est_cons_rate)
+            # flag if difference is greater than threshold
+            if rate_difference > self.cons_rate_diff_threshold:
+                print '***FLAG***'
+                print 'major difference between forecast and actual consumption rates'
+                alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                    reference_date=self.today, status='W', risk='F', text='C')
+                alert.analyzed = datetime.datetime.now()
+                alert.save()
+
+            # "Query 2" Order Lead Time
             # see if there are forecasted deliveries and/or purchased deliveries
             # scheduled for the near future
             self.forecasted_this_year = type_for_year_asc(self.country_pk, self.vaccine_abbr, "FF", self.today.year)
@@ -389,6 +404,7 @@ class Analysis(object):
             self.upcoming_on_po = [d for d in self.on_po_this_year if ((d['date'] - self.today) <= self.lookahead)]
             self.upcoming_forecasted = [d for d in self.forecasted_this_year if ((d['date'] - self.today) <= self.lookahead)]
 
+            # "Query 3" Stock Management
             # see how many months worth of supply are in stock
             latest_stocklevel = self.stocklevels[0]
 
@@ -398,6 +414,7 @@ class Analysis(object):
 
             # check if there is too much stock (more than nine months' worth)
             if self.days_of_stock >= 270:
+                # "Query 4" Stock Management
                 # flag if there are any upcoming deliveries (forecasted or purchased)
                 if (len(self.upcoming_forecasted) > 0) or (len(self.upcoming_on_po) > 0):
                     print '***FLAG***'
@@ -417,6 +434,7 @@ class Analysis(object):
 
             self.demand_for_period = self.lookahead.days * self.est_daily_cons
 
+            # "Query 5" Stock Management
             # calculate % coverage of annual need
             self.percent_coverage = float(self.first_level_this_year + self.doses_delivered_this_year)/float(self.annual_demand[self.today.year])
             print '%s percent coverage' % str(self.percent_coverage)
@@ -428,6 +446,7 @@ class Analysis(object):
                     print '---OK---'
 
                 if self.percent_coverage < (0.25 + float(self.today.month)/12.0):
+                    # "Query 7" Stock Management
                     if (len(self.upcoming_on_po) > 0):
                         if self.doses_on_orders < self.demand_for_period:
                             print '***FLAG***'
@@ -464,6 +483,7 @@ class Analysis(object):
                         if self.doses_on_orders <= self.demand_for_period:
                             print '---OK---'
 
+                        # "Query 6a" Stock Management
                         if self.doses_on_orders > self.demand_for_period:
                             print '***FLAG***'
                             print 'risk of overstocking'

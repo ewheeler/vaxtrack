@@ -292,6 +292,7 @@ class Alert(models.Model):
     RISK_TYPE = (
         ('O', _('risk of overstock')),
         ('S', _('risk of stockout')),
+        ('F', _('further analysis needed')),
         ('U', _('unknown')),
     )
     ADVICE = (
@@ -301,6 +302,7 @@ class Alert(models.Model):
         ('P', _('order immediately, no doses on PO or forecasted in next 3 months')),
         ('E', _('delay shipment, excessive doses on upcoming deliveries')),
         ('O', _('delay order, delay purchase of forecasted delivery')),
+        ('C', _('major difference between forecast and actual consumption rates')),
         ('U', _('unknown or error')),
     )
 
