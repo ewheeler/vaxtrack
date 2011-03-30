@@ -19,6 +19,16 @@ from decimal import Decimal as D
 
 from vaxapp.models import *
 
+def day_of_year_to_date(year, day_of_year):
+    ''' Given a year and day of year (1-366),
+        this function returns the date of given day. '''
+    # 1 January of whatever year
+    first_of_year = date(year, 1, 1)
+    # subtrack 1 from day_of_year because we are
+    # adding to 1 January rather than 0 January
+    day_as_date = first_of_year + timedelta(day_of_year-1)
+    return day_as_date
+
 def import_who(file=None):
     '''
     opv-50
@@ -58,15 +68,11 @@ def import_who(file=None):
                         break
 
                     year = int(values[1])
-                    # 1 January of whatever year
-                    first_of_year = date(year, 1, 1)
 
                     # day of year 1-365 (sometimes 366)
                     day_of_year = int(values[2][-3:])
 
-                    # subtrack 1 from day_of_year because we are 
-                    # adding to 1 January rather than 0 January
-                    day = first_of_year + timedelta(day_of_year-1)
+                    day = day_of_year_to_date(year, day_of_year)
 
                     vax = values[2][:-4]
                     try:
