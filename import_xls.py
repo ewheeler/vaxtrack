@@ -97,7 +97,7 @@ def import_who(file=None):
             titles = []
             stocks = []
             last_amount = 1
-            skips = []
+            skips = ["", " "]
             for r in range(int(sheet.nrows)):
                 types = sheet.row_types(r)
                 values = sheet.row_values(r)
@@ -189,10 +189,13 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
         return "oops. unknown datemode!"
 
     def xldate_to_datetime(xldate):
-        return datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
+        return datetime.datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
 
     def xldate_to_date(xldate):
-        return xldate_to_datetime(xldate).date()
+        if isinstance(xldate, int):
+            return xldate_to_datetime(xldate).date()
+        else:
+            return None
 
     sheets = book.sheet_names()
     sheet = None
@@ -202,9 +205,9 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
     if sheet is None:
         return "oops. expecting sheet named '%s'" % (target_sheet)
 
-    country_names = Country.objects.values_list('printable_name', flat=True)
     column_names = sheet.row_values(0)
 
+    skips = ['', ' ']
     for r in range(int(sheet.nrows))[1:]:
         rd = dict(zip(column_names, sheet.row_values(r)))
         try:
@@ -218,13 +221,19 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                     skips.append(rd['Country'])
                 continue
         except Exception, e:
-            continue
+            print 'BANG'
+            print e
+            import ipdb;ipdb.set_trace()
+            #continue
 
+        '''
+        chad = Country.objects.get(iso2_code='TD')
         senegal = Country.objects.get(iso2_code='SN')
-        niger = Country.objects.get(iso2_code='NE')
+        mali = Country.objects.get(iso2_code='ML')
 
-        if country not in [senegal, niger]:
+        if country not in [senegal, chad, mali]:
             continue
+        '''
 
         vaccine = Vaccine.lookup_slug(rd['Product'])
         if vaccine is None:
@@ -264,6 +273,7 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
             yr, month = year_month.split('-')
             approx_date = date(int(yr), int(month), 15)
 
+        '''
         if approx_date is not None:
             sdb = boto.connect_sdb()
             domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
@@ -331,6 +341,7 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                 print 'error creating countrystock item'
                 print e
                 import ipdb;ipdb.set_trace()
+        '''
 
 
 def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xls"):
@@ -355,12 +366,10 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
 
     column_names = sheet.row_values(0)
 
-    skips = []
+    skips = ["", " "]
     for r in range(int(sheet.nrows))[1:]:
         rd = dict(zip(column_names, sheet.row_values(r)))
         try:
-            # TODO better country lookup
-            #country = Country.objects.get(printable_name=rd['Country'])
             country = None
             if rd['Country'] not in skips:
                 country = reconcile_country_interactively(rd['Country'])
