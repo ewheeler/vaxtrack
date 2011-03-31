@@ -73,9 +73,19 @@ class Country(models.Model):
     @classmethod
     def closest_to(klass, term):
         try:
-            # grr edge case...
-            if term.upper() == 'OPT':
+            # grr edge cases...
+            if 'OPT' in term.upper():
                 term = 'palestinian'
+            if 'PALESTINE' in term.upper():
+                term = 'palestinian'
+            if "SERBIA" in term.upper():
+                term = 'serbia and montenegro'
+            if "LIBYA" in term.upper():
+                term = 'libyan arab JAMAHIRIYA'
+            if "DRC" in term.upper():
+                term = 'congo'
+            if "IVORY" in term.upper():
+                term = "COTE D'IVOIRE"
             # words to exclude when attempting to match country names
             exclude = set(["democratic", "peoples", "republic", "the", "of", "american", "french", "brazzaville", "islamic", "people's", "territory", "kingdom", "démocratique", "république", "territories", "françaises", "française", "islands", "british", "britannique", "américaines", "britanniques", "western", "occidental", "république-unie", "république", "l'ex-république", "démocratique", "equatorial", "équatoriale", "territoire", "plurinational", "américaines", "conakry", "states", "états", "outlying", "éloignées", "federation", "fédération", "pays"])
             # replace hyphens, exclude any words from exclude set, and pluck the longest remaining word
@@ -195,7 +205,7 @@ class Vaccine(models.Model):
                 fields.append(obj.abbr_en_alt)
                 fields.append(obj.abbr_fr)
                 fields.append(obj.abbr_fr_alt)
-                if term.lower() in [f.lower() for f in fields if f is not None]:
+                if term.lower().replace('+','-') in [f.lower().replace('+','-') for f in fields if f is not None]:
                     match = obj
                     break
             if match is None:
