@@ -22,37 +22,34 @@ class StartupMiddlewareHack():
         # get all countrystocks from cloud
     	sdb_cs = vsdb.sdb_get_all_cs()
 
-        if len(sdb_cs) > 0:
-            for cs in sdb_cs:
+        for cs in sdb_cs:
+            try:
+                my_cs = CountryStock.objects.get(md5_hash = cs.name)
+                # if a countrystock with same hash exists locally,
+                # move on to the next one
+                continue
+
+            except ObjectDoesNotExist:
+                # otherwise if a matching countrystock does not
+                # exist locally, create it
                 try:
-                    my_cs = CountryStock.objects.get(md5_hash = cs['name'])
-                    # if a countrystock with same hash exists locally,
-                    # move on to the next one
-                    continue
+                    # get the vaccine and country
+                    vaccine = Vaccine.objects.get(slug=cs['vaccine'])
+                    country = Country.objects.get(iso2_code=cs['country'])
 
                 except ObjectDoesNotExist:
-                    # otherwise if a matching countrystock does not
-                    # exist locally, create it
-                    try:
-                        # get the vaccine and country
-                        vaccine = Vaccine.objects.get(slug=cs['vaccine'])
-                        country = Country.objects.get(iso2_code=cs['country'])
+                    # if vaccine or country lookup fails, move on
+                    print 'PROBLEM WITH VACCINE SLUG OR COUNTRY CODE'
+                    print 'MAKE SURE FIXTURES HAVE BEEN LOADED'
+                    continue
 
-                    except ObjectDoesNotExist:
-                        # if vaccine or country lookup fails, move on
-                        print 'PROBLEM WITH VACCINE SLUG OR COUNTRY CODE'
-                        print 'MAKE SURE FIXTURES HAVE BEEN LOADED'
-                        continue
-                
-                    # create countrystock if its not here locally
-                    countrystock = CountryStock(country=country, vaccine=vaccine)
-                    countrystock.save()
-                    # save hash to local db so it will be found next time around
-                    countrystock.set_md5()
-                    print 'NEW COUNTRYSTOCK:'
-                    print countrystock
-        else:
-            print 'NO COUNTRYSTOCKS FOUND ON SDB'
+                # create countrystock if its not here locally
+                countrystock = CountryStock(country=country, vaccine=vaccine)
+                countrystock.save()
+                # save hash to local db so it will be found next time around
+                countrystock.set_md5()
+                print 'NEW COUNTRYSTOCK:'
+                print countrystock
 
         # finally, tell django not to use this 
         # middleware for any subsequent requests

@@ -141,7 +141,7 @@ def sdb_get_all_cs():
     cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
     query = "SELECT * FROM `%s` WHERE `type`='CS'" % (SDB_DOMAIN_TO_USE)
     result = cs.select(query)
-    return decode_results(result)
+    return result
 
 
 def multikeysort(items, columns):
