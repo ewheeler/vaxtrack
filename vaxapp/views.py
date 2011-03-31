@@ -33,10 +33,8 @@ def index(req, country_pk=None):
         countrystocks = CountryStock.objects.filter(country=country_pk)
     else:
         countrystocks = False
-    mali = Country.objects.get(iso2_code='ML')
-    chad = Country.objects.get(iso2_code='TD')
-    countries = [mali, chad]
-    vaccines = Vaccine.objects.all()
+    countries = list(set([c.country for c in CountryStock.objects.all()]))
+    vaccines = list(set([v.vaccine for v in CountryStock.objects.all()]))
     return render_to_response("index.html",\
         {"countrystocks": countrystocks,\
             "countries": countries,\
