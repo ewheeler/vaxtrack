@@ -1,0 +1,154 @@
+[
+  {
+    "pk": 1, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "BA", 
+      "alternate": "Bosnia-Herzegovina"
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "CF", 
+      "alternate": "Central African Rep."
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "CD", 
+      "alternate": "DR Congo"
+    }
+  }, 
+  {
+    "pk": 4, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "TL", 
+      "alternate": "East Timor"
+    }
+  }, 
+  {
+    "pk": 5, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "GN", 
+      "alternate": "Guinea-Conakry"
+    }
+  }, 
+  {
+    "pk": 6, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "KP", 
+      "alternate": "Korea DPR"
+    }
+  }, 
+  {
+    "pk": 7, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "LA", 
+      "alternate": "Lao PDR"
+    }
+  }, 
+  {
+    "pk": 8, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "MD", 
+      "alternate": "Moldova"
+    }
+  }, 
+  {
+    "pk": 9, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "PS", 
+      "alternate": "OPT"
+    }
+  }, 
+  {
+    "pk": 10, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "PS", 
+      "alternate": "Palestinian Prog"
+    }
+  }, 
+  {
+    "pk": 11, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "ST", 
+      "alternate": "Sao Tome & Principe"
+    }
+  }, 
+  {
+    "pk": 12, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "TZ", 
+      "alternate": "Tanzania"
+    }
+  }, 
+  {
+    "pk": 13, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "SY", 
+      "alternate": "Syria"
+    }
+  }, 
+  {
+    "pk": 14, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "PS", 
+      "alternate": "Palestinian Programme"
+    }
+  }, 
+  {
+    "pk": 15, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "CG", 
+      "alternate": "Congo Brazzaville"
+    }
+  }, 
+  {
+    "pk": 16, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "LY", 
+      "alternate": "Libya"
+    }
+  }, 
+  {
+    "pk": 17, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "CS", 
+      "alternate": "Serbia"
+    }
+  }, 
+  {
+    "pk": 18, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "CD", 
+      "alternate": "DRC"
+    }
+  }, 
+  {
+    "pk": 19, 
+    "model": "vaxapp.altcountry", 
+    "fields": {
+      "country": "CI", 
+      "alternate": "Ivory Coast"
+    }
+  }
+]
