@@ -19,6 +19,9 @@ from decimal import Decimal as D
 
 from vaxapp.models import *
 
+SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'marchcountrystocks')
+
+# a few helper functions
 def day_of_year_to_date(year, day_of_year):
     ''' Given a year and day of year (1-366),
         this function returns the date of given day. '''
@@ -28,6 +31,48 @@ def day_of_year_to_date(year, day_of_year):
     # adding to 1 January rather than 0 January
     day_as_date = first_of_year + timedelta(day_of_year-1)
     return day_as_date
+
+def only_digits(raw_str):
+    cleaned = re.sub("[^0-9]", "", raw_str)
+    if cleaned != "":
+        return cleaned
+    else:
+        return None
+
+def first_monday_of_week(year, week):
+    ''' Returns the date of the first monday of a given
+        week number and year.'''
+    d = date(int(year), 1, 4)  # The Jan 4th must be in week 1  according to ISO
+    return d + timedelta(weeks=(int(week)-1), days=-d.weekday())
+
+def reconcile_country_interactively(term):
+    try:
+        country = Country.objects.get(printable_name=term)
+        return country
+    except ObjectDoesNotExist:
+        try:
+            country = Country.lookup(term)
+            if country is not None:
+                return country
+            else:
+                print "Could not reconcile '%s'" % (term)
+                # cast set as list to preserve order
+                matches = list(Country.closest_to(term))
+                for n, match in enumerate(matches):
+                    print "Type %s for %s" % (n, match.name)
+                choice = raw_input("Choose a match and press enter or press enter to skip:")
+                if choice not in [None, "", " "]:
+                    choice_num = int(choice)
+                    country = matches[choice_num]
+                    alt = AltCountry(country=country, alternate=term)
+                    alt.save()
+                    return country
+                else:
+                    return None
+        except Exception, e:
+            print 'BANG'
+            print e
+            import ipdb;ipdb.set_trace()
 
 def import_who(file=None):
     '''
@@ -47,24 +92,31 @@ def import_who(file=None):
 
         if sheet is not None:
             sdb = boto.connect_sdb()
-            domain = sdb.create_domain('countrystockdata')
+            domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
 
             titles = []
             stocks = []
             last_amount = 1
+            skips = []
             for r in range(int(sheet.nrows)):
                 types = sheet.row_types(r)
                 values = sheet.row_values(r)
                 if types.count(1) == types.count(2):
                     # expecting two words (1) and two numbers (2)
                     try:
-                        country = Country.lookup(values[0])
+                        country = None
+                        term = values[0]
+                        if term not in skips:
+                            country = reconcile_country_interactively(term)
+                        if country is None:
+                            if term not in skips:
+                                print 'cannot reconcile %s' % (term)
+                                print 'moving on...'
+                                skips.append(term)
+                                break
+
                     except Exception, e:
-                        # TODO better check and error?
-                        print "could not find country named '%s'" % (values[0])
-                        break
-                    if country is None:
-                        print "could not find country named '%s'" % (values[0])
+                        print 'BANG'
                         break
 
                     year = int(values[1])
@@ -77,6 +129,9 @@ def import_who(file=None):
                     vax = values[2][:-4]
                     try:
                         vaccine = Vaccine.lookup_slug(vax)
+                        if vaccine is None:
+                            print 'cannot find vax: %s' % (vax)
+                            continue
                         vax_slug = vaccine.slug
                     except Exception, e:
                         print e
@@ -126,19 +181,6 @@ def import_who(file=None):
             print len(stocks)
 
 
-def only_digits(raw_str):
-    cleaned = re.sub("[^0-9]", "", raw_str) 
-    if cleaned != "":
-        return cleaned
-    else:
-        return None
-
-def first_monday_of_week(year, week):
-    ''' Returns the date of the first monday of a given
-        week number and year.'''
-    d = date(int(year), 1, 4)  # The Jan 4th must be in week 1  according to ISO
-    return d + timedelta(weeks=(int(week)-1), days=-d.weekday())
-
 def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Office Forecasts 2008.xls"):
     target_sheet = 'allocations'
     book = xlrd.open_workbook(file)
@@ -166,7 +208,15 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
     for r in range(int(sheet.nrows))[1:]:
         rd = dict(zip(column_names, sheet.row_values(r)))
         try:
-            country = Country.lookup(rd['Country'])
+            country = None
+            if rd['Country'] not in skips:
+                country = reconcile_country_interactively(rd['Country'])
+            if country is None:
+                if rd['Country'] not in skips:
+                    print 'cannot reconcile %s' % (rd['Country'])
+                    print 'moving on...'
+                    skips.append(rd['Country'])
+                continue
         except Exception, e:
             continue
 
@@ -216,7 +266,7 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
 
         if approx_date is not None:
             sdb = boto.connect_sdb()
-            domain = sdb.create_domain('countrystockdata')
+            domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
 
             if forecast_doses > 0:
                 amount = forecast_doses
@@ -303,21 +353,31 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
     if sheet is None:
         return "oops. expecting sheet named 'allocations'"
 
-    country_names = Country.objects.values_list('printable_name', flat=True)
     column_names = sheet.row_values(0)
 
+    skips = []
     for r in range(int(sheet.nrows))[1:]:
         rd = dict(zip(column_names, sheet.row_values(r)))
         try:
             # TODO better country lookup
-            country = Country.objects.get(printable_name=rd['Country'])
+            #country = Country.objects.get(printable_name=rd['Country'])
+            country = None
+            if rd['Country'] not in skips:
+                country = reconcile_country_interactively(rd['Country'])
+            if country is None:
+                if rd['Country'] not in skips:
+                    print 'cannot reconcile %s' % (rd['Country'])
+                    print 'moving on...'
+                    skips.append(rd['Country'])
+                continue
         except Exception, e:
             continue
 
+        chad = Country.objects.get(iso2_code='TD')
         senegal = Country.objects.get(iso2_code='SN')
-        niger = Country.objects.get(iso2_code='NE')
+        mali = Country.objects.get(iso2_code='ML')
 
-        if country not in [senegal, niger]:
+        if country not in [senegal, chad, mali]:
             continue
 
         vaccine = Vaccine.lookup_slug(rd['Product'])
@@ -340,7 +400,7 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
 
         if approx_date is not None:
             sdb = boto.connect_sdb()
-            domain = sdb.create_domain('countrystockdata')
+            domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
 
             try:
                 item_name = hashlib.md5()

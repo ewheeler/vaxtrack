@@ -6,11 +6,20 @@ import uuid
 import datetime
 import hashlib
 from operator import attrgetter
+from operator import itemgetter
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+
+from dameraulevenshtein import dameraulevenshtein as dm
+
+class AltCountry(models.Model):
+    country = models.ForeignKey("Country")
+    alternate = models.CharField(max_length=160)
+
 
 class Country(models.Model):
     name = models.CharField(max_length=160, blank=True, null=True)
@@ -50,7 +59,47 @@ class Country(models.Model):
                 if term.upper() in [f for f in fields if f is not None]:
                     match = obj
                     break
+            if match is None:
+                # if no matches found, check for alternates
+                alternates = AltCountry.objects.filter(alternate__iexact=term)
+                if bool(alternates):
+                    # if any alternates are found, return the first one
+                    match = alternates[0].country
             return match
+        except Exception, e:
+            print 'BANG'
+            print e
+
+    @classmethod
+    def closest_to(klass, term):
+        try:
+            # grr edge case...
+            if term.upper() == 'OPT':
+                term = 'palestinian'
+            # words to exclude when attempting to match country names
+            exclude = set(["democratic", "peoples", "republic", "the", "of", "american", "french", "brazzaville", "islamic", "people's", "territory", "kingdom", "démocratique", "république", "territories", "françaises", "française", "islands", "british", "britannique", "américaines", "britanniques", "western", "occidental", "république-unie", "république", "l'ex-république", "démocratique", "equatorial", "équatoriale", "territoire", "plurinational", "américaines", "conakry", "states", "états", "outlying", "éloignées", "federation", "fédération", "pays"])
+            # replace hyphens, exclude any words from exclude set, and pluck the longest remaining word
+            big_term = max(set(term.lower().replace('-', ' ').split()).difference(exclude), key=len)
+            country_tuples = []
+            for obj in klass.objects.all():
+                big_en = ""
+                big_fr = ""
+                if obj.name is not None:
+                    # pluck longest word in english name that does not appear in exclude
+                    big_en = max(set(word.lower().strip(",") for word in obj.name.replace('-', ' ').split()).difference(exclude), key=len)
+                    # calculate edit distance between word from term and word from english name
+                    country_tuples.append((dm(big_term, big_en), obj, obj.name))
+                if obj.name_fr is not None:
+                    # pluck longest word in french name that does not appear in exclude
+                    big_fr = max(set(word.lower().strip(",") for word in obj.name_fr.replace('-', ' ').split()).difference(exclude), key=len)
+                    if big_fr != big_en:
+                        # calculate edit distance between word from term and word from french name
+                        country_tuples.append((dm(big_term, big_fr), obj, obj.name_fr))
+
+            # sort tuples by ascending edit distance, pluck the 5 closest matches
+            closest = sorted(country_tuples, key=itemgetter(0))[:5]
+            # return only the objects
+            return set(map(itemgetter(1), closest))
         except Exception, e:
             print 'BANG'
             print e
@@ -92,6 +141,11 @@ class VaccineGroup(models.Model):
     @property
     def fr(self):
         return self.abbr_fr
+
+
+class AltVaccine(models.Model):
+    vaccine = models.ForeignKey("Vaccine")
+    alternate = models.CharField(max_length=160)
 
 
 class Vaccine(models.Model):
@@ -151,6 +205,11 @@ class Vaccine(models.Model):
                     fields.append(obj.group.abbr_fr)
                     if term.lower() in [f.lower() for f in fields if f is not None]:
                         return 'matched a group'
+                # if no matches found, check for alternates
+                alternates = AltVaccine.objects.filter(alternate__iexact=term)
+                if bool(alternates):
+                    # if any alternates are found, return the first one
+                    match = alternates[0].vaccine
             return match
         except Exception, e:
             print 'BANG'

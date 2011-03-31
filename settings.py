@@ -1,4 +1,5 @@
 # Django settings for the example project.
+SDB_DOMAIN = 'marchcountrystocks'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

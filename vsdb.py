@@ -9,6 +9,8 @@ from boto.sdb.db.model import Model
 from boto.sdb.db.property import *
 from boto.sdb.db.manager import sdbmanager
 
+SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'marchcountrystocks')
+
 # not sure how to use these models exactly...
 # http://groups.google.com/group/boto-users/browse_thread/thread/3bc0feb15183cf2a/3e44b4e7bbd44fae?lnk=gst&q=sdb#3e44b4e7bbd44fae
 # http://cloudcarpenters.com/blog/simpledb_primer_with_python_and_boto/
@@ -105,8 +107,8 @@ def sdb_type_for_year(country, year, supply, type):
         result = cached_year_results[hashed]
     else:
         sdb = boto.connect_sdb()
-        cs = sdb.get_domain('demodata')
-        query = "SELECT * FROM `demodata` WHERE `country`='%s' AND `year`='%s' AND `supply`='%s' AND `type`='%s'" % (country, year, supply, type)
+        cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `year`='%s' AND `supply`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, year, supply, type)
         result = cs.select(query)
         cached_year_results.update({hashed:result})
 
@@ -127,8 +129,8 @@ def sdb_get_all_type(country, supply, type):
     else:
         print 'FETCHING FRESH'
         sdb = boto.connect_sdb()
-        cs = sdb.get_domain('demodata')
-        query = "SELECT * FROM `demodata` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (country, supply, type)
+        cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, supply, type)
         result = cs.select(query)
         cached_results.update({hashed:result})
 
@@ -136,8 +138,8 @@ def sdb_get_all_type(country, supply, type):
 
 def sdb_get_all_cs():
     sdb = boto.connect_sdb()
-    cs = sdb.get_domain('demodata')
-    query = "SELECT * FROM `demodata` WHERE `type`='CS'"
+    cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+    query = "SELECT * FROM `%s` WHERE `type`='CS'" % (SDB_DOMAIN_TO_USE)
     result = cs.select(query)
     return decode_results(result)
 

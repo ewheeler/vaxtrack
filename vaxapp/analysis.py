@@ -333,11 +333,11 @@ class Analysis(object):
         if self.upload_chart_to_s3:
             try:
                 # TODO make these configurable? same with sdb domain?
-                #s3_key = "%s-%s-%s-%s.png" % (lang, country_pk, vaccine_abbr, options_str)
-                #s3_path = "%s/%s/%s/" % (lang, country_pk, vaccine_abbr)
-                #upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
-                demo_key = "%s-%s-%s.png" % (self.country_pk, self.vaccine_abbr, self.options_str)
-                upload_file(file_path, 'vaxtrack_charts', demo_key, True)
+                s3_key = "%s-%s-%s-%s.png" % (lang, country_pk, vaccine_abbr, options_str)
+                s3_path = "%s/%s/%s/" % (lang, country_pk, vaccine_abbr)
+                upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
+                #demo_key = "%s-%s-%s.png" % (self.country_pk, self.vaccine_abbr, self.options_str)
+                #upload_file(file_path, 'vaxtrack_charts', demo_key, True)
                 return file_path
             except Exception, e:
                 print 'ERROR UPLOADING'
