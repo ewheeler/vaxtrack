@@ -36,7 +36,7 @@ def index(req, country_pk=None):
     mali = Country.objects.get(iso2_code='ML')
     chad = Country.objects.get(iso2_code='TD')
     countries = [mali, chad]
-    vaccines = Vaccine.objects.filter(abbr_en='BCG')
+    vaccines = Vaccine.objects.all()
     return render_to_response("index.html",\
         {"countrystocks": countrystocks,\
             "countries": countries,\
