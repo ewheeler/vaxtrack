@@ -226,14 +226,13 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
             import ipdb;ipdb.set_trace()
             #continue
 
-        '''
+        # XXX temporary
         chad = Country.objects.get(iso2_code='TD')
         senegal = Country.objects.get(iso2_code='SN')
         mali = Country.objects.get(iso2_code='ML')
 
         if country not in [senegal, chad, mali]:
             continue
-        '''
 
         vaccine = Vaccine.lookup_slug(rd['Product'])
         if vaccine is None:
@@ -241,6 +240,11 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
             continue
 
         vax_slug = vaccine.slug
+        # XXX temporary
+        targets = [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']
+        if vax_slug not in targets:
+            continue
+
         allocation_type = None
 
         try:
@@ -273,7 +277,6 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
             yr, month = year_month.split('-')
             approx_date = date(int(yr), int(month), 15)
 
-        '''
         if approx_date is not None:
             sdb = boto.connect_sdb()
             domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
@@ -341,7 +344,6 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                 print 'error creating countrystock item'
                 print e
                 import ipdb;ipdb.set_trace()
-        '''
 
 
 def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xls"):
@@ -382,6 +384,7 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
         except Exception, e:
             continue
 
+        # XXX temporary
         chad = Country.objects.get(iso2_code='TD')
         senegal = Country.objects.get(iso2_code='SN')
         mali = Country.objects.get(iso2_code='ML')
@@ -395,6 +398,10 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
             continue
 
         vax_slug = vaccine.slug
+        # XXX temporary
+        targets = [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']
+        if vax_slug not in targets:
+            continue
         allocation_type = 'CF'
 
         amount = int(rd['Doses - CO Forecast'])
