@@ -86,8 +86,10 @@ class Country(models.Model):
                 term = 'congo'
             if "IVORY" in term.upper():
                 term = "COTE D'IVOIRE"
+            if "VERT" in term.upper():
+                term = "cape verde"
             # words to exclude when attempting to match country names
-            exclude = set(["democratic", "peoples", "republic", "the", "of", "american", "french", "brazzaville", "islamic", "people's", "territory", "kingdom", "démocratique", "république", "territories", "françaises", "française", "islands", "british", "britannique", "américaines", "britanniques", "western", "occidental", "république-unie", "république", "l'ex-république", "démocratique", "equatorial", "équatoriale", "territoire", "plurinational", "américaines", "conakry", "states", "états", "outlying", "éloignées", "federation", "fédération", "pays"])
+            exclude = set(["democratic", "peoples", "republic", "the", "of", "american", "french", "brazzaville", "islamic", "people's", "territory", "kingdom", "démocratique", "république", "territories", "françaises", "française", "islands", "british", "britannique", "américaines", "britanniques", "western", "occidental", "république-unie", "république", "l'ex-république", "démocratique", "equatorial", "équatoriale", "territoire", "plurinational", "américaines", "conakry", "states", "états", "outlying", "éloignées", "federation", "fédération", "pays", "sultanate"])
             # replace hyphens, exclude any words from exclude set, and pluck the longest remaining word
             big_term = max(set(term.lower().replace('-', ' ').split()).difference(exclude), key=len)
             country_tuples = []
@@ -155,6 +157,7 @@ class VaccineGroup(models.Model):
 
 class AltVaccine(models.Model):
     vaccine = models.ForeignKey("Vaccine")
+    country = models.ForeignKey("Country")
     alternate = models.CharField(max_length=160)
 
 
@@ -203,20 +206,55 @@ class Vaccine(models.Model):
                 fields.append(obj.slug)
                 fields.append(obj.abbr_en)
                 fields.append(obj.abbr_en_alt)
-                fields.append(obj.abbr_fr)
-                fields.append(obj.abbr_fr_alt)
+                #fields.append(obj.abbr_fr)
+                #fields.append(obj.abbr_fr_alt)
                 if term.lower().replace('+','-') in [f.lower().replace('+','-') for f in fields if f is not None]:
                     match = obj
                     break
             if match is None:
+                '''
                 for obj in klass.objects.all():
                     fields = []
                     fields.append(obj.group.abbr_en)
-                    fields.append(obj.group.abbr_fr)
+                    #fields.append(obj.group.abbr_fr)
                     if term.lower() in [f.lower() for f in fields if f is not None]:
                         return 'matched a group'
+                '''
                 # if no matches found, check for alternates
                 alternates = AltVaccine.objects.filter(alternate__iexact=term)
+                if bool(alternates):
+                    # if any alternates are found, return the first one
+                    match = alternates[0].vaccine
+            return match
+        except Exception, e:
+            print 'BANG'
+            print e
+
+    @classmethod
+    def country_aware_lookup(klass, term, country_pk):
+        try:
+            match = None
+            for obj in klass.objects.all():
+                fields = []
+                fields.append(obj.slug)
+                fields.append(obj.abbr_en)
+                fields.append(obj.abbr_en_alt)
+                #fields.append(obj.abbr_fr)
+                #fields.append(obj.abbr_fr_alt)
+                if term.lower().replace('+','-') in [f.lower().replace('+','-') for f in fields if f is not None]:
+                    match = obj
+                    break
+            if match is None:
+                '''
+                for obj in klass.objects.all():
+                    fields = []
+                    fields.append(obj.group.abbr_en)
+                    #fields.append(obj.group.abbr_fr)
+                    if term.lower() in [f.lower() for f in fields if f is not None]:
+                        return 'matched a group'
+                '''
+                # if no matches found, check for alternates
+                alternates = AltVaccine.objects.filter(alternate__iexact=term, country=country_pk)
                 if bool(alternates):
                     # if any alternates are found, return the first one
                     match = alternates[0].vaccine
@@ -243,6 +281,74 @@ class Vaccine(models.Model):
                         d.update({f.lower(): val})
         print len(d.keys())
         return d
+
+    @classmethod
+    def closest_to(klass, term):
+        try:
+            # words to exclude when attempting to match country names
+            exclude = set(["vaccine"])
+            big_term = term.lower()
+            vax_tuples = []
+            for obj in klass.objects.all():
+                big_en = ""
+                big_fr = ""
+                if obj.abbr_en is not None:
+                    big_en = obj.abbr_en.lower()
+                    # calculate edit distance between word from term and word from english name
+                    vax_tuples.append((dm(big_term, big_en), obj, obj.abbr_en))
+                if obj.abbr_fr is not None:
+                    big_fr = obj.abbr_fr.lower()
+                    if big_fr != big_en:
+                        # calculate edit distance between word from term and word from french name
+                        vax_tuples.append((dm(big_term, big_fr), obj, obj.abbr_fr))
+
+            # sort tuples by ascending edit distance, pluck the 5 closest matches
+            closest = sorted(vax_tuples, key=itemgetter(0))[:10]
+            # return only the objects
+            return set(map(itemgetter(1), closest))
+        except Exception, e:
+            print 'BANG'
+            print e
+
+    @classmethod
+    def country_aware_closest_to(klass, term, country_pk):
+        try:
+            big_term = term.lower()
+            countrystocks = CountryStock.objects.filter(country=country_pk)
+            # fetch all vaccines that this country has stocks of
+            cs_vaccines = map(attrgetter('vaccine'), countrystocks)
+
+            vax_tuples = []
+            for obj in klass.objects.all():
+                big_en = ""
+                big_fr = ""
+                if obj.abbr_en is not None:
+                    big_en = obj.abbr_en.lower()
+                    # calculate edit distance between word from term and word from english name
+                    vax_tuples.append((dm(big_term, big_en), obj, obj.abbr_en))
+                if obj.abbr_fr is not None:
+                    big_fr = obj.abbr_fr.lower()
+                    if big_fr != big_en:
+                        # calculate edit distance between word from term and word from french name
+                        vax_tuples.append((dm(big_term, big_fr), obj, obj.abbr_fr))
+
+            # sort tuples by ascending edit distance, pluck closest matches
+            closest = sorted(vax_tuples, key=itemgetter(0))[:10]
+            # return only the objects
+            only_objs = set(map(itemgetter(1), closest))
+
+            # see if any closest matches are vaccines this country stocks
+            if only_objs.isdisjoint(set(cs_vaccines)):
+                # if not, return top matches
+                return only_objs[:10], None
+            else:
+                # if so, return the intersection
+                return only_objs.difference(set(cs_vaccines)), only_objs.intersection(set(cs_vaccines))
+
+        except Exception, e:
+            print 'BANG'
+            print e
+
 
 class CountryStock(models.Model):
     vaccine = models.ForeignKey(Vaccine)

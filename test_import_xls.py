@@ -74,6 +74,61 @@ def reconcile_country_interactively(term):
             print e
             import ipdb;ipdb.set_trace()
 
+def reconcile_vaccine_interactively(term, country_pk):
+    try:
+        vaccine = Vaccine.objects.get(name__istartswith=term)
+        return vaccine
+    except MultipleObjectsReturned:
+        try:
+            print "MULTIPLE"
+            matches = Vaccine.objects.filter(name__istartswith=term)
+            print "Could not reconcile '%s'" % (term)
+            # cast set as list to preserve order
+            for n, match in enumerate(matches):
+                print "Type %s for %s" % (n, match.name)
+            choice = raw_input("Choose a match and press enter or press enter to skip:")
+            if choice not in [None, "", " "]:
+                choice_num = int(choice)
+                vax = matches[choice_num]
+                #alt = AltVaccine(vaccine=vax, alternate=term)
+                #alt.save()
+                return vax 
+            else:
+                return None
+        except Exception, e:
+            print 'BANG'
+            print e
+            import ipdb; ipdb.set_trace()
+    except ObjectDoesNotExist:
+        try:
+            vaccine = Vaccine.country_aware_lookup(term, country_pk)
+            if vaccine is not None:
+                return vaccine 
+            else:
+                print "LOOKUP"
+                print "Could not reconcile '%s'" % (term)
+                # cast set as list to preserve order
+                matches, matches_in_stock = Vaccine.country_aware_closest_to(term, country_pk)
+                all_matches = list(set(matches | matches_in_stock))
+                print "'***' indicates vaccine country has in stock"
+                for n, match in enumerate(all_matches):
+                    if match in matches_in_stock:
+                        print "Type %s for %s***" % (n, match)
+                    print "Type %s for %s" % (n, match)
+                choice = raw_input("Choose a match and press enter or press enter to skip:")
+                if choice not in [None, "", " "]:
+                    choice_num = int(choice)
+                    vax = all_matches[choice_num]
+                    #alt = AltVaccine(vaccine=vax, country=country_pk, alternate=term)
+                    #alt.save()
+                    return vax 
+                else:
+                    return None
+        except Exception, e:
+            print 'BANG'
+            print e
+            import ipdb;ipdb.set_trace()
+
 def import_who(file=None):
     '''
     opv-50
@@ -104,6 +159,7 @@ def import_who(file=None):
             matched_groups = []
 
             skips = ["", " "]
+            vax_skips = ["", " "]
             for r in range(int(sheet.nrows)):
                 types = sheet.row_types(r)
                 values = sheet.row_values(r)
@@ -134,9 +190,14 @@ def import_who(file=None):
 
                     vax = values[2][:-4]
                     try:
-                        vaccine = Vaccine.lookup_slug(vax)
+                        if vax not in vax_skips:
+                            vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
                         if vaccine is None:
                             #print "cannot find vax: '%s'" % (vax)
+                            if vax not in vax_skips:
+                                print "cannot reconcile '%s'" % (vax)
+                                print "moving on..."
+                                vax_skips.append(vax)
                             if vax not in unmatched_products:
                                 unmatched_products.append(vax)
                             continue
@@ -153,6 +214,7 @@ def import_who(file=None):
                         print "cannot find vax: '%s'" % (vax)
                         continue
 
+                    '''
                     amount = int(values[3])
                     if amount == last_amount:
                         continue
@@ -190,6 +252,7 @@ def import_who(file=None):
                     cs, csc = CountryStock.objects.get_or_create(vaccine=vaccine, country=country)
                     cs.md5_hash = cs_item_name
                     cs.save()
+                    '''
                 else:
                     titles.append(values)
             #print len(titles)
@@ -250,12 +313,15 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
             import ipdb;ipdb.set_trace()
             #continue
 
+        # XXX temporary
+        '''
         chad = Country.objects.get(iso2_code='TD')
         senegal = Country.objects.get(iso2_code='SN')
         mali = Country.objects.get(iso2_code='ML')
 
         if country not in [senegal, chad, mali]:
             continue
+        '''
 
         vaccine = Vaccine.lookup_slug(rd['Product'])
         if vaccine is None:
@@ -273,6 +339,12 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
         vax_slug = vaccine.slug
         if vax_slug not in products:
             products.append(vax_slug)
+        # XXX temporary
+        '''
+        targets = [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']
+        if vax_slug not in targets:
+            continue
+
 
         allocation_type = None
 
@@ -373,9 +445,11 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                 print 'error creating countrystock item'
                 print e
                 import ipdb;ipdb.set_trace()
+        '''
     print set(products)
     print set(unmatched_products)
     print set(matched_groups)
+    import ipdb; ipdb.set_trace()
 
 
 def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xls"):
@@ -421,12 +495,15 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
         except Exception, e:
             continue
 
+        # XXX temporary
+        '''
         chad = Country.objects.get(iso2_code='TD')
         senegal = Country.objects.get(iso2_code='SN')
         mali = Country.objects.get(iso2_code='ML')
 
         if country not in [senegal, chad, mali]:
             continue
+        '''
 
         vaccine = Vaccine.lookup_slug(rd['Product'])
         if vaccine is None:
@@ -442,6 +519,11 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
             continue
 
         vax_slug = vaccine.slug
+        # XXX temporary
+        '''
+        targets = [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']
+        if vax_slug not in targets:
+            continue
         allocation_type = 'CF'
 
         amount = int(rd['Doses - CO Forecast'])
@@ -492,6 +574,7 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
             except Exception, e:
                 print 'error creating countrystock item'
                 print e
+        '''
     print set(products)
     print set(unmatched_products)
     print set(matched_groups)
@@ -544,12 +627,15 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
         except Exception, e:
             continue
 
+        # XXX temporary
+        '''
         chad = Country.objects.get(iso2_code='TD')
         senegal = Country.objects.get(iso2_code='SN')
         mali = Country.objects.get(iso2_code='ML')
 
         if country not in [senegal, chad, mali]:
             continue
+        '''
 
         vaccine = Vaccine.lookup_slug(rd['Product'])
         if vaccine is None:
@@ -567,6 +653,11 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
         vax_slug = vaccine.slug
         if vax_slug not in products:
             products.append(vax_slug)
+        # XXX temporary
+        '''
+        targets = [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']
+        if vax_slug not in targets:
+            continue
 
         allocation_type = 'CF'
 
@@ -611,7 +702,8 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
                 print 'error creating countrystock item'
                 print e
                 import ipdb;ipdb.set_trace()
-
+        '''
     print set(products)
     print set(unmatched_products)
     print set(matched_groups)
+    import ipdb; ipdb.set_trace()

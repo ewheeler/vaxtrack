@@ -59,6 +59,18 @@ def analyze_demo(lang='en'):
         analysis = Analysis(country_pk=country, vaccine_abbr='BCG', lang=lang, B=True, F=True, P=True, C=True, U=True)
         print analysis.save_stats()
 
+def analyze_all_march(lang='en'):
+    for country in ['ML', 'TD', 'SN']:
+        for v in [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']:
+            analysis = Analysis(country_pk=country, vaccine_abbr=str(v), lang=lang, B=True, F=True, P=True, C=True, U=True)
+            print analysis.save_stats()
+
+def analyze_one_march(country='ML', lang='en'):
+    for v in [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']:
+        analysis = Analysis(country_pk=country, vaccine_abbr=str(v), lang=lang, B=True, F=True, P=True, C=True, U=True)
+        print analysis.save_stats()
+
+
 class Analysis(object):
     # helper methods
     @staticmethod
@@ -104,7 +116,7 @@ class Analysis(object):
 
         # configuration options
         self.save_chart = True
-        self.upload_chart_to_s3 = False
+        self.upload_chart_to_s3 = True
         self.lookahead = datetime.timedelta(90)
         self.cons_rate_diff_threshold = 0.25
 
@@ -161,6 +173,7 @@ class Analysis(object):
             if end_date is None:
                 last_day_in_current_year = datetime.date(self.today.year, 12, 31)
                 end_date = last_day_in_current_year
+
             # timedelta representing days we are plotting
             days_to_plot = end_date - begin_date
 
@@ -265,14 +278,16 @@ class Analysis(object):
 
             if self.display_forecast_projection:
                 projected_ff_dates, projected_ff_levels = self._calc_stock_levels(\
-                    "FF", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
+                    "FF", self.stocklevels[0]['date'], self.stocklevels[0]['amount'],\
+                    self.stocklevels[-1]['date'])
                 ax.plot_date(projected_ff_dates, projected_ff_levels, '--',\
                     drawstyle='steps', color='purple',\
                     label=translation.ugettext('projected stock based on forecast'))
 
             if self.display_purchased_projection:
                 projected_fp_dates, projected_fp_levels = self._calc_stock_levels(\
-                    "FP", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
+                    "FP", self.stocklevels[0]['date'], self.stocklevels[0]['amount'],\
+                    self.stocklevels[-1]['date'])
                 ax.plot_date(projected_fp_dates, projected_fp_levels, '--',\
                 drawstyle='steps', color='blue',\
                 label=translation.ugettext('projected stock based on placed POs'))
@@ -280,7 +295,8 @@ class Analysis(object):
             if self.display_theoretical_forecast:
                 # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
                 projected_co_dates, projected_co_levels = self._calc_stock_levels(\
-                    "CO", self.stocklevels[-2]['date'], self.stocklevels[-2]['amount'])
+                    "CO", self.stocklevels[-2]['date'], self.stocklevels[-2]['amount'],\
+                    self.stocklevels[-1]['date'])
                 ax.plot_date(projected_co_dates, projected_co_levels, '--',\
                 drawstyle='steps', color='green',\
                 label=translation.ugettext('theoretical stock based on forecast'))
@@ -288,7 +304,8 @@ class Analysis(object):
             if self.display_adjusted_theoretical_forecast:
                 # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
                 projected_un_dates, projected_un_levels = self._calc_stock_levels(\
-                    "UN", self.stocklevels[-2]['date'], self.stocklevels[-2]['amount'])
+                    "UN", self.stocklevels[-2]['date'], self.stocklevels[-2]['amount'],\
+                    self.stocklevels[-1]['date'])
                 ax.plot_date(projected_un_dates, projected_un_levels, '--',\
                 drawstyle='steps', color='orange',\
                 label=translation.ugettext('theoretical stock adjusted with deliveries'))
@@ -333,8 +350,8 @@ class Analysis(object):
         if self.upload_chart_to_s3:
             try:
                 # TODO make these configurable? same with sdb domain?
-                s3_key = "%s-%s-%s-%s.png" % (lang, country_pk, vaccine_abbr, options_str)
-                s3_path = "%s/%s/%s/" % (lang, country_pk, vaccine_abbr)
+                s3_key = "%s-%s-%s-%s.png" % (self.lang, self.country_pk, self.vaccine_abbr, self.options_str)
+                s3_path = "%s/%s/%s/" % (self.lang, self.country_pk, self.vaccine_abbr)
                 upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
                 #demo_key = "%s-%s-%s.png" % (self.country_pk, self.vaccine_abbr, self.options_str)
                 #upload_file(file_path, 'vaxtrack_charts', demo_key, True)
@@ -353,6 +370,7 @@ class Analysis(object):
             for y in self.f_years:
                 self.consumed_in_year.update({y:0})
                 last_s.update({y:0})
+            print self.f_years
 
             for d in all_stocklevels_asc(self.country_pk, self.vaccine_abbr):
                 yr = int(d['year'])
@@ -382,10 +400,20 @@ class Analysis(object):
                 rate = float(self.consumed_in_year[y])/float(self.days_of_stock_data[y])
                 self.actual_cons_rate.update({y:int(rate)})
 
+            print self.actual_cons_rate
+
+            if not self.today.year in self.f_years:
+                # if there is no forecast for the reference date's year,
+                # don't perform any of these queries
+                self.analyzed = True
+                return
+
             # "Query 1" Forecast Accuracy
             # for this year, see how actual consumption rate compares to estimated daily rate
             est_cons_rate = int(float(self.annual_demand[self.today.year])/float(365))
+            print est_cons_rate
             rate_difference = float(abs(est_cons_rate - self.actual_cons_rate[self.today.year]))/float(est_cons_rate)
+            print rate_difference
             # flag if difference is greater than threshold
             if rate_difference > self.cons_rate_diff_threshold:
                 print '***FLAG***'
@@ -527,20 +555,32 @@ class Analysis(object):
             css.analyzed = datetime.datetime.now()
             css.reference_date = self.today
 
-            css.consumed_in_year = Dicty.create('consumed_in_year', self.consumed_in_year)
-            css.actual_cons_rate = Dicty.create('actual_cons_rate', self.actual_cons_rate)
-            css.annual_demand = Dicty.create('annual_demand', self.annual_demand)
-            css.three_by_year = Dicty.create('three_by_year', self.three_by_year)
-            css.nine_by_year = Dicty.create('nine_by_year', self.nine_by_year)
-            css.days_of_stock_data = Dicty.create('days_of_stock_data', self.days_of_stock_data)
+            if hasattr(self, "consumed_in_year"):
+                css.consumed_in_year = Dicty.create('consumed_in_year', self.consumed_in_year)
+            if hasattr(self, "actual_cons_rate"):
+                css.actual_cons_rate = Dicty.create('actual_cons_rate', self.actual_cons_rate)
+            if hasattr(self, "annual_demand"):
+                css.annual_demand = Dicty.create('annual_demand', self.annual_demand)
+            if hasattr(self, "three_by_year"):
+                css.three_by_year = Dicty.create('three_by_year', self.three_by_year)
+            if hasattr(self, "nine_by_year"):
+                css.nine_by_year = Dicty.create('nine_by_year', self.nine_by_year)
+            if hasattr(self, "days_of_stock_data"):
+                css.days_of_stock_data = Dicty.create('days_of_stock_data', self.days_of_stock_data)
 
-            css.est_daily_cons = self.est_daily_cons
-            css.days_of_stock = self.days_of_stock
+            if hasattr(self, "est_daily_cons"):
+                css.est_daily_cons = self.est_daily_cons
+            if hasattr(self, "days_of_stock"):
+                css.days_of_stock = self.days_of_stock
 
-            css.doses_delivered_this_year = self.doses_delivered_this_year
-            css.doses_on_orders = self.doses_on_orders
-            css.demand_for_period = self.demand_for_period
-            css.percent_coverage = self.percent_coverage
+            if hasattr(self, "doses_delivered_this_year"):
+                css.doses_delivered_this_year = self.doses_delivered_this_year
+            if hasattr(self, "doses_on_orders"):
+                css.doses_on_orders = self.doses_on_orders
+            if hasattr(self, "demand_for_period"):
+                css.demand_for_period = self.demand_for_period
+            if hasattr(self, "percent_coverage"):
+                css.percent_coverage = self.percent_coverage
             css.save()
             self.saved = True
         except Exception, e:
