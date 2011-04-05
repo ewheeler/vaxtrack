@@ -7,6 +7,7 @@ import datetime
 import hashlib
 from operator import attrgetter
 from operator import itemgetter
+import itertools
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -15,6 +16,12 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
 from dameraulevenshtein import dameraulevenshtein as dm
+
+def _split_term(term):
+    if term is not None:
+        for char in ["_", "-", "+", "(", ")"]:
+            term = term.replace(char, " ")
+        return list(set(term.lower().split()))
 
 class AltCountry(models.Model):
     country = models.ForeignKey("Country")
@@ -260,7 +267,7 @@ class Vaccine(models.Model):
                     match = alternates[0].vaccine
             return match
         except Exception, e:
-            print 'BANG'
+            print 'BANG country_aware_lookup'
             print e
 
     @classmethod
@@ -310,6 +317,17 @@ class Vaccine(models.Model):
             print 'BANG'
             print e
 
+    def _field_list(self):
+        fields = []
+        fields.append(self.slug)
+        fields.append(self.abbr_en)
+        fields.append(self.abbr_en_alt)
+        fields.append(self.abbr_fr)
+        fields.append(self.abbr_fr_alt)
+        fields = [f for f in fields if f is not None]
+        return list(itertools.chain(*map(lambda f: _split_term(f), fields)))
+        
+
     @classmethod
     def country_aware_closest_to(klass, term, country_pk):
         try:
@@ -318,35 +336,46 @@ class Vaccine(models.Model):
             # fetch all vaccines that this country has stocks of
             cs_vaccines = map(attrgetter('vaccine'), countrystocks)
 
-            vax_tuples = []
-            for obj in klass.objects.all():
-                big_en = ""
-                big_fr = ""
-                if obj.abbr_en is not None:
-                    big_en = obj.abbr_en.lower()
-                    # calculate edit distance between word from term and word from english name
-                    vax_tuples.append((dm(big_term, big_en), obj, obj.abbr_en))
-                if obj.abbr_fr is not None:
-                    big_fr = obj.abbr_fr.lower()
-                    if big_fr != big_en:
-                        # calculate edit distance between word from term and word from french name
-                        vax_tuples.append((dm(big_term, big_fr), obj, obj.abbr_fr))
+            # get list of vaccines who's name and/or any abbreviations
+            # contain any words in the given term
+            vax_partials = [obj for obj in klass.objects.all()\
+                if not set(_split_term(big_term)).isdisjoint(set(obj._field_list()))]
+            if len(vax_partials) > 0:
+                vax_partials_groups = set(map(attrgetter('group'), vax_partials))
+                vax_relatives = list(itertools.chain(*[g.vaccine_set.all() for g in vax_partials_groups]))
+                only_objs = set(vax_partials).union(set(vax_relatives))
+            # if there are no overlapping terms, try to find
+            # similar vaccines by edit distance
+            else:
+                vax_tuples = []
+                for obj in klass.objects.all():
+                    big_en = ""
+                    big_fr = ""
+                    if obj.abbr_en is not None:
+                        big_en = obj.abbr_en.lower()
+                        # calculate edit distance between word from term and word from english name
+                        vax_tuples.append((dm(big_term, big_en), obj, obj.abbr_en))
+                    if obj.abbr_fr is not None:
+                        big_fr = obj.abbr_fr.lower()
+                        if big_fr != big_en:
+                            # calculate edit distance between word from term and word from french name
+                            vax_tuples.append((dm(big_term, big_fr), obj, obj.abbr_fr))
 
-            # sort tuples by ascending edit distance, pluck closest matches
-            closest = sorted(vax_tuples, key=itemgetter(0))[:10]
-            # return only the objects
-            only_objs = set(map(itemgetter(1), closest))
+                # sort tuples by ascending edit distance, pluck closest matches
+                closest = sorted(vax_tuples, key=itemgetter(0))[:10]
+                # return only the objects
+                only_objs = set(map(itemgetter(1), closest)).union(vax_partials)
 
             # see if any closest matches are vaccines this country stocks
             if only_objs.isdisjoint(set(cs_vaccines)):
-                # if not, return top matches
-                return only_objs[:10], None
+                # if not, return top matches and None
+                return list(only_objs)[:20], None
             else:
-                # if so, return the intersection
+                # if so, return the ones that country doesnt stock and the ones that the country does stock
                 return only_objs.difference(set(cs_vaccines)), only_objs.intersection(set(cs_vaccines))
 
         except Exception, e:
-            print 'BANG'
+            print 'BANG country aware closest to'
             print e
 
 

@@ -105,27 +105,37 @@ def reconcile_vaccine_interactively(term, country_pk):
             if vaccine is not None:
                 return vaccine 
             else:
-                print "LOOKUP"
+                print ""
+                print ""
                 print "Could not reconcile '%s'" % (term)
                 # cast set as list to preserve order
                 matches, matches_in_stock = Vaccine.country_aware_closest_to(term, country_pk)
-                all_matches = list(set(matches | matches_in_stock))
-                print "'***' indicates vaccine country has in stock"
+                if matches_in_stock is not None:
+                    all_matches = list(set(matches.union(matches_in_stock)))
+                    print "** indicates vaccine country has in stock"
+                    print ""
+                else:
+                    all_matches = list(matches)
                 for n, match in enumerate(all_matches):
-                    if match in matches_in_stock:
-                        print "Type %s for %s***" % (n, match)
-                    print "Type %s for %s" % (n, match)
+                    if matches_in_stock is not None:
+                        if match in matches_in_stock:
+                            print " *%s* for %s" % (n, match)
+                        else:
+                            print "  %s  for %s" % (n, match)
+                    else:
+                        print " %s for %s" % (n, match)
                 choice = raw_input("Choose a match and press enter or press enter to skip:")
                 if choice not in [None, "", " "]:
                     choice_num = int(choice)
                     vax = all_matches[choice_num]
-                    #alt = AltVaccine(vaccine=vax, country=country_pk, alternate=term)
-                    #alt.save()
+                    country = Country.objects.get(pk=country_pk)
+                    alt = AltVaccine(vaccine=vax, country=country, alternate=term)
+                    alt.save()
                     return vax 
                 else:
                     return None
         except Exception, e:
-            print 'BANG'
+            print 'BANG lookup'
             print e
             import ipdb;ipdb.set_trace()
 

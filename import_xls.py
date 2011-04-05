@@ -74,6 +74,71 @@ def reconcile_country_interactively(term):
             print e
             import ipdb;ipdb.set_trace()
 
+def reconcile_vaccine_interactively(term, country_pk):
+    try:
+        vaccine = Vaccine.objects.get(name__istartswith=term)
+        return vaccine
+    except MultipleObjectsReturned:
+        try:
+            print "MULTIPLE"
+            matches = Vaccine.objects.filter(name__istartswith=term)
+            print "Could not reconcile '%s'" % (term)
+            # cast set as list to preserve order
+            for n, match in enumerate(matches):
+                print "Type %s for %s" % (n, match.name)
+            choice = raw_input("Choose a match and press enter or press enter to skip:")
+            if choice not in [None, "", " "]:
+                choice_num = int(choice)
+                vax = matches[choice_num]
+                #alt = AltVaccine(vaccine=vax, alternate=term)
+                #alt.save()
+                return vax
+            else:
+                return None
+        except Exception, e:
+            print 'BANG'
+            print e
+            import ipdb; ipdb.set_trace()
+    except ObjectDoesNotExist:
+        try:
+            vaccine = Vaccine.country_aware_lookup(term, country_pk)
+            if vaccine is not None:
+                return vaccine
+            else:
+                print ""
+                print ""
+                print "Could not reconcile '%s'" % (term)
+                # cast set as list to preserve order
+                matches, matches_in_stock = Vaccine.country_aware_closest_to(term, country_pk)
+                if matches_in_stock is not None:
+                    all_matches = list(set(matches.union(matches_in_stock)))
+                    print "** indicates vaccine country has in stock"
+                    print ""
+                else:
+                    all_matches = list(matches)
+                for n, match in enumerate(all_matches):
+                    if matches_in_stock is not None:
+                        if match in matches_in_stock:
+                            print " *%s* for %s" % (n, match)
+                        else:
+                            print "  %s  for %s" % (n, match)
+                    else:
+                        print " %s for %s" % (n, match)
+                choice = raw_input("Choose a match and press enter or press enter to skip:")
+                if choice not in [None, "", " "]:
+                    choice_num = int(choice)
+                    vax = all_matches[choice_num]
+                    country = Country.objects.get(iso2_code=country_pk)
+                    alt = AltVaccine(vaccine=vax, country=country, alternate=term)
+                    alt.save()
+                    return vax 
+                else:
+                    return None
+        except Exception, e:
+            print 'BANG lookup'
+            print e
+            import ipdb; ipdb.set_trace()
+
 def import_who(file=None):
     '''
     opv-50
@@ -104,6 +169,7 @@ def import_who(file=None):
             matched_groups = []
 
             skips = ["", " "]
+            vax_skips = ["", " "]
             for r in range(int(sheet.nrows)):
                 types = sheet.row_types(r)
                 values = sheet.row_values(r)
@@ -134,9 +200,14 @@ def import_who(file=None):
 
                     vax = values[2][:-4]
                     try:
-                        vaccine = Vaccine.lookup_slug(vax)
+                        if vax not in vax_skips:
+                            vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
                         if vaccine is None:
                             #print "cannot find vax: '%s'" % (vax)
+                            if vax not in vax_skips:
+                                print "cannot reconcile '%s'" % (vax)
+                                print "moving on..."
+                                vax_skips.append(vax)
                             if vax not in unmatched_products:
                                 unmatched_products.append(vax)
                             continue
@@ -197,7 +268,6 @@ def import_who(file=None):
             print set(products)
             print set(unmatched_products)
             print set(matched_groups)
-            import ipdb; ipdb.set_trace()
 
 
 def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Office Forecasts 2008.xls"):

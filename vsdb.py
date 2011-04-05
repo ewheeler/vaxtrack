@@ -9,7 +9,7 @@ from boto.sdb.db.model import Model
 from boto.sdb.db.property import *
 from boto.sdb.db.manager import sdbmanager
 
-SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'marchcountrystocks')
+SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'aprilcountrystocks')
 
 # not sure how to use these models exactly...
 # http://groups.google.com/group/boto-users/browse_thread/thread/3bc0feb15183cf2a/3e44b4e7bbd44fae?lnk=gst&q=sdb#3e44b4e7bbd44fae
@@ -124,10 +124,8 @@ def sdb_get_all_type(country, supply, type):
     hashed = search.hexdigest()
 
     if hashed in cached_results:
-        print 'USING CACHED'
         result = cached_results[hashed]
     else:
-        print 'FETCHING FRESH'
         sdb = boto.connect_sdb()
         cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
         query = "SELECT * FROM `%s` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, supply, type)

@@ -65,8 +65,8 @@ def analyze_all_march(lang='en'):
             analysis = Analysis(country_pk=country, vaccine_abbr=str(v), lang=lang, B=True, F=True, P=True, C=True, U=True)
             print analysis.save_stats()
 
-def analyze_one_march(country='ML', lang='en'):
-    for v in [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']:
+def analyze_ml_april(country='ML', lang='en'):
+    for v in [u'dtp-hepbhib-2', u'yf-10', u'tt-20', u'tt-10', u'mopv1-20', u'mea-10', u'bcg-20', u'yf-5', u'topv-10', u'measles', u'hib-1-lph']:
         analysis = Analysis(country_pk=country, vaccine_abbr=str(v), lang=lang, B=True, F=True, P=True, C=True, U=True)
         print analysis.save_stats()
 
@@ -122,7 +122,7 @@ class Analysis(object):
 
         # TODO XXX back to the present!
         #self.today = datetime.datetime.today().date()
-        self.today = datetime.date(2010, 2, 15)
+        self.today = datetime.date(2009, 12, 31)
 
         # default to false if options are not specified
         self.display_buffers = kwargs.get('B', False)
@@ -143,6 +143,7 @@ class Analysis(object):
             self.annual_demand = {}
             # get list of years we are dealing with
             self.f_years = list(set(Analysis.values_list(self.forecasts, 'year')))
+            self.s_years = list(set(Analysis.values_list(self.stocklevels, 'year')))
             for year in self.f_years:
                 annual = []
                 # get list of forecasts for each year
@@ -223,22 +224,26 @@ class Analysis(object):
 
                 for year in self.f_years:
                     # create a single key/value pair for each year/sum forecast
-                    self.three_by_year.update({year:three_month_buffer(self.annual_demand[year])})
-                    self.nine_by_year.update({year:nine_month_buffer(self.annual_demand[year])})
+                    if year in self.annual_demand:
+                        self.three_by_year.update({year:three_month_buffer(self.annual_demand[year])})
+                        self.nine_by_year.update({year:nine_month_buffer(self.annual_demand[year])})
 
                 # make a list of corresponding buffer levels for every reported stock level
                 first_and_last_days = []
                 for i, y in enumerate(sorted(self.three_by_year.keys())):
-                    if i == 0:
+                    if (i == 0 and (len(self.stocklevels) > 0)):
                         # on the first loop, use the earliest stocklevel
                         # instead of january 1 of that year
-                        first_and_last_days.append(self.stocklevels[-1]['date'])
+                        if self.stocklevels[-1]['date'].year in self.three_by_year.keys():
+                            first_and_last_days.append(self.stocklevels[-1]['date'])
+                        else:
+                            first_and_last_days.append(datetime.date(y, 1, 1))
                     else:
                         first_and_last_days.append(datetime.date(y, 1, 1))
                     first_and_last_days.append(datetime.date(y, 12, 31))
 
-                self.three_month_buffers = [self.three_by_year[d.year] for d in first_and_last_days]
-                self.nine_month_buffers = [self.nine_by_year[d.year] for d in first_and_last_days]
+                self.three_month_buffers = [self.three_by_year[d.year] for d in first_and_last_days if d.year in self.three_by_year]
+                self.nine_month_buffers = [self.nine_by_year[d.year] for d in first_and_last_days if d.year in self.nine_by_year]
 
             except Exception,e:
                 print 'ERROR BUFFERS'
@@ -246,6 +251,9 @@ class Analysis(object):
                 import ipdb; ipdb.set_trace()
 
         try:
+            if (len(self.dates) == 0) or (len(self.levels) == 0):
+                return
+
             # documentation sez figsize is in inches (!?)
             #fig = figure(figsize=(15,12))
             fig = figure(figsize=(9,6))
@@ -276,7 +284,7 @@ class Analysis(object):
                 ax.plot_date(first_and_last_days, self.nine_month_buffers, '-', drawstyle='steps',\
                     color='red', label=translation.ugettext('9 month buffer'))
 
-            if self.display_forecast_projection:
+            if self.display_forecast_projection and (len(self.stocklevels) > 0):
                 projected_ff_dates, projected_ff_levels = self._calc_stock_levels(\
                     "FF", self.stocklevels[0]['date'], self.stocklevels[0]['amount'],\
                     self.stocklevels[-1]['date'])
@@ -284,7 +292,7 @@ class Analysis(object):
                     drawstyle='steps', color='purple',\
                     label=translation.ugettext('projected stock based on forecast'))
 
-            if self.display_purchased_projection:
+            if self.display_purchased_projection and (len(self.stocklevels) > 0):
                 projected_fp_dates, projected_fp_levels = self._calc_stock_levels(\
                     "FP", self.stocklevels[0]['date'], self.stocklevels[0]['amount'],\
                     self.stocklevels[-1]['date'])
@@ -292,7 +300,7 @@ class Analysis(object):
                 drawstyle='steps', color='blue',\
                 label=translation.ugettext('projected stock based on placed POs'))
 
-            if self.display_theoretical_forecast:
+            if self.display_theoretical_forecast and (len(self.stocklevels) > 0):
                 # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
                 projected_co_dates, projected_co_levels = self._calc_stock_levels(\
                     "CO", self.stocklevels[-2]['date'], self.stocklevels[-2]['amount'],\
@@ -301,7 +309,7 @@ class Analysis(object):
                 drawstyle='steps', color='green',\
                 label=translation.ugettext('theoretical stock based on forecast'))
 
-            if self.display_adjusted_theoretical_forecast:
+            if self.display_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
                 # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
                 projected_un_dates, projected_un_levels = self._calc_stock_levels(\
                     "UN", self.stocklevels[-2]['date'], self.stocklevels[-2]['amount'],\
@@ -362,20 +370,24 @@ class Analysis(object):
                 import ipdb; ipdb.set_trace()
 
     def analyze(self):
+        print '~~~~ANALYZING~~~~'
+        print self.country_pk
+        print self.vaccine_abbr
+        print '~~~~~~~~~~~~~~~~~'
         try:
             last_s = {}
             self.consumed_in_year = {}
 
             # populate dicts with years and 0s
-            for y in self.f_years:
+            for y in self.s_years:
                 self.consumed_in_year.update({y:0})
                 last_s.update({y:0})
-            print self.f_years
+            print self.s_years
 
             for d in all_stocklevels_asc(self.country_pk, self.vaccine_abbr):
                 yr = int(d['year'])
                 s = int(d['amount'])
-                if not yr in self.f_years:
+                if not yr in self.s_years:
                     continue
                 # if this day's stocklevel is less than the last stocklevel...
                 if s <= last_s[yr]:
@@ -392,40 +404,49 @@ class Analysis(object):
 
             self.actual_cons_rate = {}
             self.days_of_stock_data = {}
-            for y in self.f_years:
+            for y in self.s_years:
                 # get all stocklevel datapoints from year
                 stocklevels_in_year = type_for_year_asc(self.country_pk, self.vaccine_abbr, 'SL', y)
+                print len(stocklevels_in_year)
                 # find number of days enclosed between first stocklevel entry of year and last
-                self.days_of_stock_data.update({y:(stocklevels_in_year[-1]['date'] - stocklevels_in_year[0]['date']).days})
-                rate = float(self.consumed_in_year[y])/float(self.days_of_stock_data[y])
-                self.actual_cons_rate.update({y:int(rate)})
+                if len(stocklevels_in_year) > 0:
+                    self.days_of_stock_data.update({y:(stocklevels_in_year[-1]['date'] - stocklevels_in_year[0]['date']).days})
+                    rate = float(self.consumed_in_year[y])/float(self.days_of_stock_data[y])
+                    self.actual_cons_rate.update({y:int(rate)})
 
             print self.actual_cons_rate
 
-            if not self.today.year in self.f_years:
+            if self.today.year not in self.f_years:
                 # if there is no forecast for the reference date's year,
                 # don't perform any of these queries
                 self.analyzed = True
                 return
 
+            if len(self.stocklevels) == 0:
+                self.analyzed = True
+                return
+
             # "Query 1" Forecast Accuracy
             # for this year, see how actual consumption rate compares to estimated daily rate
+            print 'Query 1'
             est_cons_rate = int(float(self.annual_demand[self.today.year])/float(365))
             print est_cons_rate
-            rate_difference = float(abs(est_cons_rate - self.actual_cons_rate[self.today.year]))/float(est_cons_rate)
-            print rate_difference
-            # flag if difference is greater than threshold
-            if rate_difference > self.cons_rate_diff_threshold:
-                print '***FLAG***'
-                print 'major difference between forecast and actual consumption rates'
-                alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
-                    reference_date=self.today, status='W', risk='F', text='C')
-                alert.analyzed = datetime.datetime.now()
-                alert.save()
+            if self.today.year in self.actual_cons_rate:
+                rate_difference = float(abs(est_cons_rate - self.actual_cons_rate[self.today.year]))/float(est_cons_rate)
+                print rate_difference
+                # flag if difference is greater than threshold
+                if rate_difference > self.cons_rate_diff_threshold:
+                    print '***FLAG***'
+                    print 'major difference between forecast and actual consumption rates'
+                    alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                        reference_date=self.today, status='W', risk='F', text='C')
+                    alert.analyzed = datetime.datetime.now()
+                    alert.save()
 
             # "Query 2" Order Lead Time
             # see if there are forecasted deliveries and/or purchased deliveries
             # scheduled for the near future
+            print 'Query 2'
             self.forecasted_this_year = type_for_year_asc(self.country_pk, self.vaccine_abbr, "FF", self.today.year)
             self.on_po_this_year = type_for_year_asc(self.country_pk, self.vaccine_abbr, "FP", self.today.year)
 
@@ -434,38 +455,44 @@ class Analysis(object):
 
             # "Query 3" Stock Management
             # see how many months worth of supply are in stock
+            print 'Query 3'
             latest_stocklevel = self.stocklevels[0]
 
-            self.est_daily_cons = int(float(self.annual_demand[self.today.year])/float(365))
-            self.days_of_stock = int(float(latest_stocklevel['amount'])/float(self.est_daily_cons))
-            print '%s days of stock' % str(self.days_of_stock)
+            if self.today.year in self.annual_demand:
+                self.est_daily_cons = int(float(self.annual_demand[self.today.year])/float(365))
+                self.days_of_stock = int(float(latest_stocklevel['amount'])/float(self.est_daily_cons))
+                print '%s days of stock' % str(self.days_of_stock)
 
-            # check if there is too much stock (more than nine months' worth)
-            if self.days_of_stock >= 270:
-                # "Query 4" Stock Management
-                # flag if there are any upcoming deliveries (forecasted or purchased)
-                if (len(self.upcoming_forecasted) > 0) or (len(self.upcoming_on_po) > 0):
-                    print '***FLAG***'
-                    print 'delay or reduce shipment'
-                    alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
-                        reference_date=self.today, status='U', risk='O', text='D')
-                    alert.analyzed = datetime.datetime.now()
-                    alert.save()
-                else:
-                    print '---OK---'
+                # check if there is too much stock (more than nine months' worth)
+                if self.days_of_stock >= 270:
+                    # "Query 4" Stock Management
+                    # flag if there are any upcoming deliveries (forecasted or purchased)
+                    print 'Query 4'
+                    if (len(self.upcoming_forecasted) > 0) or (len(self.upcoming_on_po) > 0):
+                        print '***FLAG***'
+                        print 'delay or reduce shipment'
+                        alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                            reference_date=self.today, status='U', risk='O', text='D')
+                        alert.analyzed = datetime.datetime.now()
+                        alert.save()
+                    else:
+                        print '---OK---'
 
-            self.first_level_this_year = Analysis.filter(self.stocklevels, 'year', self.today.year)[-1]['amount']
-            self.deliveries_this_year = type_for_year(self.country_pk, self.vaccine_abbr, "UN", self.today.year)
+            this_years_levels = Analysis.filter(self.stocklevels, 'year', self.today.year)
+            if len(this_years_levels) > 0:
+                self.first_level_this_year = Analysis.filter(self.stocklevels, 'year', self.today.year)[-1]['amount']
+                self.deliveries_this_year = type_for_year(self.country_pk, self.vaccine_abbr, "UN", self.today.year)
 
-            self.doses_delivered_this_year = reduce(lambda s,d: s + d['amount'], self.deliveries_this_year, 0)
-            self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.upcoming_on_po, 0)
+                self.doses_delivered_this_year = reduce(lambda s,d: s + d['amount'], self.deliveries_this_year, 0)
+                self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.upcoming_on_po, 0)
 
-            self.demand_for_period = self.lookahead.days * self.est_daily_cons
+                self.demand_for_period = self.lookahead.days * self.est_daily_cons
 
-            # "Query 5" Stock Management
-            # calculate % coverage of annual need
-            self.percent_coverage = float(self.first_level_this_year + self.doses_delivered_this_year)/float(self.annual_demand[self.today.year])
-            print '%s percent coverage' % str(self.percent_coverage)
+                # "Query 5" Stock Management
+                # calculate % coverage of annual need
+                print 'Query 5'
+                self.percent_coverage = float(self.first_level_this_year + self.doses_delivered_this_year)/float(self.annual_demand[self.today.year])
+                print '%s percent coverage' % str(self.percent_coverage)
 
             # check if there is insufficient stock (less than three months' worth)
             if self.days_of_stock <= 90:
