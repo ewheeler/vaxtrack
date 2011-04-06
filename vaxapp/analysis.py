@@ -103,8 +103,9 @@ class Analysis(object):
         v = Vaccine.lookup_slug(self.vaccine_abbr)
         if v is None:
             return 'couldnt find vaccine'
+        self.group_slug = v.group.slug
 
-        self.cs = CountryStock.objects.get(country=self.country_pk, vaccine=v)
+        self.cs = CountryStock.objects.get(country=self.country_pk, group=v.group)
         if self.cs is None:
             return 'couldnt find countrystock'
 
@@ -263,7 +264,7 @@ class Analysis(object):
 
             # lookup country name and vaccine abbreviation in given language
             _country_name = getattr(self.cs.country, self.lang)
-            _vaccine_abbr = getattr(self.cs.vaccine, self.lang)
+            _vaccine_abbr = getattr(self.cs.group, self.lang)
             title = "%s %s" % (_country_name, _vaccine_abbr)
             fig.suptitle(title, fontsize=18)
 
@@ -347,7 +348,7 @@ class Analysis(object):
 
         if self.save_chart:
             try:
-                filename = "%s-%s-%s.png" % (self.country_pk, self.vaccine_abbr, self.options_str)
+                filename = "%s-%s-%s.png" % (self.country_pk, self.group_slug, self.options_str)
                 file_path = "/tmp/" + filename
                 fig.savefig(file_path)
             except Exception, e:
@@ -358,8 +359,8 @@ class Analysis(object):
         if self.upload_chart_to_s3:
             try:
                 # TODO make these configurable? same with sdb domain?
-                s3_key = "%s-%s-%s-%s.png" % (self.lang, self.country_pk, self.vaccine_abbr, self.options_str)
-                s3_path = "%s/%s/%s/" % (self.lang, self.country_pk, self.vaccine_abbr)
+                s3_key = "%s-%s-%s-%s.png" % (self.lang, self.country_pk, self.group_slug, self.options_str)
+                s3_path = "%s/%s/%s/" % (self.lang, self.country_pk, self.group_slug)
                 upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
                 #demo_key = "%s-%s-%s.png" % (self.country_pk, self.vaccine_abbr, self.options_str)
                 #upload_file(file_path, 'vaxtrack_charts', demo_key, True)

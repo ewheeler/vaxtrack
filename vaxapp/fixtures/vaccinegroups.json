@@ -1,210 +1,236 @@
 [
-    {
-        "pk": 1, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "BCG", 
-            "abbr_fr": "BCG"
-        }
-    }, 
-    {
-        "pk": 2, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "CHOLERA", 
-            "abbr_fr": "CHOLERA"
-        }
-    }, 
-    {
-        "pk": 3, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "DT", 
-            "abbr_fr": ""
-        }
-    }, 
-    {
-        "pk": 4, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "DTP", 
-            "abbr_fr": "DTC"
-        }
-    }, 
-    {
-        "pk": 5, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "DTP-HepB", 
-            "abbr_fr": "DTC-HEPB"
-        }
-    }, 
-    {
-        "pk": 6, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "DTP-HepB/Hib", 
-            "abbr_fr": "DTC-HEPB-HIB"
-        }
-    }, 
-    {
-        "pk": 7, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "DTP-Hib", 
-            "abbr_fr": "DTC-HIB"
-        }
-    }, 
-    {
-        "pk": 8, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "HEPB", 
-            "abbr_fr": "HEPB"
-        }
-    }, 
-    {
-        "pk": 9, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "HEPB ADULT", 
-            "abbr_fr": "HEPB"
-        }
-    }, 
-    {
-        "pk": 10, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "HIB", 
-            "abbr_fr": "HIB"
-        }
-    }, 
-    {
-        "pk": 11, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "INFLUENZA", 
-            "abbr_fr": ""
-        }
-    }, 
-    {
-        "pk": 12, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "IPV", 
-            "abbr_fr": "VPI"
-        }
-    }, 
-    {
-        "pk": 13, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "MEA", 
-            "abbr_fr": "VAR"
-        }
-    }, 
-    {
-        "pk": 14, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "MENING", 
-            "abbr_fr": "VAM"
-        }
-    }, 
-    {
-        "pk": 15, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "MMR", 
-            "abbr_fr": "ROR"
-        }
-    }, 
-    {
-        "pk": 16, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "MR", 
-            "abbr_fr": ""
-        }
-    }, 
-    {
-        "pk": 17, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "MUMPS", 
-            "abbr_fr": "OREILLONS"
-        }
-    }, 
-    {
-        "pk": 18, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "OPV", 
-            "abbr_fr": "VPO"
-        }
-    }, 
-    {
-        "pk": 19, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "OTHER", 
-            "abbr_fr": "AUTRES"
-        }
-    }, 
-    {
-        "pk": 20, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "PNEUMO / PCV", 
-            "abbr_fr": ""
-        }
-    }, 
-    {
-        "pk": 21, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "RABIES", 
-            "abbr_fr": "RAGE"
-        }
-    }, 
-    {
-        "pk": 22, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "RUBELLA", 
-            "abbr_fr": "ANTI-RUBEOLE"
-        }
-    }, 
-    {
-        "pk": 23, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "Td", 
-            "abbr_fr": ""
-        }
-    }, 
-    {
-        "pk": 24, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "TT", 
-            "abbr_fr": "VAT"
-        }
-    }, 
-    {
-        "pk": 25, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "TYPHOID", 
-            "abbr_fr": "TYPHOIDE"
-        }
-    }, 
-    {
-        "pk": 26, 
-        "model": "vaxapp.vaccinegroup", 
-        "fields": {
-            "abbr_en": "YF", 
-            "abbr_fr": "VAA"
-        }
+  {
+    "pk": 1, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "BCG", 
+      "abbr_fr": "BCG", 
+      "slug": "bcg"
     }
+  }, 
+  {
+    "pk": 2, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "CHOLERA", 
+      "abbr_fr": "CHOLERA", 
+      "slug": "cholera"
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "DT", 
+      "abbr_fr": "", 
+      "slug": "dt"
+    }
+  }, 
+  {
+    "pk": 4, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "DTP", 
+      "abbr_fr": "DTC", 
+      "slug": "dtp"
+    }
+  }, 
+  {
+    "pk": 5, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "DTP-HepB", 
+      "abbr_fr": "DTC-HEPB", 
+      "slug": "dtp-hepb"
+    }
+  }, 
+  {
+    "pk": 6, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "DTP-HepB/Hib", 
+      "abbr_fr": "DTC-HEPB-HIB", 
+      "slug": "dtp-hepbhib"
+    }
+  }, 
+  {
+    "pk": 7, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "DTP-Hib", 
+      "abbr_fr": "DTC-HIB", 
+      "slug": "dtp-hib"
+    }
+  }, 
+  {
+    "pk": 8, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "HEPB", 
+      "abbr_fr": "HEPB", 
+      "slug": "hepb"
+    }
+  }, 
+  {
+    "pk": 9, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "HEPB ADULT", 
+      "abbr_fr": "HEPB", 
+      "slug": "hepb-adult"
+    }
+  }, 
+  {
+    "pk": 10, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "HIB", 
+      "abbr_fr": "HIB", 
+      "slug": "hib"
+    }
+  }, 
+  {
+    "pk": 11, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "INFLUENZA", 
+      "abbr_fr": "", 
+      "slug": "influenza"
+    }
+  }, 
+  {
+    "pk": 12, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "IPV", 
+      "abbr_fr": "VPI", 
+      "slug": "ipv"
+    }
+  }, 
+  {
+    "pk": 13, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "MEA", 
+      "abbr_fr": "VAR", 
+      "slug": "mea"
+    }
+  }, 
+  {
+    "pk": 14, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "MENING", 
+      "abbr_fr": "VAM", 
+      "slug": "mening"
+    }
+  }, 
+  {
+    "pk": 15, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "MMR", 
+      "abbr_fr": "ROR", 
+      "slug": "mmr"
+    }
+  }, 
+  {
+    "pk": 16, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "MR", 
+      "abbr_fr": "", 
+      "slug": "mr"
+    }
+  }, 
+  {
+    "pk": 17, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "MUMPS", 
+      "abbr_fr": "OREILLONS", 
+      "slug": "mumps"
+    }
+  }, 
+  {
+    "pk": 18, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "OPV", 
+      "abbr_fr": "VPO", 
+      "slug": "opv"
+    }
+  }, 
+  {
+    "pk": 19, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "OTHER", 
+      "abbr_fr": "AUTRES", 
+      "slug": "other"
+    }
+  }, 
+  {
+    "pk": 20, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "PNEUMO / PCV", 
+      "abbr_fr": "", 
+      "slug": "pneumo-pcv"
+    }
+  }, 
+  {
+    "pk": 21, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "RABIES", 
+      "abbr_fr": "RAGE", 
+      "slug": "rabies"
+    }
+  }, 
+  {
+    "pk": 22, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "RUBELLA", 
+      "abbr_fr": "ANTI-RUBEOLE", 
+      "slug": "rubella"
+    }
+  }, 
+  {
+    "pk": 23, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "Td", 
+      "abbr_fr": "", 
+      "slug": "td"
+    }
+  }, 
+  {
+    "pk": 24, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "TT", 
+      "abbr_fr": "VAT", 
+      "slug": "tt"
+    }
+  }, 
+  {
+    "pk": 25, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "TYPHOID", 
+      "abbr_fr": "TYPHOIDE", 
+      "slug": "typhoid"
+    }
+  }, 
+  {
+    "pk": 26, 
+    "model": "vaxapp.vaccinegroup", 
+    "fields": {
+      "abbr_en": "YF", 
+      "abbr_fr": "VAA", 
+      "slug": "yf"
+    }
+  }
 ]

@@ -19,7 +19,7 @@ from decimal import Decimal as D
 
 from vaxapp.models import *
 
-SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'aprilcountrystocks')
+SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'groupcountrystocks')
 
 # a few helper functions
 def day_of_year_to_date(year, day_of_year):
@@ -126,8 +126,11 @@ def reconcile_vaccine_interactively(term, country_pk):
                         print " %s for %s" % (n, match)
                 choice = raw_input("Choose a match and press enter or press enter to skip:")
                 if choice not in [None, "", " "]:
-                    choice_num = int(choice)
-                    vax = all_matches[choice_num]
+                    try:
+                        choice_num = int(choice)
+                        vax = all_matches[choice_num]
+                    except ValueError:
+                        vax = Vaccine.objects.get(slug=choice)
                     country = Country.objects.get(iso2_code=country_pk)
                     alt = AltVaccine(vaccine=vax, country=country, alternate=term)
                     alt.save()
@@ -217,6 +220,7 @@ def import_who(file=None):
                                 matched_groups.append(vax)
                             continue
                         vax_slug = vaccine.slug
+                        vax_group = vaccine.group.slug
                         if vax_slug not in products:
                             products.append(vax_slug)
                     except Exception, e:
@@ -235,13 +239,15 @@ def import_who(file=None):
                         item_name = hashlib.md5()
                         item_name.update(str(country.iso2_code))
                         item_name.update(str(vax_slug))
+                        item_name.update(str(vax_group))
                         item_name.update("SL")
                         item_name.update(str(day))
                         item_name.update(str(amount))
 
                         item = domain.new_item(item_name.hexdigest())
                         item.add_value("country", str(country.iso2_code))
-                        item.add_value("supply", str(vax_slug))
+                        item.add_value("product", str(vax_slug))
+                        item.add_value("group", str(vax_group))
                         item.add_value("type", "SL")
                         item.add_value("date", str(day))
                         item.add_value("year", str(year))
@@ -255,10 +261,11 @@ def import_who(file=None):
                     cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
                     cs_item = domain.new_item(cs_item_name)
                     cs_item.add_value("country", str(country.iso2_code))
-                    cs_item.add_value("supply", str(vax_slug))
+                    cs_item.add_value("product", str(vax_slug))
                     cs_item.add_value("type", "CS")
                     cs_item.save()
-                    cs, csc = CountryStock.objects.get_or_create(vaccine=vaccine, country=country)
+                    cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
+                    cs.products.add(vaccine)
                     cs.md5_hash = cs_item_name
                     cs.save()
                 else:
@@ -302,6 +309,7 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
     matched_groups = []
 
     skips = ['', ' ']
+    vax_skips = ['', ' ']
     for r in range(int(sheet.nrows))[1:]:
         rd = dict(zip(column_names, sheet.row_values(r)))
         try:
@@ -327,20 +335,36 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
         if country not in [senegal, chad, mali]:
             continue
 
-        vaccine = Vaccine.lookup_slug(rd['Product'])
-        if vaccine is None:
-            #print "oops. could not find vaccine '%s'" % (rd['Product'])
-            if rd['Product'] not in unmatched_products:
-                unmatched_products.append(rd['Product'])
-            continue
+        vax = rd['Product']
 
-        if isinstance(vaccine, str):
-            #print vaccine
-            if rd['Product'] not in matched_groups:
-                matched_groups.append(rd['Product'])
+        try:
+            if vax not in vax_skips:
+                vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
+            if vaccine is None:
+                #print "cannot find vax: '%s'" % (vax)
+                if vax not in vax_skips:
+                    print "cannot reconcile '%s'" % (vax)
+                    print "moving on..."
+                    vax_skips.append(vax)
+                if vax not in unmatched_products:
+                    unmatched_products.append(vax)
+                continue
+            if isinstance(vaccine, str):
+                #print vaccine
+                if vax not in matched_groups:
+                    matched_groups.append(vax)
+                continue
+            vax_slug = vaccine.slug
+            vax_group = vaccine.group.slug
+            if vax_slug not in products:
+                products.append(vax_slug)
+        except Exception, e:
+            print e
+            print "cannot find vax: '%s'" % (vax)
             continue
 
         vax_slug = vaccine.slug
+        vax_group = vaccine.group.slug
         if vax_slug not in products:
             products.append(vax_slug)
 
@@ -398,13 +422,15 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                     # future delivery on PO (FP)
                     allocation_type = 'FP'
 
+            '''
             if co_forecast is not None:
                 amount = co_forecast
                 allocation_type = 'CF'
+            '''
 
             if allocation_type is None:
-                print 'unknown allocation_type!'
-                print rd
+                #print 'unknown allocation_type!'
+                #print rd
                 continue
 
             # TODO save row number
@@ -412,13 +438,15 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                 item_name = hashlib.md5()
                 item_name.update(str(country.iso2_code))
                 item_name.update(str(vax_slug))
+                item_name.update(str(vax_group))
                 item_name.update(allocation_type)
                 item_name.update(str(approx_date))
                 item_name.update(str(amount))
 
                 item = domain.new_item(item_name.hexdigest())
                 item.add_value("country", str(country.iso2_code))
-                item.add_value("supply", str(vax_slug))
+                item.add_value("product", str(vax_slug))
+                item.add_value("group", str(vax_group))
                 item.add_value("type", allocation_type)
                 item.add_value("date", str(approx_date))
                 item.add_value("year", str(year))
@@ -433,10 +461,11 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                 cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
                 cs_item = domain.new_item(cs_item_name)
                 cs_item.add_value("country", str(country.iso2_code))
-                cs_item.add_value("supply", str(vax_slug))
+                cs_item.add_value("product", str(vax_slug))
                 cs_item.add_value("type", "CS")
                 cs_item.save()
-                cs, csc = CountryStock.objects.get_or_create(vaccine=vaccine, country=country)
+                cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
+                cs.products.add(vaccine)
                 cs.md5_hash = cs_item_name
                 cs.save()
             except Exception, e:
@@ -476,6 +505,7 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
     matched_groups = []
 
     skips = ["", " "]
+    vax_skips = ["", " "]
     for r in range(int(sheet.nrows))[1:]:
         rd = dict(zip(column_names, sheet.row_values(r)))
         try:
@@ -498,20 +528,36 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
         if country not in [senegal, chad, mali]:
             continue
 
-        vaccine = Vaccine.lookup_slug(rd['Product'])
-        if vaccine is None:
-            #print "oops. could not find vaccine '%s'" % (rd['Product'])
-            if rd['Product'] not in unmatched_products:
-                unmatched_products.append(rd['Product'])
-            continue
+        vax = rd['Product']
 
-        if isinstance(vaccine, str):
-            #print vaccine
-            if rd['Product'] not in matched_groups:
-                matched_groups.append(rd['Product'])
+        try:
+            if vax not in vax_skips:
+                vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
+            if vaccine is None:
+                #print "cannot find vax: '%s'" % (vax)
+                if vax not in vax_skips:
+                    print "cannot reconcile '%s'" % (vax)
+                    print "moving on..."
+                    vax_skips.append(vax)
+                if vax not in unmatched_products:
+                    unmatched_products.append(vax)
+                continue
+            if isinstance(vaccine, str):
+                #print vaccine
+                if vax not in matched_groups:
+                    matched_groups.append(vax)
+                continue
+            vax_slug = vaccine.slug
+            vax_group = vaccine.group.slug
+            if vax_slug not in products:
+                products.append(vax_slug)
+        except Exception, e:
+            print e
+            print "cannot find vax: '%s'" % (vax)
             continue
 
         vax_slug = vaccine.slug
+        vax_group = vaccine.group.slug
         allocation_type = 'CF'
 
         amount = int(rd['Doses - CO Forecast'])
@@ -532,13 +578,15 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
                 item_name = hashlib.md5()
                 item_name.update(str(country.iso2_code))
                 item_name.update(str(vax_slug))
+                item_name.update(str(vax_group))
                 item_name.update(allocation_type)
                 item_name.update(str(approx_date))
                 item_name.update(str(amount))
 
                 item = domain.new_item(item_name.hexdigest())
                 item.add_value("country", str(country.iso2_code))
-                item.add_value("supply", str(vax_slug))
+                item.add_value("product", str(vax_slug))
+                item.add_value("group", str(vax_group))
                 item.add_value("type", allocation_type)
                 item.add_value("date", str(approx_date))
                 item.add_value("year", str(year))
@@ -553,10 +601,11 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
                 cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
                 cs_item = domain.new_item(cs_item_name)
                 cs_item.add_value("country", str(country.iso2_code))
-                cs_item.add_value("supply", str(vax_slug))
+                cs_item.add_value("product", str(vax_slug))
                 cs_item.add_value("type", "CS")
                 cs_item.save()
-                cs, csc = CountryStock.objects.get_or_create(vaccine=vaccine, country=country)
+                cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
+                cs.products.add(vaccine)
                 cs.md5_hash = cs_item_name
                 cs.save()
             except Exception, e:
@@ -565,7 +614,6 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
     print set(products)
     print set(unmatched_products)
     print set(matched_groups)
-    import ipdb; ipdb.set_trace()
 
 def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting Data.xls", yr="2010"):
     sheetname = "forecasting %s" % (yr)
@@ -599,6 +647,7 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
     matched_groups = []
 
     skips = ["", " "]
+    vax_skips = ["", " "]
     for r in range(int(sheet.nrows))[1:]:
         rd = dict(zip(column_names, sheet.row_values(r)))
         try:
@@ -621,26 +670,45 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
         if country not in [senegal, chad, mali]:
             continue
 
-        vaccine = Vaccine.lookup_slug(rd['Product'])
-        if vaccine is None:
-            #print "oops. could not find vaccine '%s'" % (rd['Product'])
-            if rd['Product'] not in unmatched_products:
-                unmatched_products.append(rd['Product'])
-            continue
+        vax = rd['Product']
 
-        if isinstance(vaccine, str):
-            #print vaccine
-            if rd['Product'] not in matched_groups:
-                matched_groups.append(rd['Product'])
+        try:
+            if vax not in vax_skips:
+                vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
+            if vaccine is None:
+                #print "cannot find vax: '%s'" % (vax)
+                if vax not in vax_skips:
+                    print "cannot reconcile '%s'" % (vax)
+                    print "moving on..."
+                    vax_skips.append(vax)
+                if vax not in unmatched_products:
+                    unmatched_products.append(vax)
+                continue
+            if isinstance(vaccine, str):
+                #print vaccine
+                if vax not in matched_groups:
+                    matched_groups.append(vax)
+                continue
+            vax_slug = vaccine.slug
+            vax_group = vaccine.group.slug
+            if vax_slug not in products:
+                products.append(vax_slug)
+        except Exception, e:
+            print e
+            print "cannot find vax: '%s'" % (vax)
             continue
 
         vax_slug = vaccine.slug
+        vax_group = vaccine.group.slug
         if vax_slug not in products:
             products.append(vax_slug)
 
         allocation_type = 'CF'
 
-        amount = int(rd['Total no. of doses'])
+        try:
+            amount = int(rd['Total no. of doses'])
+        except ValueError:
+            continue
 
         year = int(yr)
 
@@ -657,7 +725,8 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
 
                 item = domain.new_item(item_name.hexdigest())
                 item.add_value("country", str(country.iso2_code))
-                item.add_value("supply", str(vax_slug))
+                item.add_value("product", str(vax_slug))
+                item.add_value("group", str(vax_group))
                 item.add_value("type", allocation_type)
                 item.add_value("year", str(year))
                 item.add_value("amount", str(amount))
@@ -671,10 +740,11 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
                 cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
                 cs_item = domain.new_item(cs_item_name)
                 cs_item.add_value("country", str(country.iso2_code))
-                cs_item.add_value("supply", str(vax_slug))
+                cs_item.add_value("group", str(vax_group))
                 cs_item.add_value("type", "CS")
                 cs_item.save()
-                cs, csc = CountryStock.objects.get_or_create(vaccine=vaccine, country=country)
+                cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
+                cs.products.add(vaccine)
                 cs.md5_hash = cs_item_name
                 cs.save()
             except Exception, e:

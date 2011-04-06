@@ -9,14 +9,15 @@ from boto.sdb.db.model import Model
 from boto.sdb.db.property import *
 from boto.sdb.db.manager import sdbmanager
 
-SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'aprilcountrystocks')
+SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'groupcountrystocks')
 
 # not sure how to use these models exactly...
 # http://groups.google.com/group/boto-users/browse_thread/thread/3bc0feb15183cf2a/3e44b4e7bbd44fae?lnk=gst&q=sdb#3e44b4e7bbd44fae
 # http://cloudcarpenters.com/blog/simpledb_primer_with_python_and_boto/
 class Vaxtrack(Model):
     country = StringProperty()
-    supply = StringProperty()
+    product = StringProperty()
+    group = StringProperty()
     type = StringProperty()
     date = DateProperty()
     # added year to ease lookups because comparisons are lexicographic
@@ -30,7 +31,8 @@ class Vaxtrack(Model):
 # if boto's model implementation improves
 field_types = {
     'country' : StringProperty(),
-    'supply' : StringProperty(),
+    'product' : StringProperty(),
+    'group' : StringProperty(),
     'type' : StringProperty(),
     'date' : DateProperty(),
     'year' : IntegerProperty(),
@@ -94,12 +96,16 @@ def sort_results_desc(list, attr):
     return sorted(list, key=itemgetter(attr), reverse=True)
 
 cached_year_results = {}
-def sdb_type_for_year(country, year, supply, type):
+def sdb_type_for_year(country, year, product, type):
+
+    vaccine = Vaccine.objects.get(slug=product)
+    group = vaccine.group.slug
+
     # TODO cache results better!
     search = hashlib.md5()
     search.update(str(country))
     search.update(str(year))
-    search.update(str(supply))
+    search.update(str(group))
     search.update(str(type))
     hashed = search.hexdigest()
 
@@ -108,18 +114,22 @@ def sdb_type_for_year(country, year, supply, type):
     else:
         sdb = boto.connect_sdb()
         cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
-        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `year`='%s' AND `supply`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, year, supply, type)
+        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `year`='%s' AND `group`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, year, group, type)
         result = cs.select(query)
         cached_year_results.update({hashed:result})
 
     return result
 
 cached_results = {}
-def sdb_get_all_type(country, supply, type):
+def sdb_get_all_type(country, product, type):
+
+    vaccine = Vaccine.objects.get(slug=product)
+    group = vaccine.group.slug
+
     # TODO cache results better!
     search = hashlib.md5()
     search.update(str(country))
-    search.update(str(supply))
+    search.update(str(group))
     search.update(str(type))
     hashed = search.hexdigest()
 
@@ -128,7 +138,7 @@ def sdb_get_all_type(country, supply, type):
     else:
         sdb = boto.connect_sdb()
         cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
-        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `supply`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, supply, type)
+        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `group`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, group, type)
         result = cs.select(query)
         cached_results.update({hashed:result})
 
@@ -154,24 +164,24 @@ def multikeysort(items, columns):
             return 0
     return sorted(items, cmp=comparer)
 
-def all_stocklevels_desc(country, supply):
-    return sort_results_desc(decode_results(sdb_get_all_type(country, supply, 'SL')), 'date')
+def all_stocklevels_desc(country, product):
+    return sort_results_desc(decode_results(sdb_get_all_type(country, product, 'SL')), 'date')
 
-def all_stocklevels_asc(country, supply):
-    return sort_results_asc(decode_results(sdb_get_all_type(country, supply, 'SL')), 'date')
+def all_stocklevels_asc(country, product):
+    return sort_results_asc(decode_results(sdb_get_all_type(country, product, 'SL')), 'date')
 
-def all_forecasts_asc(country, supply):
-    return sort_results_asc(decode_results(sdb_get_all_type(country, supply, 'CF')), 'year')
+def all_forecasts_asc(country, product):
+    return sort_results_asc(decode_results(sdb_get_all_type(country, product, 'CF')), 'year')
 
-def all_deliveries_for_type_asc(country, supply, type):
-    return sort_results_asc(decode_results(sdb_get_all_type(country, supply, type)), 'date')
+def all_deliveries_for_type_asc(country, product, type):
+    return sort_results_asc(decode_results(sdb_get_all_type(country, product, type)), 'date')
 
-def forecast_for_year(country, supply, year):
-    return decode_results(sdb_type_for_year(country, year, supply, 'CF'))
+def forecast_for_year(country, product, year):
+    return decode_results(sdb_type_for_year(country, year, product, 'CF'))
 
-def type_for_year_asc(country, supply, type, year):
-    return sorted(decode_results(sdb_type_for_year(country, year, supply, type)), key=itemgetter('date'))
+def type_for_year_asc(country, product, type, year):
+    return sorted(decode_results(sdb_type_for_year(country, year, product, type)), key=itemgetter('date'))
 
-def type_for_year(country, supply, type, year):
-    return decode_results(sdb_type_for_year(country, year, supply, type))
+def type_for_year(country, product, type, year):
+    return decode_results(sdb_type_for_year(country, year, product, type))
 

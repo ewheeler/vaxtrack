@@ -1,11 +1,15 @@
 **TODO**
-switch to final s3 hierarchy and hookup i18n charts
+correct vaccines (-/+)
+deal with country-like non-country entities
+fix radio buttons, show only groups relevant to country
+fix stats, alerts, hist tables
+
+**PUNT**
+import SD forecasts
 progress bar for uploads (http://www.laurentluce.com/?p=93)
 add WHO logo
 refactor vsdb interfaces
 download button to download all charts for vaccine/country or country
-
-**PUNT**
 print button that opens image in new window
 date range selection for charts
 only allow registration by @unicef.org and @who.int email addresses
@@ -21,3 +25,8 @@ get rid of old import scripts
 update analyze() so Alerts are not duplicated
 documentform should accept xls in addition to csv
 also save countrystocks in cloud!!!
+switch to final s3 hierarchy and hookup i18n charts
+import new WHO data
+rename supply field in sdb records to product, add productgroup - import scripts and vsdb
+do not import any forecasts from allocation files -- only from country forecasting files
+recreate vaccinegroup.json fixtures that include new slug field

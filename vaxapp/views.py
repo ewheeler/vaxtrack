@@ -33,18 +33,19 @@ def index(req, country_pk=None):
         countrystocks = CountryStock.objects.filter(country=country_pk)
     else:
         countrystocks = False
-    countries = list(set([c.country for c in CountryStock.objects.all()]))
-    vaccines = list(set([v.vaccine for v in CountryStock.objects.all()]))
+    countrystocks = CountryStock.objects.filter(country="ML")
+    countries = list(set([c.country for c in countrystocks ]))
+    groups = list(set([g.group for g in countrystocks]))
     return render_to_response("index.html",\
         {"countrystocks": countrystocks,\
             "countries": countries,\
-            "vaccines": vaccines,\
+            "groups": groups,\
             "tab": "dashboard"},\
             context_instance=RequestContext(req))
 
 def alerts(req, country_pk, vaccine_abbr):
     if req.is_ajax():
-        countrystock = CountryStock.objects.filter(country=country_pk, vaccine__abbr_fr_alt=vaccine_abbr)
+        countrystock = CountryStock.objects.filter(country=country_pk, group=group_slug)
         alerts = Alert.objects.filter(countrystock=countrystock)
         if len(alerts) == 0:
             return HttpResponse([], 'application/javascript')
@@ -155,15 +156,16 @@ def upload(req):
             "tab": "upload"},\
             context_instance=RequestContext(req))
 
-def get_chart_dev(req, country_pk=None, vaccine_abbr=None, chart_opts=""):
-    vaccine_abbr = vaccine_abbr.replace("_", "-")
-    path = "%s/%s/%s/" % ('en', country_pk, vaccine_abbr)
-    filename = "en-%s-%s-%s.png" % (country_pk, vaccine_abbr, chart_opts)
+def get_chart(req, country_pk=None, group_slug=None, chart_opts=""):
+    group_slug = group_slug.replace("_", "-").lower()
+    path = "%s/%s/%s/" % ('en', country_pk, group_slug)
+    filename = "en-%s-%s-%s.png" % (country_pk, group_slug, chart_opts)
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s%s" % (path, filename)
     return HttpResponseRedirect(chart_url)
 
-def get_chart(req, country_pk=None, vaccine_abbr=None, chart_opts=""):
-    vaccine_abbr = 'BCG'
-    filename = "%s-%s-%s.png" % (country_pk, vaccine_abbr, chart_opts)
+'''
+def get_chart(req, country_pk=None, group_slug=None, chart_opts=""):
+    filename = "%s-%s-%s.png" % (country_pk, group_slug, chart_opts)
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s" % (filename)
     return HttpResponseRedirect(chart_url)
+'''

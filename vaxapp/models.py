@@ -14,6 +14,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.template.defaultfilters import slugify
 
 from dameraulevenshtein import dameraulevenshtein as dm
 
@@ -85,6 +86,8 @@ class Country(models.Model):
                 term = 'palestinian'
             if 'PALESTINE' in term.upper():
                 term = 'palestinian'
+            if 'GAZA' in term.upper():
+                term = 'palestinian'
             if "SERBIA" in term.upper():
                 term = 'serbia and montenegro'
             if "LIBYA" in term.upper():
@@ -95,6 +98,8 @@ class Country(models.Model):
                 term = "COTE D'IVOIRE"
             if "VERT" in term.upper():
                 term = "cape verde"
+            if "PACIFIC" in term.upper():
+                term = "fiji"
             # words to exclude when attempting to match country names
             exclude = set(["democratic", "peoples", "republic", "the", "of", "american", "french", "brazzaville", "islamic", "people's", "territory", "kingdom", "démocratique", "république", "territories", "françaises", "française", "islands", "british", "britannique", "américaines", "britanniques", "western", "occidental", "république-unie", "république", "l'ex-république", "démocratique", "equatorial", "équatoriale", "territoire", "plurinational", "américaines", "conakry", "states", "états", "outlying", "éloignées", "federation", "fédération", "pays", "sultanate"])
             # replace hyphens, exclude any words from exclude set, and pluck the longest remaining word
@@ -149,9 +154,10 @@ class Country(models.Model):
 class VaccineGroup(models.Model):
     abbr_en = models.CharField(max_length=160, blank=True, null=True)
     abbr_fr = models.CharField(max_length=160, blank=True, null=True)
+    slug = models.CharField(max_length=160, blank=True, null=True)
 
     def __unicode__(self):
-        return self.abbr_en
+        return self.slug
 
     @property
     def en(self):
@@ -160,6 +166,19 @@ class VaccineGroup(models.Model):
     @property
     def fr(self):
         return self.abbr_fr
+
+    @classmethod
+    def generate_slugs(klass):
+        for obj in klass.objects.all():
+            obj.slug = slugify(obj.abbr_en)
+            obj.save()
+
+    @classmethod
+    def lookup(klass, term):
+        for obj in klass.objects.all():
+            if obj.slug.lower() == term.lower():
+                return obj
+        return None
 
 
 class AltVaccine(models.Model):
@@ -332,6 +351,8 @@ class Vaccine(models.Model):
     def country_aware_closest_to(klass, term, country_pk):
         try:
             big_term = term.lower()
+            # grrr edge cases
+            big_term.replace('meningitis', 'mening')
             countrystocks = CountryStock.objects.filter(country=country_pk)
             # fetch all vaccines that this country has stocks of
             cs_vaccines = map(attrgetter('vaccine'), countrystocks)
@@ -380,7 +401,8 @@ class Vaccine(models.Model):
 
 
 class CountryStock(models.Model):
-    vaccine = models.ForeignKey(Vaccine)
+    products = models.ManyToManyField(Vaccine)
+    group = models.ForeignKey(VaccineGroup)
     country = models.ForeignKey(Country)
     md5_hash = models.CharField(max_length=200, null=True, blank=True)
 
@@ -405,8 +427,12 @@ class CountryStock(models.Model):
         return self.md5_hash
 
     def set_md5(self):
-        self.md5_hash = hashlib.md5(self.country.iso2_code + self.vaccine.slug).hexdigest()
+        self.md5_hash = hashlib.md5(self.country.iso2_code + self.group.slug).hexdigest()
         self.save()
+
+    @property
+    def vaccine(self):
+        return self.group.slug
 
 class Dicty(models.Model):
     ''' not pretty, but more useful than stashing dicts
@@ -520,7 +546,7 @@ class Alert(models.Model):
 
     def __unicode__(self):
         return "%s: %s - %s" % (self.countrystock.country.iso2_code,\
-            self.countrystock.vaccine, self.get_text_display())
+            self.countrystock.group, self.get_text_display())
 
 class UserProfile(models.Model):
     user = models.ForeignKey(User)

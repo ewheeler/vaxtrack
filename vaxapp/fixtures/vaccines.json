@@ -658,7 +658,7 @@
             "name": null, 
             "abbr_en": "TOPV-20", 
             "abbr_fr": "tVPO-20", 
-            "abbr_en_alt": null, 
+            "abbr_en_alt": "opv-20", 
             "slug": "topv-20"
         }
     }, 
@@ -671,7 +671,7 @@
             "name": null, 
             "abbr_en": "TOPV-10", 
             "abbr_fr": "tVPO-10", 
-            "abbr_en_alt": null, 
+            "abbr_en_alt": "opv-10", 
             "slug": "topv-10"
         }
     }, 

@@ -2,8 +2,8 @@ $(document).ready(function(){
     var saved_history = window.history;
 
     /*	default chart options, vax, and country */
-    var options = new Array("B","F","P");
-    var vaccine = "BCG";
+    var options = new Array("B","F","P","C","U");
+    var group = "BCG";
     var country = "ML";
     var chart_name = "";
     var lang;
@@ -56,7 +56,7 @@ $(document).ready(function(){
 
     /*	set inputs to values of global variables */
     $("#plot_options :input").val(options);
-    $("#vaccines :input").val(vaccine);
+    $("#vaccines :input").filter("[value=" + group + "]").attr("checked", "checked");
     $("#country").val(country);
 
     /*	set lang global variable to selected lang
@@ -78,13 +78,14 @@ $(document).ready(function(){
 	hash_parts = document.location.hash.split('/');
 	lang = hash_parts[1];
 	country = hash_parts[2].replace(/[\#\-\!]/g,"");
-	vaccine = hash_parts[3];
+	group = hash_parts[3];
 	options = new Array();
 	for (i=0; i< hash_parts[4].length; i++){
 	    options.push(hash_parts[4].charAt(i));
 	}
 	$("#plot_options :input").val(options);
-	$("#vaccines :input").val(vaccine);
+	$("#vaccines :input").attr("checked", false);
+	$("#vaccines :input").filter("[value=" + group + "]").attr("checked", "checked");
 	$("#country").val(country);
 	$("#auth select").val(lang);
     });
@@ -117,9 +118,9 @@ $(document).ready(function(){
 	reset global vaccine variable to currently checked
 	vaccine, update url hash, fetch new chart and tables */
     $("#vaccines :input").click(function(){
-        vaccine = ""; 
+        group = ""; 
 	$("#vaccines :input:radio:checked").each(function() {
-	    vaccine = $(this).val();
+	    group = $(this).val();
 	});
 	update_url();
         get_chart();
@@ -143,9 +144,9 @@ $(document).ready(function(){
     /*	alter url hash to reflect current values of global variables */
     function update_url(){
 	chart_opts = options.sort().join("");
-        vaccine = vaccine.replace(/-/g, "_");
+        group = group.replace(/-/g, "_");
     	var path;
-	path = "#!/" + lang + "/" + country + "/" + vaccine + "/" + chart_opts;
+	path = "#!/" + lang + "/" + country + "/" + group + "/" + chart_opts;
 	document.location.hash = path;
     };
 
@@ -153,15 +154,15 @@ $(document).ready(function(){
 	and country flag */
     function get_chart(){
 	chart_opts = options.sort().join("");
-        vaccine = vaccine.replace(/-/g, "_");
-        chart_name = country + "/" + vaccine + "/" + chart_opts + ".png";
+        group = group.replace(/-/g, "_");
+        chart_name = country + "/" + group + "/" + chart_opts + ".png";
         $("#chart").attr('src', "/charts/" + chart_name);
         $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
     };
 
     /* 	fetch alerts for current country/vax and build table rows if needed */
     function get_alerts(){
-	$.get("/alerts/" + country + "/" + vaccine, function (data){
+	$.get("/alerts/" + country + "/" + group, function (data){
 		$("#alerts li").remove();
 		var alerts;
 		alerts = jQuery.parseJSON(data);
@@ -179,7 +180,7 @@ $(document).ready(function(){
     /* 	fetch stats and historical info for current country/vax
 	and build table rows if needed */
     function get_stats(){
-	$.get("/stats/" + country + "/" + vaccine, function (data){
+	$.get("/stats/" + country + "/" + group, function (data){
 		$("#stats tbody tr, #hist tbody tr").remove();
 		var stats;
 		stats = jQuery.parseJSON(data);
