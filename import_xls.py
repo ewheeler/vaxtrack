@@ -19,7 +19,7 @@ from decimal import Decimal as D
 
 from vaxapp.models import *
 
-SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'groupcountrystocks')
+SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'mangocountrystocks')
 
 # a few helper functions
 def day_of_year_to_date(year, day_of_year):
@@ -407,8 +407,12 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
             if forecast_doses > 0:
                 amount = forecast_doses
                 if approx_date <= date.today():
+                    # hmm dont think this is correct
+                    # i think this is really 'CF'
+                    #
                     # original CO forecast (CO)
-                    allocation_type = 'CO'
+                    #allocation_type = 'CO'
+                    pass
                 else:
                     # future delivery on forecast (FF)
                     allocation_type = 'FF'
@@ -422,11 +426,9 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                     # future delivery on PO (FP)
                     allocation_type = 'FP'
 
-            '''
             if co_forecast is not None:
                 amount = co_forecast
-                allocation_type = 'CF'
-            '''
+                allocation_type = 'CO'
 
             if allocation_type is None:
                 #print 'unknown allocation_type!'
@@ -720,6 +722,7 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
                 item_name = hashlib.md5()
                 item_name.update(str(country.iso2_code))
                 item_name.update(str(vax_slug))
+                item_name.update(str(vax_group))
                 item_name.update(allocation_type)
                 item_name.update(str(amount))
 

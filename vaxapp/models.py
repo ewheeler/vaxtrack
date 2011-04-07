@@ -423,6 +423,13 @@ class CountryStock(models.Model):
             return None
 
     @property
+    def has_stock_data(self):
+        if self.latest_stats is not None:
+            return self.latest_stats.has_stock_data
+        else:
+            return False
+
+    @property
     def get_md5(self):
         return self.md5_hash
 
@@ -465,6 +472,10 @@ class CountryStockStats(models.Model):
     countrystock = models.ForeignKey(CountryStock)
     analyzed = models.DateTimeField(blank=True, null=True)
     reference_date = models.DateField(blank=True, null=True)
+
+    has_stock_data = models.BooleanField(default=False)
+    has_forecast_data = models.BooleanField(default=False)
+    has_delivery_data = models.BooleanField(default=False)
 
     consumed_in_year = models.ForeignKey(Dicty, blank=True, null=True, related_name='consumed_in_year')
     actual_cons_rate = models.ForeignKey(Dicty, blank=True, null=True, related_name='actual_cons_rate')

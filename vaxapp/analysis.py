@@ -65,9 +65,9 @@ def analyze_all_march(lang='en'):
             analysis = Analysis(country_pk=country, vaccine_abbr=str(v), lang=lang, B=True, F=True, P=True, C=True, U=True)
             print analysis.save_stats()
 
-def analyze_ml_april(country='ML', lang='en'):
-    for v in [u'dtp-hepbhib-2', u'yf-10', u'tt-20', u'tt-10', u'mopv1-20', u'mea-10', u'bcg-20', u'yf-5', u'topv-10', u'measles', u'hib-1-lph']:
-        analysis = Analysis(country_pk=country, vaccine_abbr=str(v), lang=lang, B=True, F=True, P=True, C=True, U=True)
+def analyze_april(country='ML', lang='en'):
+    for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
+        analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, lang=lang, B=True, F=True, P=True, C=True, U=True)
         print analysis.save_stats()
 
 
@@ -89,23 +89,28 @@ class Analysis(object):
         return matches
 
 
-    def __init__(self, country_pk=None, vaccine_abbr=None, lang=None, **kwargs):
+    def __init__(self, country_pk=None, group_slug=None, vaccine_abbr=None, lang=None, **kwargs):
         # string of options (as single characters) in alphabetical order
         # used later for filename
         self.options_str = ''.join(sorted(kwargs.keys()))
 
         self.country_pk = country_pk
         self.vaccine_abbr = vaccine_abbr
+        self.group_slug = group_slug
         self.lang = lang
         if self.lang is not None:
             translation.activate(self.lang)
 
-        v = Vaccine.lookup_slug(self.vaccine_abbr)
-        if v is None:
-            return 'couldnt find vaccine'
-        self.group_slug = v.group.slug
+        if vaccine_abbr is not None:
+            v = Vaccine.lookup_slug(self.vaccine_abbr)
+            if v is None:
+                print 'couldnt find vaccine'
+        print "GROUP"
+        print self.group_slug
 
-        self.cs = CountryStock.objects.get(country=self.country_pk, group=v.group)
+        country = Country.objects.get(iso2_code=self.country_pk)
+        group = VaccineGroup.objects.get(slug=self.group_slug)
+        self.cs, new = CountryStock.objects.get_or_create(country=country, group=group)
         if self.cs is None:
             return 'couldnt find countrystock'
 
@@ -123,7 +128,7 @@ class Analysis(object):
 
         # TODO XXX back to the present!
         #self.today = datetime.datetime.today().date()
-        self.today = datetime.date(2009, 12, 31)
+        self.today = datetime.date(2010, 12, 31)
 
         # default to false if options are not specified
         self.display_buffers = kwargs.get('B', False)
@@ -134,17 +139,19 @@ class Analysis(object):
 
 
         try:
-            self.stocklevels = all_stocklevels_desc(self.country_pk, self.vaccine_abbr)
+            self.stocklevels = get_group_all_stocklevels_desc(self.country_pk, self.group_slug)
 
             self.dates = Analysis.values_list(self.stocklevels, 'date')
             self.levels = Analysis.values_list(self.stocklevels, 'amount')
 
-            self.forecasts = all_forecasts_asc(self.country_pk, self.vaccine_abbr)
+            self.forecasts = get_group_all_forecasts_asc(self.country_pk, self.group_slug)
 
             self.annual_demand = {}
             # get list of years we are dealing with
             self.f_years = list(set(Analysis.values_list(self.forecasts, 'year')))
+            print self.f_years
             self.s_years = list(set(Analysis.values_list(self.stocklevels, 'year')))
+            print self.s_years
             for year in self.f_years:
                 annual = []
                 # get list of forecasts for each year
@@ -153,6 +160,7 @@ class Analysis(object):
                     # add forecasts for this year to list
                     annual.append(f['amount'])
                 self.annual_demand.update({year:sum(annual)})
+            print self.annual_demand
 
         except Exception,e:
             print 'ERROR INIT'
@@ -162,13 +170,21 @@ class Analysis(object):
 
     # calculate projections
     def _calc_stock_levels(self, delivery_type, begin_date, begin_level, end_date=None):
+        print 'CALCULATE PROJECTIONS: %s' % delivery_type
         try:
-            filtered_deliveries = all_deliveries_for_type_asc(self.country_pk, self.vaccine_abbr, delivery_type)
+            filtered_deliveries = get_group_all_deliveries_for_type_asc(self.country_pk, self.group_slug, delivery_type)
+            print 'deliveries:'
+            print len(filtered_deliveries)
+            if len(filtered_deliveries) == 0:
+                return [], []
 
             def _est_daily_consumption_for_year(year):
                 ''' Return daily consumption based on estimated annual demand '''
-                forecast = self.annual_demand[year]
-                return int(float(forecast)/float(365.0))
+                if year in self.annual_demand:
+                    forecast = self.annual_demand[year]
+                    return int(float(forecast)/float(365.0))
+                else:
+                    return 0
 
             # timedelta representing a change of one day
             one_day = datetime.timedelta(days=1)
@@ -178,6 +194,9 @@ class Analysis(object):
 
             # timedelta representing days we are plotting
             days_to_plot = end_date - begin_date
+            print begin_date
+            print end_date
+            print days_to_plot
 
             # variables to keep track of running totals while we loop
             est_stock_level = begin_level
@@ -205,6 +224,8 @@ class Analysis(object):
                     est_stock_level = 0
                 # add level to list of levels
                 projected_stock_levels.append(est_stock_level)
+            print len(projected_stock_dates)
+            print len(projected_stock_levels)
             return projected_stock_dates, projected_stock_levels
         except Exception,e:
             print 'ERROR PROJECTION'
@@ -252,20 +273,19 @@ class Analysis(object):
                 import ipdb; ipdb.set_trace()
 
         try:
-            if (len(self.dates) == 0) or (len(self.levels) == 0):
-                return
 
             # documentation sez figsize is in inches (!?)
             #fig = figure(figsize=(15,12))
             fig = figure(figsize=(9,6))
+            #fig_legend = figure()
 
             # add country name and vaccine as chart title
             #title = "%s %s" % (self.country_pk, self.vaccine_abbr)
 
             # lookup country name and vaccine abbreviation in given language
             _country_name = getattr(self.cs.country, self.lang)
-            _vaccine_abbr = getattr(self.cs.group, self.lang)
-            title = "%s %s" % (_country_name, _vaccine_abbr)
+            _group_abbr = getattr(self.cs.group, self.lang)
+            title = "%s %s" % (_country_name, _group_abbr)
             fig.suptitle(title, fontsize=18)
 
             # add timestamp to lower left corner
@@ -274,9 +294,11 @@ class Analysis(object):
             fig.text(0,0,translation.ugettext(colophon), fontsize=8)
             ax = fig.add_subplot(111)
 
-            # plot stock levels
-            ax.plot_date(self.dates, self.levels, '-', drawstyle='steps', color='blue',\
-                label=translation.ugettext('actual stock'))
+
+            if (len(self.dates) != 0) and (len(self.levels) != 0):
+                # plot stock levels
+                ax.plot_date(self.dates, self.levels, '-', drawstyle='steps', color='blue',\
+                    label=translation.ugettext('actual stock'))
 
             if self.display_buffers:
                 # plot 3 and 9 month buffer levels as red lines
@@ -287,34 +309,44 @@ class Analysis(object):
 
             if self.display_forecast_projection and (len(self.stocklevels) > 0):
                 projected_ff_dates, projected_ff_levels = self._calc_stock_levels(\
-                    "FF", self.stocklevels[0]['date'], self.stocklevels[0]['amount'],\
-                    self.stocklevels[-1]['date'])
+                    "FF", self.stocklevels[-1]['date'], self.stocklevels[0]['amount'],\
+                    self.stocklevels[0]['date'])
+                print 'display_forecast_projection:'
+                print len(projected_ff_dates)
+                print len(projected_ff_levels)
                 ax.plot_date(projected_ff_dates, projected_ff_levels, '--',\
                     drawstyle='steps', color='purple',\
                     label=translation.ugettext('projected stock based on forecast'))
 
             if self.display_purchased_projection and (len(self.stocklevels) > 0):
                 projected_fp_dates, projected_fp_levels = self._calc_stock_levels(\
-                    "FP", self.stocklevels[0]['date'], self.stocklevels[0]['amount'],\
-                    self.stocklevels[-1]['date'])
+                    "FP", self.stocklevels[-1]['date'], self.stocklevels[0]['amount'],\
+                    self.stocklevels[0]['date'])
+                print 'display_purchased_projection:'
+                print len(projected_fp_dates)
+                print len(projected_fp_levels)
                 ax.plot_date(projected_fp_dates, projected_fp_levels, '--',\
                 drawstyle='steps', color='blue',\
                 label=translation.ugettext('projected stock based on placed POs'))
 
             if self.display_theoretical_forecast and (len(self.stocklevels) > 0):
-                # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
                 projected_co_dates, projected_co_levels = self._calc_stock_levels(\
-                    "CO", self.stocklevels[-2]['date'], self.stocklevels[-2]['amount'],\
-                    self.stocklevels[-1]['date'])
+                    "CO", self.stocklevels[-1]['date'], self.stocklevels[0]['amount'],\
+                    self.stocklevels[0]['date'])
+                print 'display_theoretical_forecast:'
+                print len(projected_co_dates)
+                print len(projected_co_levels)
                 ax.plot_date(projected_co_dates, projected_co_levels, '--',\
                 drawstyle='steps', color='green',\
                 label=translation.ugettext('theoretical stock based on forecast'))
 
             if self.display_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
-                # TODO use the first stocklevel -- using second because the first data point for chad is really low (incorrect)
                 projected_un_dates, projected_un_levels = self._calc_stock_levels(\
-                    "UN", self.stocklevels[-2]['date'], self.stocklevels[-2]['amount'],\
-                    self.stocklevels[-1]['date'])
+                    "UN", self.stocklevels[-1]['date'], self.stocklevels[0]['amount'],\
+                    self.stocklevels[0]['date'])
+                print 'display_adjusted_theoretical_forecast:'
+                print len(projected_un_dates)
+                print len(projected_un_levels)
                 ax.plot_date(projected_un_dates, projected_un_levels, '--',\
                 drawstyle='steps', color='orange',\
                 label=translation.ugettext('theoretical stock adjusted with deliveries'))
@@ -330,14 +362,14 @@ class Analysis(object):
             ax.autoscale_view()
 
             ax.grid(True)
-            #ax.legend(prop={'size': 'x-small'})
-            ax.legend(prop={'size': 'x-small'}, loc='upper right')
+            #fig_legend.legend(prop={'size': 'x-small'})
 
             fig.autofmt_xdate()
 
             # close figure so next call doesn't add to previous call's image
             # and so memory gets gc'ed
             matplotlib.pyplot.close(fig)
+            #matplotlib.pyplot.close(fig_legend)
 
             self.plotted = True
 
@@ -351,6 +383,9 @@ class Analysis(object):
                 filename = "%s-%s-%s.png" % (self.country_pk, self.group_slug, self.options_str)
                 file_path = "/tmp/" + filename
                 fig.savefig(file_path)
+                #legend_filename = "%s.png" % (self.options_str)
+                #legend_file_path = "/tmp/" + legend_filename
+                #fig_legend.savefig(legend_file_path)
             except Exception, e:
                 print 'ERROR SAVING'
                 print e
@@ -361,7 +396,9 @@ class Analysis(object):
                 # TODO make these configurable? same with sdb domain?
                 s3_key = "%s-%s-%s-%s.png" % (self.lang, self.country_pk, self.group_slug, self.options_str)
                 s3_path = "%s/%s/%s/" % (self.lang, self.country_pk, self.group_slug)
-                upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
+                #upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
+                #legend_path = "%s/legends/%s.png" % (self.lang, self.options_str)
+                #upload_file(legend_path, 'vaxtrack_charts', legend_path, True)
                 #demo_key = "%s-%s-%s.png" % (self.country_pk, self.vaccine_abbr, self.options_str)
                 #upload_file(file_path, 'vaxtrack_charts', demo_key, True)
                 return file_path
@@ -374,6 +411,7 @@ class Analysis(object):
         print '~~~~ANALYZING~~~~'
         print self.country_pk
         print self.vaccine_abbr
+        print self.group_slug
         print '~~~~~~~~~~~~~~~~~'
         try:
             last_s = {}
@@ -385,7 +423,7 @@ class Analysis(object):
                 last_s.update({y:0})
             print self.s_years
 
-            for d in all_stocklevels_asc(self.country_pk, self.vaccine_abbr):
+            for d in get_group_all_stocklevels_asc(self.country_pk, self.group_slug):
                 yr = int(d['year'])
                 s = int(d['amount'])
                 if not yr in self.s_years:
@@ -402,12 +440,13 @@ class Analysis(object):
 
                 # set this day's stocklevel as last one and continue looping
                 last_s[yr] = s
+            print self.consumed_in_year
 
             self.actual_cons_rate = {}
             self.days_of_stock_data = {}
             for y in self.s_years:
                 # get all stocklevel datapoints from year
-                stocklevels_in_year = type_for_year_asc(self.country_pk, self.vaccine_abbr, 'SL', y)
+                stocklevels_in_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, 'SL', y)
                 print len(stocklevels_in_year)
                 # find number of days enclosed between first stocklevel entry of year and last
                 if len(stocklevels_in_year) > 0:
@@ -426,6 +465,8 @@ class Analysis(object):
             if len(self.stocklevels) == 0:
                 self.analyzed = True
                 return
+            else:
+                self.has_stock_data = True
 
             # "Query 1" Forecast Accuracy
             # for this year, see how actual consumption rate compares to estimated daily rate
@@ -448,8 +489,8 @@ class Analysis(object):
             # see if there are forecasted deliveries and/or purchased deliveries
             # scheduled for the near future
             print 'Query 2'
-            self.forecasted_this_year = type_for_year_asc(self.country_pk, self.vaccine_abbr, "FF", self.today.year)
-            self.on_po_this_year = type_for_year_asc(self.country_pk, self.vaccine_abbr, "FP", self.today.year)
+            self.forecasted_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FF", self.today.year)
+            self.on_po_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FP", self.today.year)
 
             self.upcoming_on_po = [d for d in self.on_po_this_year if ((d['date'] - self.today) <= self.lookahead)]
             self.upcoming_forecasted = [d for d in self.forecasted_this_year if ((d['date'] - self.today) <= self.lookahead)]
@@ -482,7 +523,7 @@ class Analysis(object):
             this_years_levels = Analysis.filter(self.stocklevels, 'year', self.today.year)
             if len(this_years_levels) > 0:
                 self.first_level_this_year = Analysis.filter(self.stocklevels, 'year', self.today.year)[-1]['amount']
-                self.deliveries_this_year = type_for_year(self.country_pk, self.vaccine_abbr, "UN", self.today.year)
+                self.deliveries_this_year = get_group_type_for_year(self.country_pk, self.group_slug, "UN", self.today.year)
 
                 self.doses_delivered_this_year = reduce(lambda s,d: s + d['amount'], self.deliveries_this_year, 0)
                 self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.upcoming_on_po, 0)
@@ -582,6 +623,9 @@ class Analysis(object):
             css.countrystock = self.cs
             css.analyzed = datetime.datetime.now()
             css.reference_date = self.today
+
+            if hasattr(self, "has_stock_data"):
+                css.has_stock_data = True
 
             if hasattr(self, "consumed_in_year"):
                 css.consumed_in_year = Dicty.create('consumed_in_year', self.consumed_in_year)

@@ -33,8 +33,8 @@ def index(req, country_pk=None):
         countrystocks = CountryStock.objects.filter(country=country_pk)
     else:
         countrystocks = False
-    countrystocks = CountryStock.objects.filter(country="ML")
-    countries = list(set([c.country for c in countrystocks ]))
+    countrystocks = CountryStock.objects.all()
+    countries = list(set([c.country for c in countrystocks]))
     groups = list(set([g.group for g in countrystocks]))
     return render_to_response("index.html",\
         {"countrystocks": countrystocks,\
@@ -43,87 +43,80 @@ def index(req, country_pk=None):
             "tab": "dashboard"},\
             context_instance=RequestContext(req))
 
-def alerts(req, country_pk, vaccine_abbr):
+def alerts(req, country_pk, group_slug):
+    group_slug = group_slug.replace("_", "-").lower()
     if req.is_ajax():
-        countrystock = CountryStock.objects.filter(country=country_pk, group=group_slug)
-        alerts = Alert.objects.filter(countrystock=countrystock)
-        if len(alerts) == 0:
-            return HttpResponse([], 'application/javascript')
-        #alerts_text = []
-        #any(itertools.imap(lambda alert: alerts_text.append({'text':alert.get_text_display(), 'status':alert.status}), alerts))
-        alerts_text = [{'text':alert.get_text_display(), 'status':alert.status} for alert in alerts]
-        return HttpResponse(simplejson.dumps(alerts_text), 'application/javascript')
-
-def stats(req, country_pk, vaccine_abbr):
-    if req.is_ajax():
-        countrystock = CountryStock.objects.filter(country=country_pk, vaccine__abbr_fr_alt=vaccine_abbr)
-        if countrystock.count() > 0:
-            css = countrystock[0].latest_stats
-            if css is None:
+        try:
+            countrystock = CountryStock.objects.filter(country=country_pk, group__slug=group_slug)
+            alerts = Alert.objects.filter(countrystock=countrystock)
+            if len(alerts) == 0:
                 return HttpResponse([], 'application/javascript')
-            # TODO this is insane
-            # instead of the fields, i'd like the properties that return
-            # a dict of the related obj rather than pks of related obj
-            props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year', 'days_of_stock_data']
-            years = []
+            alerts_text = [{'text':alert.get_text_display(), 'status':alert.status} for alert in alerts]
+            return HttpResponse(simplejson.dumps(alerts_text), 'application/javascript')
+        except Exception, e:
+            print 'BANG ALERTS'
+            print e
+            return HttpResponse([], 'application/javascript')
 
-            #t1 = os.times()
-            stats = {}
-            for prop in props_to_get:
-                prop_dict = getattr(css, 'get_' + prop)
-                prop_list = []
-                if prop_dict is not None:
-                    for year in sorted(prop_dict.iterkeys()):
-                        years.append(str(year))
-                        prop_list.append(prop_dict[year])
-                    stats[prop] = prop_list
-            stats['years'] = sorted(list(set(years)))
-            #t2 = os.times()
-            ## print result
-            #utime = t2[0] - t1[0] # user time
-            #stime = t2[1] - t1[1] # system time
-            #print "utime=%s, stime=%s" % (utime, stime)
-            #print stats
+def stats(req, country_pk, group_slug):
+    group_slug = group_slug.replace("_", "-").lower()
+    if req.is_ajax():
+        try:
+            countrystock = CountryStock.objects.filter(country=country_pk, group__slug=group_slug)
+            if countrystock.count() > 0:
+                css = countrystock[0].latest_stats
+                if css is None:
+                    return HttpResponse([], 'application/javascript')
+                # TODO this is insane
+                # instead of the fields, i'd like the properties that return
+                # a dict of the related obj rather than pks of related obj
+                props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year', 'days_of_stock_data']
+                years = []
 
-            # in this case, the for loop is comparable in speed
-            # and much much more legible. caveat: os.times() is not best measure
-            # could be faster if theres a way to get rid of the list comps
-            #
-            #test = {}
-            #t1 =  os.times()
-            #props = dict(((prop, getattr(css, 'get_' + prop)) for prop in props_to_get))
-            #test.update({'years': sorted(props['annual_demand'].keys())})
-            #any(itertools.imap(lambda prop: test.update({prop: [props[prop][y] for y in test['years']]}), props_to_get))
-            #t2 = os.times()
-            ## print result
-            #utime = t2[0] - t1[0] # user time
-            #stime = t2[1] - t1[1] # system time
-            #print "utime=%s, stime=%s" % (utime, stime)
-            #print test
+                stats = {}
+                for prop in props_to_get:
+                    prop_dict = getattr(css, 'get_' + prop)
+                    prop_list = []
+                    if prop_dict is not None:
+                        for year in sorted(prop_dict.iterkeys()):
+                            years.append(str(year))
+                            prop_list.append(prop_dict[year])
+                        stats[prop] = prop_list
+                stats['years'] = sorted(list(set(years)))
 
-            attrs_to_get = ['est_daily_cons','days_of_stock','doses_delivered_this_year','doses_on_orders','demand_for_period']
-            # instead of a for loop, using this strategy: http://news.ycombinator.com/item?id=2320298
-            # basically, this avoids having the for loop translated into
-            # bytecode by the interpreter and runs in straight c instead
-            any(itertools.imap(lambda attr: stats.update({attr: getattr(css, attr)}), attrs_to_get))
+                attrs_to_get = ['est_daily_cons','days_of_stock','doses_delivered_this_year','doses_on_orders','demand_for_period']
+                # instead of a for loop, using this strategy: http://news.ycombinator.com/item?id=2320298
+                # basically, this avoids having the for loop translated into
+                # bytecode by the interpreter and runs in straight c instead
+                any(itertools.imap(lambda attr: stats.update({attr: getattr(css, attr)}), attrs_to_get))
 
-            stats['percent_coverage'] = str(int(css.percent_coverage*100.0)) + '%'
+                if css.percent_coverage is not None:
+                    stats['percent_coverage'] = str(int(css.percent_coverage*100.0)) + '%'
 
-            # need isoformat because dates/datetimes aren't serializable
-            date_attrs = ['analyzed', 'reference_date']
-            for date_attr in date_attrs:
-                # analyzed is a datetime, so use the isoformat of its date
-                temp = getattr(css, date_attr)
-                if isinstance(temp, datetime.datetime):
-                    stats[date_attr] = getattr(css, date_attr).date().isoformat()
-                    continue
-                # otherwise, assume we have a datetime.date...
-                stats[date_attr] = getattr(css, date_attr).isoformat()
+                # need isoformat because dates/datetimes aren't serializable
+                date_attrs = ['analyzed', 'reference_date']
+                for date_attr in date_attrs:
+                    # analyzed is a datetime, so use the isoformat of its date
+                    temp = getattr(css, date_attr)
+                    if isinstance(temp, datetime.datetime):
+                        stats[date_attr] = getattr(css, date_attr).date().isoformat()
+                        continue
+                    # otherwise, assume we have a datetime.date...
+                    stats[date_attr] = getattr(css, date_attr).isoformat()
 
-            data = simplejson.dumps([stats])
-            return HttpResponse(data, 'application/javascript')
-        else:
-            data = simplejson.dumps([{}])
+                if len(stats):
+                    data = simplejson.dumps([stats])
+                else:
+                    data = simplejson.dumps([])
+                
+                return HttpResponse(data, 'application/javascript')
+            else:
+                data = simplejson.dumps([])
+                return HttpResponse(data, 'application/javascript')
+        except Exception, e:
+            print 'BANG STATS'
+            print e
+            data = simplejson.dumps([])
             return HttpResponse(data, 'application/javascript')
 
 def register(req):

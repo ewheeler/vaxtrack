@@ -9,7 +9,7 @@ from boto.sdb.db.model import Model
 from boto.sdb.db.property import *
 from boto.sdb.db.manager import sdbmanager
 
-SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'groupcountrystocks')
+SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'mangocountrystocks')
 
 # not sure how to use these models exactly...
 # http://groups.google.com/group/boto-users/browse_thread/thread/3bc0feb15183cf2a/3e44b4e7bbd44fae?lnk=gst&q=sdb#3e44b4e7bbd44fae
@@ -151,6 +151,57 @@ def sdb_get_all_cs():
     result = cs.select(query)
     return result
 
+def sdb_clear_all_except_sl():
+    sdb = boto.connect_sdb()
+    cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+    query = "SELECT * FROM `%s` WHERE `type`!='SL'" % (SDB_DOMAIN_TO_USE)
+    result = cs.select(query)
+    for res in result:
+        res.delete()
+
+group_cached_year_results = {}
+def group_type_for_year(country, year, group_slug, type):
+
+    # TODO cache results better!
+    search = hashlib.md5()
+    search.update(str(country))
+    search.update(str(year))
+    search.update(str(group_slug))
+    search.update(str(type))
+    hashed = search.hexdigest()
+
+    if hashed in cached_year_results:
+        result = cached_year_results[hashed]
+    else:
+        sdb = boto.connect_sdb()
+        cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `year`='%s' AND `group`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, year, group_slug, type)
+        result = cs.select(query)
+        group_cached_year_results.update({hashed:result})
+
+    return result
+
+group_cached_results = {}
+def group_all_type(country, group_slug, type):
+
+    # TODO cache results better!
+    search = hashlib.md5()
+    search.update(str(country))
+    search.update(str(group_slug))
+    search.update(str(type))
+    hashed = search.hexdigest()
+
+    if hashed in cached_results:
+        result = cached_results[hashed]
+    else:
+        sdb = boto.connect_sdb()
+        cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `group`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, group_slug, type)
+        result = cs.select(query)
+        group_cached_results.update({hashed:result})
+
+    return result
+
 
 def multikeysort(items, columns):
     from operator import itemgetter
@@ -164,6 +215,7 @@ def multikeysort(items, columns):
             return 0
     return sorted(items, cmp=comparer)
 
+# PRODUCT API
 def all_stocklevels_desc(country, product):
     return sort_results_desc(decode_results(sdb_get_all_type(country, product, 'SL')), 'date')
 
@@ -184,4 +236,26 @@ def type_for_year_asc(country, product, type, year):
 
 def type_for_year(country, product, type, year):
     return decode_results(sdb_type_for_year(country, year, product, type))
+
+# GROUP API
+def get_group_all_stocklevels_desc(country, group):
+    return sort_results_desc(decode_results(group_all_type(country, group, 'SL')), 'date')
+
+def get_group_all_stocklevels_asc(country, group):
+    return sort_results_asc(decode_results(group_all_type(country, group, 'SL')), 'date')
+
+def get_group_all_forecasts_asc(country, group):
+    return sort_results_asc(decode_results(group_all_type(country, group, 'CF')), 'year')
+
+def get_group_all_deliveries_for_type_asc(country, group, type):
+    return sort_results_asc(decode_results(group_all_type(country, group, type)), 'date')
+
+def get_group_forecast_for_year(country, group, year):
+    return decode_results(group_type_for_year(country, year, group, 'CF'))
+
+def get_group_type_for_year_asc(country, group, type, year):
+    return sorted(decode_results(group_type_for_year(country, year, group, type)), key=itemgetter('date'))
+
+def get_group_type_for_year(country, group, type, year):
+    return decode_results(group_type_for_year(country, year, group, type))
 
