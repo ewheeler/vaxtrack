@@ -34,7 +34,7 @@ class StartupMiddlewareHack():
                 # exist locally, create it
                 try:
                     # get the vaccine and country
-                    vaccine = Vaccine.objects.get(slug=cs['product'])
+                    group = VaccineGroup.objects.get(slug=cs['group'])
                     country = Country.objects.get(iso2_code=cs['country'])
 
                 except ObjectDoesNotExist:
@@ -50,12 +50,12 @@ class StartupMiddlewareHack():
                     continue
 
                 # create countrystock if its not here locally
-                countrystock = CountryStock(country=country, group=vaccine.group)
-                countrystock.save()
-                # save hash to local db so it will be found next time around
-                countrystock.set_md5()
-                print 'NEW COUNTRYSTOCK:'
-                print countrystock
+                countrystock, created = CountryStock.objects.get_or_create(country=country, group=group)
+                if created:
+                    # save hash to local db so it will be found next time around
+                    countrystock.set_md5()
+                    print 'NEW COUNTRYSTOCK:'
+                    print countrystock
 
         # finally, tell django not to use this 
         # middleware for any subsequent requests

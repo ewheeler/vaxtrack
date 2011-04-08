@@ -110,7 +110,7 @@ class Analysis(object):
 
         country = Country.objects.get(iso2_code=self.country_pk)
         group = VaccineGroup.objects.get(slug=self.group_slug)
-        self.cs, new = CountryStock.objects.get_or_create(country=country, group=group)
+        self.cs = CountryStock.objects.get(country=country, group=group)
         if self.cs is None:
             return 'couldnt find countrystock'
 
@@ -302,15 +302,19 @@ class Analysis(object):
 
             if self.display_buffers:
                 # plot 3 and 9 month buffer levels as red lines
+                print 'FIRST AND LAST DAYS:'
+                print first_and_last_days
                 ax.plot_date(first_and_last_days, self.three_month_buffers, '-', drawstyle='steps',\
                     color='red', label=translation.ugettext('3 month buffer'))
                 ax.plot_date(first_and_last_days, self.nine_month_buffers, '-', drawstyle='steps',\
                     color='red', label=translation.ugettext('9 month buffer'))
 
-            if self.display_forecast_projection and (len(self.stocklevels) > 0):
+            if self.display_forecast_projection:
+                begin_date_est = first_and_last_days[0]
+                begin_level_est = 0
                 projected_ff_dates, projected_ff_levels = self._calc_stock_levels(\
-                    "FF", self.stocklevels[-1]['date'], self.stocklevels[0]['amount'],\
-                    self.stocklevels[0]['date'])
+                    "FF", begin_date_est, begin_level_est,\
+                    first_and_last_days[-1])
                 print 'display_forecast_projection:'
                 print len(projected_ff_dates)
                 print len(projected_ff_levels)
@@ -329,10 +333,12 @@ class Analysis(object):
                 drawstyle='steps', color='blue',\
                 label=translation.ugettext('projected stock based on placed POs'))
 
-            if self.display_theoretical_forecast and (len(self.stocklevels) > 0):
+            if self.display_theoretical_forecast:
+                begin_date_est = first_and_last_days[0]
+                begin_level_est = 0
                 projected_co_dates, projected_co_levels = self._calc_stock_levels(\
-                    "CO", self.stocklevels[-1]['date'], self.stocklevels[0]['amount'],\
-                    self.stocklevels[0]['date'])
+                    "FF", begin_date_est, begin_level_est,\
+                    first_and_last_days[-1])
                 print 'display_theoretical_forecast:'
                 print len(projected_co_dates)
                 print len(projected_co_levels)
@@ -341,9 +347,11 @@ class Analysis(object):
                 label=translation.ugettext('theoretical stock based on forecast'))
 
             if self.display_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
+                begin_date_est = first_and_last_days[0]
+                begin_level_est = 0
                 projected_un_dates, projected_un_levels = self._calc_stock_levels(\
-                    "UN", self.stocklevels[-1]['date'], self.stocklevels[0]['amount'],\
-                    self.stocklevels[0]['date'])
+                    "FF", begin_date_est, begin_level_est,\
+                    first_and_last_days[-1])
                 print 'display_adjusted_theoretical_forecast:'
                 print len(projected_un_dates)
                 print len(projected_un_levels)
@@ -396,7 +404,7 @@ class Analysis(object):
                 # TODO make these configurable? same with sdb domain?
                 s3_key = "%s-%s-%s-%s.png" % (self.lang, self.country_pk, self.group_slug, self.options_str)
                 s3_path = "%s/%s/%s/" % (self.lang, self.country_pk, self.group_slug)
-                #upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
+                upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
                 #legend_path = "%s/legends/%s.png" % (self.lang, self.options_str)
                 #upload_file(legend_path, 'vaxtrack_charts', legend_path, True)
                 #demo_key = "%s-%s-%s.png" % (self.country_pk, self.vaccine_abbr, self.options_str)

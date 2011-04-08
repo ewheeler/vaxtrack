@@ -34,8 +34,8 @@ def index(req, country_pk=None):
     else:
         countrystocks = False
     countrystocks = CountryStock.objects.all()
-    countries = list(set([c.country for c in countrystocks]))
-    groups = list(set([g.group for g in countrystocks]))
+    countries = list(set([c.country for c in countrystocks if c.has_stock_data]))
+    groups = list(set([g.group for g in countrystocks if g.has_stock_data]))
     return render_to_response("index.html",\
         {"countrystocks": countrystocks,\
             "countries": countries,\
