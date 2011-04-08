@@ -226,3 +226,7 @@ div.module div.toolbar {
 .spark {
     width: 8em;
 }
+
+.data {
+    text-align: right;
+}

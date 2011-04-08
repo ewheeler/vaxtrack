@@ -299,6 +299,9 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
         sheet = book.sheet_by_name(target_sheet)
 
     if sheet is None:
+        sheet = book.sheet_by_name('Sheet1')
+
+    if sheet is None:
         return "oops. expecting sheet named '%s'" % (target_sheet)
 
     column_names = sheet.row_values(0)
@@ -384,6 +387,8 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
             co_forecast = int(rd['Doses- CO Forecast '])
         except ValueError:
             co_forecast = None
+        except KeyError:
+            co_forecast = None
 
         year = int(rd['YYYY'])
         year_month = rd['YYYY-MM']
@@ -407,9 +412,6 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
             if forecast_doses > 0:
                 amount = forecast_doses
                 if approx_date <= date.today():
-                    # hmm dont think this is correct
-                    # i think this is really 'CF'
-                    #
                     # original CO forecast (CO)
                     #allocation_type = 'CO'
                     pass
@@ -560,7 +562,7 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
 
         vax_slug = vaccine.slug
         vax_group = vaccine.group.slug
-        allocation_type = 'CF'
+        allocation_type = 'CO'
 
         amount = int(rd['Doses - CO Forecast'])
 
@@ -712,6 +714,12 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
         except ValueError:
             continue
 
+        current_stock = rd['Current Stock Qty']
+        if current_stock not in ['', ' ', None]:
+            init_quant = int(current_stock)
+        else:
+            init_quant = 0
+
         year = int(yr)
 
         if amount is not None:
@@ -733,6 +741,7 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
                 item.add_value("type", allocation_type)
                 item.add_value("year", str(year))
                 item.add_value("amount", str(amount))
+                item.add_value("initial", str(init_quant))
                 item.save()
                 print item
             except Exception, e:

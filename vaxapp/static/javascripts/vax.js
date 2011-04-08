@@ -194,7 +194,7 @@ $(document).ready(function(){
 			var stat_rows = ['est_daily_cons', 'days_of_stock', 'percent_coverage', 'doses_delivered_this_year', 'doses_on_orders', 'reference_date', 'analyzed'];
 			for (row_index in stat_rows){
 				var row_name = stat_rows[row_index];
-				$("#stats > tbody:last").append("<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td>" + strings[row_name + "_txt"] + ":</td><td>" + stats[s][row_name] + "</td></tr>");
+				$("#stats > tbody:last").append("<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + ":</td><td class='data'>" + stats[s][row_name] + "</td></tr>");
 			};
 
 			/* build first row of hist table */
@@ -210,10 +210,10 @@ $(document).ready(function(){
 				var row_name = hist_rows[row_index];
 				var row;
 				var data = new Array();
-				row = "<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td>" + strings[row_name + "_txt"] + "</td>";
+				row = "<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + "</td>";
 				row = row + "<td class='spark' id='" + row_name + "'</td>";
 				for (y in stats[s].years){
-					row = row + "<td>" + stats[s][row_name][y] + "</td>";
+					row = row + "<td class='int data'>" + stats[s][row_name][y] + "</td>";
 					data.push(stats[s][row_name][y]);
 				};
 				$("#hist > tbody:last").append(row + "</tr>");
@@ -223,8 +223,11 @@ $(document).ready(function(){
 				};
 			};
 		};
-	/* add tooltips at end of $.get callback */
-	$(".tipoff").tooltip({opacity: 0.9});
+		$(".int").each(function(){
+			$(this).text( $(this).text().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") );
+		});
+		/* add tooltips at end of $.get callback */
+		$(".tipoff").tooltip({opacity: 0.9});
 	});
     };
 });

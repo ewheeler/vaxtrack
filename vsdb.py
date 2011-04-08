@@ -24,6 +24,7 @@ class Vaxtrack(Model):
     # http://docs.amazonwebservices.com/AmazonSimpleDB/2009-04-15/DeveloperGuide/index.html?UsingSelectOperators.html 
     year = IntegerProperty()
     amount = IntegerProperty()
+    initial = IntegerProperty()
 
 #Vaxtrack._manager = sdbmanager.SDBManager( Vaxtrack, "countrystockdata", None, None, 'sdb.amazonaws.com', None, None, None, False ) 
 # boto models don't seem to work exactly as expected (some stuff is not implemented),
@@ -37,6 +38,7 @@ field_types = {
     'date' : DateProperty(),
     'year' : IntegerProperty(),
     'amount' : IntegerProperty(),
+    'initial' : IntegerProperty(),
 }
 
 def _decode_item(item):
@@ -83,7 +85,7 @@ def decode_results(results):
                 # 
                 # since we did not encode our integers in this way (TODO?),
                 # we have to undo the decoding step (subtracting the max int)
-                if field in ['year', 'amount']:
+                if field in ['year', 'amount', 'initial']:
                     decoded += 2147483648
                 dict.update({field:decoded})
         decoded_results.append(dict)
@@ -159,12 +161,21 @@ def sdb_clear_all_except_sl():
     for res in result:
         res.delete()
 
-def sdb_stocklevel_count(country, group):
+def sdb_clear_cf():
     sdb = boto.connect_sdb()
     cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
-    query = "SELECT COUNT(*) FROM `%s` WHERE `country`='%s' AND `group`='%s' AND `type`='SL'" % (SDB_DOMAIN_TO_USE, country, group)
+    query = "SELECT * FROM `%s` WHERE `type`='CF'" % (SDB_DOMAIN_TO_USE)
     result = cs.select(query)
-    return result.next()['Count']
+    for res in result:
+        res.delete()
+
+def sdb_clear_allocations():
+    sdb = boto.connect_sdb()
+    cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+    query = "SELECT * FROM `%s` WHERE `type`!='SL' AND `type`!='CF' AND `type`!='CS'" % (SDB_DOMAIN_TO_USE)
+    result = cs.select(query)
+    for res in result:
+        res.delete()
 
 group_cached_year_results = {}
 def group_type_for_year(country, year, group_slug, type):

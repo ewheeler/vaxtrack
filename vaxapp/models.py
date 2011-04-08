@@ -353,7 +353,8 @@ class Vaccine(models.Model):
         try:
             big_term = term.lower()
             # grrr edge cases
-            big_term.replace('meningitis', 'mening')
+            big_term = big_term.replace('meningitis', 'mening')
+            big_term = big_term.replace('measles', 'mea')
             countrystocks = CountryStock.objects.filter(country=country_pk)
             # fetch all vaccines that this country has stocks of
             cs_vaccines = map(attrgetter('vaccine'), countrystocks)

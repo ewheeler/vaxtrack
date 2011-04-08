@@ -58,6 +58,14 @@ def alerts(req, country_pk, group_slug):
             print e
             return HttpResponse([], 'application/javascript')
 
+def add_sep(num, sep=','):
+    s = str(int(num))
+    out = ''
+    while len(s) > 3:
+        out = sep + s[-3:] + out
+        s = s[:-3]
+    return s + out
+
 def stats(req, country_pk, group_slug):
     group_slug = group_slug.replace("_", "-").lower()
     if req.is_ajax():
@@ -88,7 +96,10 @@ def stats(req, country_pk, group_slug):
                 # instead of a for loop, using this strategy: http://news.ycombinator.com/item?id=2320298
                 # basically, this avoids having the for loop translated into
                 # bytecode by the interpreter and runs in straight c instead
-                any(itertools.imap(lambda attr: stats.update({attr: getattr(css, attr)}), attrs_to_get))
+                #
+                # also add_sep to these -- my lame js version for the hist
+                # table will add commas to these dates
+                any(itertools.imap(lambda attr: stats.update({attr: add_sep(getattr(css, attr))}), attrs_to_get))
 
                 if css.percent_coverage is not None:
                     stats['percent_coverage'] = str(int(css.percent_coverage*100.0)) + '%'
@@ -100,10 +111,10 @@ def stats(req, country_pk, group_slug):
                     temp = getattr(css, date_attr)
                     if temp is not None:
                         if isinstance(temp, datetime.datetime):
-                            stats[date_attr] = getattr(css, date_attr).date().isoformat()
+                            stats[date_attr] = getattr(css, date_attr).date().strftime("%d/%m/%Y")
                             continue
                         # otherwise, assume we have a datetime.date...
-                        stats[date_attr] = getattr(css, date_attr).isoformat()
+                        stats[date_attr] = getattr(css, date_attr).strftime("%d/%m/%Y")
 
                 if len(stats):
                     data = simplejson.dumps([stats])

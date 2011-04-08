@@ -14,6 +14,7 @@ import pylab
 from pylab import figure, axes, pie, title
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
+from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot
 
 from django.db.models import Sum
@@ -63,6 +64,12 @@ def analyze_all_march(lang='en'):
     for country in ['ML', 'TD', 'SN']:
         for v in [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']:
             analysis = Analysis(country_pk=country, vaccine_abbr=str(v), lang=lang, B=True, F=True, P=True, C=True, U=True)
+            print analysis.save_stats()
+
+def analyze_all_april(lang='en'):
+    for country in ['ML', 'TD', 'SN']:
+        for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, lang=lang, B=True, F=True, P=True, C=True, U=True)
             print analysis.save_stats()
 
 def analyze_april(country='ML', lang='en'):
@@ -128,7 +135,7 @@ class Analysis(object):
 
         # TODO XXX back to the present!
         #self.today = datetime.datetime.today().date()
-        self.today = datetime.date(2010, 12, 31)
+        self.today = datetime.date(2010, 10, 1)
 
         # default to false if options are not specified
         self.display_buffers = kwargs.get('B', False)
@@ -139,7 +146,7 @@ class Analysis(object):
 
 
         try:
-            self.stocklevels = get_group_all_stocklevels_desc(self.country_pk, self.group_slug)
+            self.stocklevels = get_group_all_stocklevels_asc(self.country_pk, self.group_slug)
 
             self.dates = Analysis.values_list(self.stocklevels, 'date')
             self.levels = Analysis.values_list(self.stocklevels, 'amount')
@@ -169,7 +176,7 @@ class Analysis(object):
 
 
     # calculate projections
-    def _calc_stock_levels(self, delivery_type, begin_date, begin_level, end_date=None):
+    def _calc_stock_levels(self, delivery_type, begin_date, begin_level=None, end_date=None):
         print 'CALCULATE PROJECTIONS: %s' % delivery_type
         try:
             filtered_deliveries = get_group_all_deliveries_for_type_asc(self.country_pk, self.group_slug, delivery_type)
@@ -199,15 +206,31 @@ class Analysis(object):
             print days_to_plot
 
             # variables to keep track of running totals while we loop
-            est_stock_level = begin_level
+            if begin_level is None:
+                if delivery_type in ["CO", "UN"]:
+                    annual_begin_levels = {}
+                    for f in get_group_all_forecasts_asc(self.country_pk, self.group_slug):
+                        if f['initial'] is not None:
+                            annual_begin_levels.update({f['year']:f['initial']})
+            if begin_level is not None:
+                est_stock_level = begin_level
+            else:
+                est_stock_level = 0
             est_stock_date = begin_date
             projected_stock_dates = list()
             projected_stock_levels = list()
+            year_counter = None
 
             for day in range(days_to_plot.days):
                 # increment date by one day
                 this_date = est_stock_date + one_day
                 est_stock_date = this_date
+                for delivery_type in ["CO", "UN"]:
+                    if this_date.year != year_counter:
+                        year_counter = this_date.year 
+                        if this_date.year in annual_begin_levels:
+                            if annual_begin_levels[this_date.year] is not None:
+                                est_stock_level = annual_begin_levels[this_date.year]
                 # check for forecasted deliveries for this date
                 deliveries_today = Analysis.filter(filtered_deliveries, 'date', this_date)
                 if len(deliveries_today) != 0:
@@ -256,8 +279,8 @@ class Analysis(object):
                     if (i == 0 and (len(self.stocklevels) > 0)):
                         # on the first loop, use the earliest stocklevel
                         # instead of january 1 of that year
-                        if self.stocklevels[-1]['date'].year in self.three_by_year.keys():
-                            first_and_last_days.append(self.stocklevels[-1]['date'])
+                        if self.stocklevels[0]['date'].year in self.three_by_year.keys():
+                            first_and_last_days.append(self.stocklevels[0]['date'])
                         else:
                             first_and_last_days.append(datetime.date(y, 1, 1))
                     else:
@@ -302,59 +325,35 @@ class Analysis(object):
 
             if self.display_buffers:
                 # plot 3 and 9 month buffer levels as red lines
-                print 'FIRST AND LAST DAYS:'
-                print first_and_last_days
                 ax.plot_date(first_and_last_days, self.three_month_buffers, '-', drawstyle='steps',\
                     color='red', label=translation.ugettext('3 month buffer'))
                 ax.plot_date(first_and_last_days, self.nine_month_buffers, '-', drawstyle='steps',\
                     color='red', label=translation.ugettext('9 month buffer'))
 
-            if self.display_forecast_projection:
-                begin_date_est = first_and_last_days[0]
-                begin_level_est = 0
+            if self.display_forecast_projection and (len(self.stocklevels) > 0):
                 projected_ff_dates, projected_ff_levels = self._calc_stock_levels(\
-                    "FF", begin_date_est, begin_level_est,\
-                    first_and_last_days[-1])
-                print 'display_forecast_projection:'
-                print len(projected_ff_dates)
-                print len(projected_ff_levels)
+                    "FF", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
                 ax.plot_date(projected_ff_dates, projected_ff_levels, '--',\
                     drawstyle='steps', color='purple',\
                     label=translation.ugettext('projected stock based on forecast'))
 
             if self.display_purchased_projection and (len(self.stocklevels) > 0):
                 projected_fp_dates, projected_fp_levels = self._calc_stock_levels(\
-                    "FP", self.stocklevels[-1]['date'], self.stocklevels[0]['amount'],\
-                    self.stocklevels[0]['date'])
-                print 'display_purchased_projection:'
-                print len(projected_fp_dates)
-                print len(projected_fp_levels)
+                    "FP", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
                 ax.plot_date(projected_fp_dates, projected_fp_levels, '--',\
                 drawstyle='steps', color='blue',\
                 label=translation.ugettext('projected stock based on placed POs'))
 
-            if self.display_theoretical_forecast:
-                begin_date_est = first_and_last_days[0]
-                begin_level_est = 0
+            if self.display_theoretical_forecast and (len(self.stocklevels) > 0):
                 projected_co_dates, projected_co_levels = self._calc_stock_levels(\
-                    "FF", begin_date_est, begin_level_est,\
-                    first_and_last_days[-1])
-                print 'display_theoretical_forecast:'
-                print len(projected_co_dates)
-                print len(projected_co_levels)
+                    "CO", self.stocklevels[0]['date'])
                 ax.plot_date(projected_co_dates, projected_co_levels, '--',\
                 drawstyle='steps', color='green',\
                 label=translation.ugettext('theoretical stock based on forecast'))
 
             if self.display_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
-                begin_date_est = first_and_last_days[0]
-                begin_level_est = 0
                 projected_un_dates, projected_un_levels = self._calc_stock_levels(\
-                    "FF", begin_date_est, begin_level_est,\
-                    first_and_last_days[-1])
-                print 'display_adjusted_theoretical_forecast:'
-                print len(projected_un_dates)
-                print len(projected_un_levels)
+                    "UN", self.stocklevels[0]['date'])
                 ax.plot_date(projected_un_dates, projected_un_levels, '--',\
                 drawstyle='steps', color='orange',\
                 label=translation.ugettext('theoretical stock adjusted with deliveries'))
@@ -363,10 +362,26 @@ class Analysis(object):
             months   = MonthLocator()  # every month
             yearsFmt = DateFormatter('%Y')
 
+            def add_sep(num, pos, sep=','):
+                """ called by FuncFormatter, below, with
+                    num as numpy.Float64 and a pos that
+                    I ignore """
+                s = str(int(num))
+                out = ''
+                while len(s) > 3:
+                    out = sep + s[-3:] + out
+                    s = s[:-3]
+                return s + out
+
+            unitFmt = FuncFormatter(add_sep)
+            ax.yaxis.set_major_formatter(unitFmt)
+            ax.yaxis.set_label_text(translation.ugettext('Number of doses'))
+
             # format the ticks
             ax.xaxis.set_major_locator(years)
             ax.xaxis.set_major_formatter(yearsFmt)
             ax.xaxis.set_minor_locator(months)
+            ax.xaxis.set_label_text(translation.ugettext('Year'))
             ax.autoscale_view()
 
             ax.grid(True)

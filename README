@@ -15,12 +15,31 @@ DATA IMPORT/EXPORT SCRIPT DEPENDENCIES:
     sudo pip install xlrd xlwt
 
 DEBIAN-BASED INSTALLATION:
-    sudo apt-get install python-pip python-dev mysql-server git-core python-mysqldb python-matplotlib rabbitmq-server
+    sudo apt-get install python-pip python-dev mysql-server git-core python-mysqldb python-matplotlib rabbitmq-server gettext
     sudo pip install setuptools boto django=1.2.3 south celery django-celery django-rosetta
 
     optionally:
     sudo apt-get install vim
     sudo pip install ipython ipdb
+
+DEBIAN-BASED DEPLOYMENT:
+    sudo apt-get insall nginx
+    sudo pip install gunicorn
+
+    Edit /etc/nginx/sites-enabled/default :
+	server {
+
+		listen   80; ## listen for ipv4
+		#listen   [::]:80 default ipv6only=on; ## listen for ipv6
+
+		server_name  myserver.com;
+
+		access_log  /var/log/nginx/localhost.access.log;
+
+		location / {
+		    proxy_pass   http://127.0.0.1:8000;
+		}
+
 
 OS X INSTALLATION:
     i recommend homebrew for rabbitmq
