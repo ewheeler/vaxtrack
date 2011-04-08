@@ -17,6 +17,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 
 from dameraulevenshtein import dameraulevenshtein as dm
+from vax.vsdb import *
 
 def _split_term(term):
     if term is not None:
@@ -427,7 +428,14 @@ class CountryStock(models.Model):
         if self.latest_stats is not None:
             return self.latest_stats.has_stock_data
         else:
-            return False
+            sl_count = sdb_stocklevel_count(self.country.iso2_code, self.group.slug)
+            if sl_count > 0:
+                css = CountryStockStats(countrystock=self, analyzed=datetime.datetime.now())
+                css.has_stock_data = True
+                css.save()
+                return True
+            else:
+                return False
 
     @property
     def get_md5(self):

@@ -1,4 +1,5 @@
 **TODO**
+fix cs synchronization
 correct vaccines (-/+)
 deal with country-like non-country entities
 fix radio buttons, show only groups relevant to country

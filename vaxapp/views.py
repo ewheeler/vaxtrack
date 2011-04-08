@@ -33,9 +33,9 @@ def index(req, country_pk=None):
         countrystocks = CountryStock.objects.filter(country=country_pk)
     else:
         countrystocks = False
-    countrystocks = CountryStock.objects.all()
-    countries = list(set([c.country for c in countrystocks if c.has_stock_data]))
-    groups = list(set([g.group for g in countrystocks if g.has_stock_data]))
+    countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
+    countries = list(set([c.country for c in countrystocks]))
+    groups = list(set([g.group for g in countrystocks]))
     return render_to_response("index.html",\
         {"countrystocks": countrystocks,\
             "countries": countries,\
@@ -98,11 +98,12 @@ def stats(req, country_pk, group_slug):
                 for date_attr in date_attrs:
                     # analyzed is a datetime, so use the isoformat of its date
                     temp = getattr(css, date_attr)
-                    if isinstance(temp, datetime.datetime):
-                        stats[date_attr] = getattr(css, date_attr).date().isoformat()
-                        continue
-                    # otherwise, assume we have a datetime.date...
-                    stats[date_attr] = getattr(css, date_attr).isoformat()
+                    if temp is not None:
+                        if isinstance(temp, datetime.datetime):
+                            stats[date_attr] = getattr(css, date_attr).date().isoformat()
+                            continue
+                        # otherwise, assume we have a datetime.date...
+                        stats[date_attr] = getattr(css, date_attr).isoformat()
 
                 if len(stats):
                     data = simplejson.dumps([stats])

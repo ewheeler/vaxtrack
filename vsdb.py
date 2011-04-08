@@ -159,6 +159,13 @@ def sdb_clear_all_except_sl():
     for res in result:
         res.delete()
 
+def sdb_stocklevel_count(country, group):
+    sdb = boto.connect_sdb()
+    cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+    query = "SELECT COUNT(*) FROM `%s` WHERE `country`='%s' AND `group`='%s' AND `type`='SL'" % (SDB_DOMAIN_TO_USE, country, group)
+    result = cs.select(query)
+    return result.next()['Count']
+
 group_cached_year_results = {}
 def group_type_for_year(country, year, group_slug, type):
 
