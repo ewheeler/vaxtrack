@@ -121,8 +121,14 @@ h2 {
             font-size: 75%;
         }
 
+        #vaccines input{
+            margin-bottom: 0.5em;
+            vertical-align: middle;
+        }
+
         #vaccines label{
             margin-left: 0.25em;
+            margin-bottom: 0.5em;
         }
 
         #plot_options {
@@ -131,11 +137,13 @@ h2 {
 
         #plot_options input{
             margin-bottom: 0.5em;
+            vertical-align: bottom;
         }
 
         #plot_options label{
             margin-left: 0.25em;
             border: 1px solid white;
+            margin-bottom: 0.5em;
         }
 
 /* this is not okay. but it is, unfortunately, the least error-prone way

@@ -230,3 +230,10 @@ div.module div.toolbar {
 .data {
     text-align: right;
 }
+
+.chart-legend {
+    font-size: 250%;
+    letter-spacing: 0.2em;
+    padding-left: 0.2em;
+    vertical-align: middle;
+}
