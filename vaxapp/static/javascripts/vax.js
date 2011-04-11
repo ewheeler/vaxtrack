@@ -168,7 +168,7 @@ $(document).ready(function(){
 	and country flag */
     function get_chart(){
 	chart_opts = options.sort().join("");
-        chart_name = country + "/" + group + "/" + chart_opts + ".png";
+        chart_name = lang + "/" + country + "/" + group + "/" + chart_opts + ".png";
         $("#chart").attr('src', "/charts/" + chart_name);
         $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
     };

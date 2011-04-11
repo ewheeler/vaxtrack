@@ -159,10 +159,9 @@ def upload(req):
             "tab": "upload"},\
             context_instance=RequestContext(req))
 
-def get_chart(req, country_pk=None, group_slug=None, chart_opts=""):
-    # TODO accept lang param
-    path = "%s/%s/%s/" % ('en', country_pk, group_slug)
-    filename = "%s_%s_%s_%s.png" % ('en', country_pk, group_slug, chart_opts)
+def get_chart(req, lang='en', country_pk=None, group_slug=None, chart_opts=""):
+    path = "%s/%s/%s/" % (lang, country_pk, group_slug)
+    filename = "%s_%s_%s_%s.png" % (lang, country_pk, group_slug, chart_opts)
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s%s" % (path, filename)
     return HttpResponseRedirect(chart_url)
 
