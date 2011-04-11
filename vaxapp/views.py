@@ -44,7 +44,6 @@ def index(req, country_pk=None):
             context_instance=RequestContext(req))
 
 def alerts(req, country_pk, group_slug):
-    group_slug = group_slug.replace("_", "-").lower()
     if req.is_ajax():
         try:
             countrystock = CountryStock.objects.filter(country=country_pk, group__slug=group_slug)
@@ -67,7 +66,6 @@ def add_sep(num, sep=','):
     return s + out
 
 def stats(req, country_pk, group_slug):
-    group_slug = group_slug.replace("_", "-").lower()
     if req.is_ajax():
         try:
             countrystock = CountryStock.objects.filter(country=country_pk, group__slug=group_slug)
@@ -162,9 +160,9 @@ def upload(req):
             context_instance=RequestContext(req))
 
 def get_chart(req, country_pk=None, group_slug=None, chart_opts=""):
-    group_slug = group_slug.replace("_", "-").lower()
+    # TODO accept lang param
     path = "%s/%s/%s/" % ('en', country_pk, group_slug)
-    filename = "en-%s-%s-%s.png" % (country_pk, group_slug, chart_opts)
+    filename = "%s_%s_%s_%s.png" % ('en', country_pk, group_slug, chart_opts)
     chart_url = "https://s3.amazonaws.com/vaxtrack_charts/%s%s" % (path, filename)
     return HttpResponseRedirect(chart_url)
 

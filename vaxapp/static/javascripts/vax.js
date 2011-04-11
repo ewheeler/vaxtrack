@@ -1,12 +1,45 @@
 $(document).ready(function(){
     var saved_history = window.history;
 
-    /*	default chart options, vax, and country */
-    var options = new Array("B","F","P","C","U");
-    var group = "BCG";
-    var country = "ML";
-    var chart_name = "";
+    var options;
+    var group;
+    var country;
+    var chart_name;
     var lang;
+
+    if (document.location.hash == ""){
+        /* default chart options, vax, and country */
+        options = new Array("B", "F", "P", "C", "U");
+        group = "bcg";
+	country = "ML";
+	chart_name = "";
+    } else {
+	update_from_hash();
+    };
+
+    function update_from_hash(){
+	var hash_parts = new Array();
+	hash_parts = document.location.hash.split('/');
+	lang = hash_parts[1];
+	country = hash_parts[2].replace(/[\#\-\!]/g,"");
+	group = hash_parts[3];
+	options = new Array();
+	for (i=0; i< hash_parts[4].length; i++){
+	    options.push(hash_parts[4].charAt(i));
+	}
+	$("#plot_options :input").val(options);
+        $("#checkbox-S").attr("checked", "checked");
+	$("#vaccines :input").attr("checked", false);
+	$("#vaccines :input").filter("[value=" + group + "]").attr("checked", "checked");
+	$("#country").val(country);
+	$("#auth select").val(lang);
+    };
+
+    /* 	whenever url hash is changed, update global variables
+	to reflect these changes, and set inputs accordingly */
+    $(window).bind("hashchange",  function(event){
+    	update_from_hash();
+    });
 
     /*	dictionary for jsi18n strings */
     var strings = {};
@@ -56,7 +89,8 @@ $(document).ready(function(){
 
     /*	set inputs to values of global variables */
     $("#plot_options :input").val(options);
-    $("#vaccines :input").filter("[value=" + group + "]").attr("checked", "checked");
+    $("#checkbox-S").attr("checked", "checked");
+    $("#vaccines :input:radio").filter("[value=" + group + "]").attr("checked", "checked");
     $("#country").val(country);
 
     /*	set lang global variable to selected lang
@@ -69,26 +103,6 @@ $(document).ready(function(){
     get_chart();
     get_alerts();
     get_stats();
-
-
-    /* 	whenever url hash is changed, update global variables
-	to reflect these changes, and set inputs accordingly */
-    $(window).bind("hashchange",  function(event){
-	var hash_parts = new Array();
-	hash_parts = document.location.hash.split('/');
-	lang = hash_parts[1];
-	country = hash_parts[2].replace(/[\#\-\!]/g,"");
-	group = hash_parts[3];
-	options = new Array();
-	for (i=0; i< hash_parts[4].length; i++){
-	    options.push(hash_parts[4].charAt(i));
-	}
-	$("#plot_options :input").val(options);
-	$("#vaccines :input").attr("checked", false);
-	$("#vaccines :input").filter("[value=" + group + "]").attr("checked", "checked");
-	$("#country").val(country);
-	$("#auth select").val(lang);
-    });
 
 
     /* 	whenever language dropdown is changed,
@@ -110,6 +124,7 @@ $(document).ready(function(){
 	$("#plot_options :input:checked").each(function() {
 	    options.push( $(this).val() );
 	});
+        $("#checkbox-S").attr("checked", "checked");
 	update_url();
         get_chart();
     });
@@ -144,7 +159,6 @@ $(document).ready(function(){
     /*	alter url hash to reflect current values of global variables */
     function update_url(){
 	chart_opts = options.sort().join("");
-        group = group.replace(/-/g, "_");
     	var path;
 	path = "#!/" + lang + "/" + country + "/" + group + "/" + chart_opts;
 	document.location.hash = path;
@@ -154,7 +168,6 @@ $(document).ready(function(){
 	and country flag */
     function get_chart(){
 	chart_opts = options.sort().join("");
-        group = group.replace(/-/g, "_");
         chart_name = country + "/" + group + "/" + chart_opts + ".png";
         $("#chart").attr('src', "/charts/" + chart_name);
         $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");

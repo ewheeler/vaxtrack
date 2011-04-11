@@ -300,14 +300,11 @@ class Analysis(object):
             # documentation sez figsize is in inches (!?)
             #fig = figure(figsize=(15,12))
             fig = figure(figsize=(9,6))
-            #fig_legend = figure()
-
-            # add country name and vaccine as chart title
-            #title = "%s %s" % (self.country_pk, self.vaccine_abbr)
 
             # lookup country name and vaccine abbreviation in given language
             _country_name = getattr(self.cs.country, self.lang)
             _group_abbr = getattr(self.cs.group, self.lang)
+            # add country name and vaccine as chart title
             title = "%s %s" % (_country_name, _group_abbr)
             fig.suptitle(title, fontsize=18)
 
@@ -385,14 +382,12 @@ class Analysis(object):
             ax.autoscale_view()
 
             ax.grid(True)
-            #fig_legend.legend(prop={'size': 'x-small'})
 
             fig.autofmt_xdate()
 
             # close figure so next call doesn't add to previous call's image
             # and so memory gets gc'ed
             matplotlib.pyplot.close(fig)
-            #matplotlib.pyplot.close(fig_legend)
 
             self.plotted = True
 
@@ -403,12 +398,9 @@ class Analysis(object):
 
         if self.save_chart:
             try:
-                filename = "%s-%s-%s.png" % (self.country_pk, self.group_slug, self.options_str)
+                filename = "%s_%s_%s.png" % (self.country_pk, self.group_slug, self.options_str)
                 file_path = "/tmp/" + filename
                 fig.savefig(file_path)
-                #legend_filename = "%s.png" % (self.options_str)
-                #legend_file_path = "/tmp/" + legend_filename
-                #fig_legend.savefig(legend_file_path)
             except Exception, e:
                 print 'ERROR SAVING'
                 print e
@@ -417,13 +409,9 @@ class Analysis(object):
         if self.upload_chart_to_s3:
             try:
                 # TODO make these configurable? same with sdb domain?
-                s3_key = "%s-%s-%s-%s.png" % (self.lang, self.country_pk, self.group_slug, self.options_str)
+                s3_key = "%s_%s_%s_%s.png" % (self.lang, self.country_pk, self.group_slug, self.options_str)
                 s3_path = "%s/%s/%s/" % (self.lang, self.country_pk, self.group_slug)
                 upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
-                #legend_path = "%s/legends/%s.png" % (self.lang, self.options_str)
-                #upload_file(legend_path, 'vaxtrack_charts', legend_path, True)
-                #demo_key = "%s-%s-%s.png" % (self.country_pk, self.vaccine_abbr, self.options_str)
-                #upload_file(file_path, 'vaxtrack_charts', demo_key, True)
                 return file_path
             except Exception, e:
                 print 'ERROR UPLOADING'
