@@ -168,8 +168,11 @@ $(document).ready(function(){
 	and country flag */
     function get_chart(){
 	chart_opts = options.sort().join("");
-        chart_name = lang + "/" + country + "/" + group + "/" + chart_opts + ".png";
-        $("#chart").attr('src', "/charts/" + chart_name);
+
+	var path = lang + "/" + country + "/" + group + "/"
+	var filename = lang + "_" + country + "_" + group + "_" + chart_opts + ".png"
+	var chart_url = "https://s3.amazonaws.com/vaxtrack_charts/" + path + filename
+        $("#chart").attr('src', chart_url);
         $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
     };
 
