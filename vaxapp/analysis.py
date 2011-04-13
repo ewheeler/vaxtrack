@@ -2,6 +2,7 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 import datetime
+import locale
 from itertools import chain
 from itertools import combinations
 
@@ -35,15 +36,15 @@ def update_dev():
     for iso in ['SN', 'NE']:
         generate_six_charts_country_sdb(iso, 'en')
 
-def generate_all_charts_country_sdb(country_pk=None, vaccine_abbr=None, lang=None, options="BFPCU"):
+def generate_all_charts_country_sdb(country_pk=None, group_slug=None, vaccine_abbr=None, lang=None, options="BFPCU"):
     ''' Calls all_charts_country_sdb with all permutations of `options`
         string where each character represents one option. '''
     # 5 options = 2^5 = 32 charts
     for p in powerset(options):
         params = {}
         dicts = [params.update({c:True}) for c in p]
-        analysis = Analysis(country_pk=country_pk, vaccine_abbr=vaccine_abbr, lang=lang, **params)
-        analysis.plot()
+        analysis = Analysis(country_pk=country_pk, group_slug=group_slug, vaccine_abbr=None, lang=lang, **params)
+        print analysis.plot()
 
 def generate_six_charts_country_sdb(country_pk=None, lang=None):
     #for v in ['opv-50', 'measles', 'tt-10', 'dtp-hepbhib-1', 'yf-1', 'bcg-10']:
@@ -65,6 +66,12 @@ def analyze_all_march(lang='en'):
         for v in [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']:
             analysis = Analysis(country_pk=country, vaccine_abbr=str(v), lang=lang, B=True, F=True, P=True, C=True, U=True)
             print analysis.save_stats()
+
+def plot_all():
+    for country in ['ML', 'TD', 'SN']:
+        for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
+            print analysis.plot()
 
 def analyze_all_april(lang='en'):
     for country in ['ML', 'TD', 'SN']:
@@ -96,23 +103,21 @@ class Analysis(object):
         return matches
 
 
-    def __init__(self, country_pk=None, group_slug=None, vaccine_abbr=None, lang=None, **kwargs):
-        # string of options (as single characters) in alphabetical order
-        # used later for filename
-        self.options_str = ''.join(sorted(kwargs.keys()))
-
+    def __init__(self, country_pk=None, group_slug=None, vaccine_abbr=None, lang=None):
         self.country_pk = country_pk
         self.vaccine_abbr = vaccine_abbr
         self.group_slug = group_slug
         self.lang = lang
-        if self.lang is not None:
-            translation.activate(self.lang)
+        self.langs = ['en', 'fr']
+        #if self.lang is not None:
+        #    translation.activate(self.lang)
 
         if vaccine_abbr is not None:
             v = Vaccine.lookup_slug(self.vaccine_abbr)
             if v is None:
                 print 'couldnt find vaccine'
-        print "GROUP"
+        #print "GROUP"
+        print self.country_pk
         print self.group_slug
 
         country = Country.objects.get(iso2_code=self.country_pk)
@@ -130,19 +135,13 @@ class Analysis(object):
         # configuration options
         self.save_chart = True
         self.upload_chart_to_s3 = True
+        self.generate_all_charts = True
         self.lookahead = datetime.timedelta(90)
         self.cons_rate_diff_threshold = 0.25
 
         # TODO XXX back to the present!
         #self.today = datetime.datetime.today().date()
         self.today = datetime.date(2010, 10, 1)
-
-        # default to false if options are not specified
-        self.display_buffers = kwargs.get('B', False)
-        self.display_forecast_projection = kwargs.get('F', False)
-        self.display_purchased_projection = kwargs.get('P', False)
-        self.display_theoretical_forecast = kwargs.get('C', False)
-        self.display_adjusted_theoretical_forecast = kwargs.get('U', False)
 
 
         try:
@@ -177,11 +176,11 @@ class Analysis(object):
 
     # calculate projections
     def _calc_stock_levels(self, delivery_type, begin_date, begin_level=None, end_date=None):
-        print 'CALCULATE PROJECTIONS: %s' % delivery_type
+        #print 'CALCULATE PROJECTIONS: %s' % delivery_type
         try:
             filtered_deliveries = get_group_all_deliveries_for_type_asc(self.country_pk, self.group_slug, delivery_type)
-            print 'deliveries:'
-            print len(filtered_deliveries)
+            #print 'deliveries:'
+            #print len(filtered_deliveries)
             if len(filtered_deliveries) == 0:
                 return [], []
 
@@ -201,9 +200,9 @@ class Analysis(object):
 
             # timedelta representing days we are plotting
             days_to_plot = end_date - begin_date
-            print begin_date
-            print end_date
-            print days_to_plot
+            #print begin_date
+            #print end_date
+            #print days_to_plot
 
             # variables to keep track of running totals while we loop
             if begin_level is None:
@@ -247,15 +246,55 @@ class Analysis(object):
                     est_stock_level = 0
                 # add level to list of levels
                 projected_stock_levels.append(est_stock_level)
-            print len(projected_stock_dates)
-            print len(projected_stock_levels)
+            #print len(projected_stock_dates)
+            #print len(projected_stock_levels)
             return projected_stock_dates, projected_stock_levels
         except Exception,e:
             print 'ERROR PROJECTION'
             print e
             import ipdb; ipdb.set_trace()
 
-    def plot(self):
+    def set_plot_options(self, options_str):
+        try:
+            self.display_buffers = bool('B' in options_str)
+            self.display_forecast_projection = bool('F' in options_str)
+            self.display_purchased_projection = bool('P' in options_str)
+            self.display_theoretical_forecast = bool('C' in options_str)
+            self.display_adjusted_theoretical_forecast = bool('U' in options_str)
+        except Exception,e:
+            print 'ERROR SET PLOT OPTIONS'
+            print e
+            import ipdb; ipdb.set_trace()
+
+    def plot(self, **kwargs):
+        # string of options (as single characters) in alphabetical order
+        # used later for filename
+        self.options_str = ''.join(sorted(kwargs.keys()))
+
+        if not self.generate_all_charts:
+            # if we are not generating all charts for countrystock,
+            # set options based on supplied keyword arguments
+            # default to false if options are not specified
+            self.calc_buffers = kwargs.get('B', False)
+            self.display_buffers = kwargs.get('B', False)
+            self.calc_forecast_projection = kwargs.get('F', False)
+            self.display_forecast_projection = kwargs.get('F', False)
+            self.calc_purchased_projection = kwargs.get('P', False)
+            self.display_purchased_projection = kwargs.get('P', False)
+            self.calc_theoretical_forecast = kwargs.get('C', False)
+            self.display_theoretical_forecast = kwargs.get('C', False)
+            self.calc_adjusted_theoretical_forecast = kwargs.get('U', False)
+            self.display_adjusted_theoretical_forecast = kwargs.get('U', False)
+        else:
+            self.options_str = 'BFPCU'
+            self.calc_buffers = True
+            self.calc_forecast_projection = True
+            self.calc_purchased_projection = True
+            self.calc_theoretical_forecast = True
+            self.calc_adjusted_theoretical_forecast = True
+            self.set_plot_options('BFPCU')
+
+
         if self.display_buffers:
             try:
                 self.three_by_year = dict()
@@ -297,126 +336,156 @@ class Analysis(object):
 
         try:
 
-            # documentation sez figsize is in inches (!?)
-            #fig = figure(figsize=(15,12))
-            fig = figure(figsize=(9,6))
-
-            # lookup country name and vaccine abbreviation in given language
-            _country_name = getattr(self.cs.country, self.lang)
-            _group_abbr = getattr(self.cs.group, self.lang)
-            # add country name and vaccine as chart title
-            title = "%s %s" % (_country_name, _group_abbr)
-            fig.suptitle(title, fontsize=18)
-
-            # add timestamp to lower left corner
-            colophon = "Generated by VaxTrack on %s (GMT -5)" %\
-                (str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
-            fig.text(0,0,translation.ugettext(colophon), fontsize=8)
-            ax = fig.add_subplot(111)
-
-
-            if (len(self.dates) != 0) and (len(self.levels) != 0):
-                # plot stock levels
-                ax.plot_date(self.dates, self.levels, '-', drawstyle='steps', color='blue',\
-                    label=translation.ugettext('actual stock'))
-
-            if self.display_buffers:
-                # plot 3 and 9 month buffer levels as red lines
-                ax.plot_date(first_and_last_days, self.three_month_buffers, '-', drawstyle='steps',\
-                    color='red', label=translation.ugettext('3 month buffer'))
-                ax.plot_date(first_and_last_days, self.nine_month_buffers, '-', drawstyle='steps',\
-                    color='red', label=translation.ugettext('9 month buffer'))
-
-            if self.display_forecast_projection and (len(self.stocklevels) > 0):
+            # perform any required calculations before beginning fig
+            # construction, so they won't have to be repeated when
+            # constructing multiple figs
+            if self.calc_forecast_projection and (len(self.stocklevels) > 0):
                 projected_ff_dates, projected_ff_levels = self._calc_stock_levels(\
                     "FF", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
-                ax.plot_date(projected_ff_dates, projected_ff_levels, '--',\
-                    drawstyle='steps', color='purple',\
-                    label=translation.ugettext('projected stock based on forecast'))
 
-            if self.display_purchased_projection and (len(self.stocklevels) > 0):
+            if self.calc_purchased_projection and (len(self.stocklevels) > 0):
                 projected_fp_dates, projected_fp_levels = self._calc_stock_levels(\
                     "FP", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
-                ax.plot_date(projected_fp_dates, projected_fp_levels, '--',\
-                drawstyle='steps', color='blue',\
-                label=translation.ugettext('projected stock based on placed POs'))
 
-            if self.display_theoretical_forecast and (len(self.stocklevels) > 0):
+            if self.calc_theoretical_forecast and (len(self.stocklevels) > 0):
                 projected_co_dates, projected_co_levels = self._calc_stock_levels(\
                     "CO", self.stocklevels[0]['date'])
-                ax.plot_date(projected_co_dates, projected_co_levels, '--',\
-                drawstyle='steps', color='green',\
-                label=translation.ugettext('theoretical stock based on forecast'))
 
-            if self.display_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
+            if self.calc_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
                 projected_un_dates, projected_un_levels = self._calc_stock_levels(\
                     "UN", self.stocklevels[0]['date'])
-                ax.plot_date(projected_un_dates, projected_un_levels, '--',\
-                drawstyle='steps', color='orange',\
-                label=translation.ugettext('theoretical stock adjusted with deliveries'))
-
-            years    = YearLocator()   # every year
-            months   = MonthLocator()  # every month
-            yearsFmt = DateFormatter('%Y')
-
-            def add_sep(num, pos, sep=','):
-                """ called by FuncFormatter, below, with
-                    num as numpy.Float64 and a pos that
-                    I ignore """
-                s = str(int(num))
-                out = ''
-                while len(s) > 3:
-                    out = sep + s[-3:] + out
-                    s = s[:-3]
-                return s + out
-
-            unitFmt = FuncFormatter(add_sep)
-            ax.yaxis.set_major_formatter(unitFmt)
-            ax.yaxis.set_label_text(translation.ugettext('Number of doses'))
-
-            # format the ticks
-            ax.xaxis.set_major_locator(years)
-            ax.xaxis.set_major_formatter(yearsFmt)
-            ax.xaxis.set_minor_locator(months)
-            ax.xaxis.set_label_text(translation.ugettext('Year'))
-            ax.autoscale_view()
-
-            ax.grid(True)
-
-            fig.autofmt_xdate()
-
-            # close figure so next call doesn't add to previous call's image
-            # and so memory gets gc'ed
-            matplotlib.pyplot.close(fig)
-
-            self.plotted = True
-
         except Exception, e:
-            print 'ERROR FIGURE'
+            print 'BANG calculations'
             print e
-            import ipdb; ipdb.set_trace()
 
-        if self.save_chart:
-            try:
-                filename = "%s_%s_%s.png" % (self.country_pk, self.group_slug, self.options_str)
-                file_path = "/tmp/" + filename
-                fig.savefig(file_path)
-            except Exception, e:
-                print 'ERROR SAVING'
-                print e
-                import ipdb; ipdb.set_trace()
+        for variant in powerset(self.options_str):
+            self.variant_str = "".join(sorted(str(c) for c in variant))
+            self.set_plot_options(self.variant_str)
+            for lang in self.langs:
+                translation.activate(lang)
+                try:
+                    # documentation sez figsize is in inches (!?)
+                    #fig = figure(figsize=(15,12))
+                    fig = figure(figsize=(9,6))
 
-        if self.upload_chart_to_s3:
-            try:
-                # TODO make these configurable? same with sdb domain?
-                s3_key = "%s_%s_%s_%s.png" % (self.lang, self.country_pk, self.group_slug, self.options_str)
-                s3_path = "%s/%s/%s/" % (self.lang, self.country_pk, self.group_slug)
-                upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
-                return file_path
-            except Exception, e:
-                print 'ERROR UPLOADING'
-                print e
-                import ipdb; ipdb.set_trace()
+                    # lookup country name and vaccine abbreviation in given language
+                    _country_name = getattr(self.cs.country, lang)
+                    _group_abbr = getattr(self.cs.group, lang)
+                    # add country name and vaccine as chart title
+                    title = "%s %s" % (_country_name, _group_abbr)
+                    fig.suptitle(title, fontsize=18)
+
+                    # get current locale
+                    loc = locale.setlocale(locale.LC_ALL, '')
+                    if lang == 'fr':
+                        # if we are making a french chart, change locale
+                        locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
+                    # get localized datetime string
+                    loc_datetime = datetime.datetime.now().strftime(locale.nl_langinfo(locale.D_T_FMT))
+                    # reset locale to initial locale
+                    locale.setlocale(locale.LC_ALL, loc)
+
+                    # add timestamp to lower left corner
+                    colophon_text = translation.ugettext("Generated by VisualVaccine on")
+                    colophon = colophon_text + " %s (GMT -5)" % (loc_datetime)
+                    fig.text(0,0,colophon, fontsize=8)
+                    ax = fig.add_subplot(111)
+
+                except Exception, e:
+                    print 'ERROR FIGURE PREP'
+                    print e
+
+                try:
+                    if (len(self.dates) != 0) and (len(self.levels) != 0):
+                        # plot stock levels
+                        ax.plot_date(self.dates, self.levels, '-', drawstyle='steps', color='blue')
+
+                    if self.display_buffers:
+                        # plot 3 and 9 month buffer levels as red lines
+                        ax.plot_date(first_and_last_days, self.three_month_buffers, '-', drawstyle='steps',\
+                            color='red')
+                        ax.plot_date(first_and_last_days, self.nine_month_buffers, '-', drawstyle='steps',\
+                            color='red')
+
+                    if self.display_forecast_projection and (len(self.stocklevels) > 0):
+                        ax.plot_date(projected_ff_dates, projected_ff_levels, '--',\
+                            drawstyle='steps', color='purple')
+
+                    if self.display_purchased_projection and (len(self.stocklevels) > 0):
+                        ax.plot_date(projected_fp_dates, projected_fp_levels, '--',\
+                        drawstyle='steps', color='blue')
+
+                    if self.display_theoretical_forecast and (len(self.stocklevels) > 0):
+                        ax.plot_date(projected_co_dates, projected_co_levels, '--',\
+                        drawstyle='steps', color='green')
+
+                    if self.display_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
+                        ax.plot_date(projected_un_dates, projected_un_levels, '--',\
+                        drawstyle='steps', color='orange')
+                except Exception, e:
+                    print 'ERROR FIGURE PLOTS'
+                    print e
+
+                try:
+
+                    years    = YearLocator()   # every year
+                    months   = MonthLocator()  # every month
+                    yearsFmt = DateFormatter('%Y')
+
+                    def add_sep(num, pos, sep=','):
+                        ''' called by FuncFormatter, below, with
+                            num as numpy.Float64 and a pos that
+                            I ignore '''
+                        s = str(int(num))
+                        out = ''
+                        while len(s) > 3:
+                            out = sep + s[-3:] + out
+                            s = s[:-3]
+                        return s + out
+
+                    unitFmt = FuncFormatter(add_sep)
+                    ax.yaxis.set_major_formatter(unitFmt)
+                    ax.yaxis.set_label_text(translation.ugettext('Number of doses'))
+
+                    # format the ticks
+                    ax.xaxis.set_major_locator(years)
+                    ax.xaxis.set_major_formatter(yearsFmt)
+                    ax.xaxis.set_minor_locator(months)
+                    ax.xaxis.set_label_text(translation.ugettext('Year'))
+                    ax.autoscale_view()
+
+                    ax.grid(True)
+
+                    fig.autofmt_xdate()
+
+                    # close figure so next call doesn't add to previous call's image
+                    # and so memory gets gc'ed
+                    matplotlib.pyplot.close(fig)
+                    self.plotted = True
+
+                    if self.save_chart:
+                        try:
+                            filename = "%s_%s_%s.png" % (self.country_pk, self.group_slug, self.variant_str)
+                            file_path = "/tmp/" + filename
+                            fig.savefig(file_path)
+                        except Exception, e:
+                            print 'ERROR SAVING'
+                            print e
+
+                    if self.upload_chart_to_s3:
+                        try:
+                            s3_key = "%s_%s_%s_%s.png" % (lang, self.country_pk, self.group_slug, self.variant_str)
+                            s3_path = "%s/%s/%s/" % (lang, self.country_pk, self.group_slug)
+                            upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
+                            print s3_key
+                        except Exception, e:
+                            print 'ERROR UPLOADING'
+                            print e
+
+                except Exception, e:
+                    print 'ERROR FIGURE'
+                    print e
+
 
     def analyze(self):
         print '~~~~ANALYZING~~~~'
