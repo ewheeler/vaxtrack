@@ -8,127 +8,128 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-29 15:52-0400\n"
+"POT-Creation-Date: 2011-04-12 20:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: static/javascripts/vax.js:15
+#: static/javascripts/vax.js:48
 msgid "est. daily cons."
 msgstr ""
 
-#: static/javascripts/vax.js:16
+#: static/javascripts/vax.js:49
 msgid ""
 "Estimated daily consumption based on annual demand provided in UNICEF "
 "forecasts"
 msgstr ""
 
-#: static/javascripts/vax.js:18
+#: static/javascripts/vax.js:51
 msgid "days of stock"
 msgstr ""
 
-#: static/javascripts/vax.js:19
+#: static/javascripts/vax.js:52
 msgid ""
 "Number of days worth of doses currently in stock based on est daily cons"
 msgstr ""
 
-#: static/javascripts/vax.js:21
+#: static/javascripts/vax.js:54
 msgid "coverage of annual need"
 msgstr ""
 
-#: static/javascripts/vax.js:22
+#: static/javascripts/vax.js:55
 msgid ""
 "Percent coverage of annual need delivered to date, based on stock at "
 "beginning of year plus deliveries and forecasted annual demand"
 msgstr ""
 
-#: static/javascripts/vax.js:24
+#: static/javascripts/vax.js:57
 msgid "doses delivered this year"
 msgstr ""
 
-#: static/javascripts/vax.js:25
+#: static/javascripts/vax.js:58
 msgid "Total doses delivered this year to date"
 msgstr ""
 
-#: static/javascripts/vax.js:27
+#: static/javascripts/vax.js:60
 msgid "doses on order"
 msgstr ""
 
-#: static/javascripts/vax.js:28
+#: static/javascripts/vax.js:61
 msgid "Total number of doses to be delivered on any purchased orders."
 msgstr ""
 
-#: static/javascripts/vax.js:30
+#: static/javascripts/vax.js:63
 msgid "reference date"
 msgstr ""
 
-#: static/javascripts/vax.js:31
+#: static/javascripts/vax.js:64
 msgid ""
 "Reference date that is the basis for chart, alerts, and statistical analysis."
 msgstr ""
 
-#: static/javascripts/vax.js:33
+#: static/javascripts/vax.js:66
 msgid "analysis date"
 msgstr ""
 
-#: static/javascripts/vax.js:34
+#: static/javascripts/vax.js:67
 msgid "Date statistical analysis was performed."
 msgstr ""
 
-#: static/javascripts/vax.js:37
+#: static/javascripts/vax.js:70
 msgid "Note: first and last year totals may not reflect full 12 months"
 msgstr ""
 
-#: static/javascripts/vax.js:39
+#: static/javascripts/vax.js:72
 msgid "total consumed"
 msgstr ""
 
-#: static/javascripts/vax.js:40
+#: static/javascripts/vax.js:73
 msgid "Total number of doses issued from national store."
 msgstr ""
 
-#: static/javascripts/vax.js:42
+#: static/javascripts/vax.js:75
 msgid "annual demand"
 msgstr ""
 
-#: static/javascripts/vax.js:43
+#: static/javascripts/vax.js:76
 msgid "Annual demand as estimated in UNICEF forecasts."
 msgstr ""
 
-#: static/javascripts/vax.js:45
+#: static/javascripts/vax.js:78
 msgid "actual daily cons. rate"
 msgstr ""
 
-#: static/javascripts/vax.js:46
+#: static/javascripts/vax.js:79
 msgid ""
 "Average daily consumption rate, based on total consumption during number of "
 "days included in stocklevel datapoints."
 msgstr ""
 
-#: static/javascripts/vax.js:48
+#: static/javascripts/vax.js:81
 msgid "buffer stock level"
 msgstr ""
 
-#: static/javascripts/vax.js:49
+#: static/javascripts/vax.js:82
 msgid "Three month buffer stock level, based on annual demand."
 msgstr ""
 
-#: static/javascripts/vax.js:51
+#: static/javascripts/vax.js:84
 msgid "overstock level"
 msgstr ""
 
-#: static/javascripts/vax.js:52
+#: static/javascripts/vax.js:85
 msgid "Nine month overstock level, based on annual demand."
 msgstr ""
 
-#: static/javascripts/vax.js:54
+#: static/javascripts/vax.js:87
 msgid "number of days"
 msgstr ""
 
-#: static/javascripts/vax.js:55
+#: static/javascripts/vax.js:88
 msgid ""
 "Number of days included between the first stock level datapoint of the year "
 "and the last stock level datapoint of the year"
