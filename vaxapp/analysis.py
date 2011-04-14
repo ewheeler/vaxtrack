@@ -32,58 +32,17 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-def update_dev():
-    for iso in ['SN', 'NE']:
-        generate_six_charts_country_sdb(iso, 'en')
-
-def generate_all_charts_country_sdb(country_pk=None, group_slug=None, vaccine_abbr=None, lang=None, options="BFPCU"):
-    ''' Calls all_charts_country_sdb with all permutations of `options`
-        string where each character represents one option. '''
-    # 5 options = 2^5 = 32 charts
-    for p in powerset(options):
-        params = {}
-        dicts = [params.update({c:True}) for c in p]
-        analysis = Analysis(country_pk=country_pk, group_slug=group_slug, vaccine_abbr=None, lang=lang, **params)
-        print analysis.plot()
-
-def generate_six_charts_country_sdb(country_pk=None, lang=None):
-    #for v in ['opv-50', 'measles', 'tt-10', 'dtp-hepbhib-1', 'yf-1', 'bcg-10']:
-    for v in ['tt-10', 'dtp-hepbhib-1']:
-        print generate_all_charts_country_sdb(country_pk=country_pk, vaccine_abbr=v, lang=lang)
-
-def generate_demo_charts():
-    for country in ['ML', 'TD']:
-        for vax in ['BCG']:
-            print generate_all_charts_country_sdb(country_pk=country, vaccine_abbr=vax, lang='en')
-
-def analyze_demo(lang='en'):
-    for country in ['ML', 'TD']:
-        analysis = Analysis(country_pk=country, vaccine_abbr='BCG', lang=lang, B=True, F=True, P=True, C=True, U=True)
-        print analysis.save_stats()
-
-def analyze_all_march(lang='en'):
-    for country in ['ML', 'TD', 'SN']:
-        for v in [u'bcg-10',u'measles',u'dtp-10',u'tt-10',u'dtp-hepb-2',u'yf-1',u'dtp-hepbhib-1',u'opv-50']:
-            analysis = Analysis(country_pk=country, vaccine_abbr=str(v), lang=lang, B=True, F=True, P=True, C=True, U=True)
-            print analysis.save_stats()
-
 def plot_all():
     for country in ['ML', 'TD', 'SN']:
         for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
             analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
             print analysis.plot()
 
-def analyze_all_april(lang='en'):
+def analyze_all():
     for country in ['ML', 'TD', 'SN']:
         for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
-            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, lang=lang, B=True, F=True, P=True, C=True, U=True)
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
             print analysis.save_stats()
-
-def analyze_april(country='ML', lang='en'):
-    for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
-        analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, lang=lang, B=True, F=True, P=True, C=True, U=True)
-        print analysis.save_stats()
-
 
 class Analysis(object):
     # helper methods
