@@ -11,7 +11,8 @@ h1,h2,h3,h4,h5 {
 }
 
 body {
-  font: 9pt verdana, sans-serif;
+  font-size: 9pt;
+  font-family: “Helvetica Neue Light”, “HelveticaNeue-Light”, Arial, Helvetica, sans-serif;
   margin: 2em;
   background: #eee url("../images/body-bg.png");
 }
@@ -30,7 +31,7 @@ h1 {
   font-size: 2em;
   margin: 0.5em 0;
   font-weight: bold;
-  font-family: arial, sans-serif;
+  font-family: “Helvetica Neue Light”, “HelveticaNeue-Light”, Arial, Helvetica, sans-serif;
 }
 
 h2 {
@@ -209,6 +210,16 @@ div.clear-hack {
             display: block;
             color: #0099FF;
             text-decoration: none;
+            font-family: “Helvetica Neue Light”, “HelveticaNeue-Light”, Arial, Helvetica, sans-serif;
+            font-size: 150%;
+            font-style: italic;
+            font-weight: 700;
+            text-shadow: 2px 2px 2px #aaa;
+            text-decoration: none;
+            text-transform: none;
+            letter-spacing: 0.033em;
+            word-spacing: 0em;
+            line-height: 1.2;
 
             /* float the RapidSMS logo, in case any app would like to
              * append anything to the light blue (empty) stripe */
