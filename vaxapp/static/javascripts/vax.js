@@ -98,6 +98,7 @@ $(document).ready(function(){
     (which is decided by django i18n based on
     browser's default lang or django cookie) */
     lang = $("#auth select").val();
+    update_abbrs();
 
     /*	update url hash, fetch chart & tables based on globals */
     update_url();
@@ -111,11 +112,19 @@ $(document).ready(function(){
 	update url hash, fetch new chart & tables */
     $("#auth select").change(function(){
 	lang = $("#auth select").val();
+	update_abbrs();
 	update_url();
         get_chart();
 	get_alerts();
 	get_stats();
     });
+
+    function update_abbrs(){
+	$("#vaccines label").each(function() {
+	    var to_use = $(this).attr(lang);
+	    $(this).text(to_use);
+	});
+    };
 
     /* 	whenever a plot option checkbox is clicked,
 	reset global options to currently checked
