@@ -436,6 +436,11 @@ class Analysis(object):
                     pylab.rcParams['xtick.minor.pad']='10'
                     pylab.rcParams['xtick.major.pad']='24'
 
+                    #pylab.rcParams['axes.linewidth']='0'
+                    #import ipdb;ipdb.set_trace()
+                    #ax.axhline()
+                    #ax.axvline()
+
                     #ax.axis["right"].set_visible(False)
                     #ax.axis["top"].set_visible(False)
 
@@ -450,7 +455,7 @@ class Analysis(object):
 
                     map(operator.methodcaller('set_rotation', 0), ax.get_xminorticklabels() + ax.get_xmajorticklabels())
 
-                    fig.subplots_adjust(left=0.15, right=0.9)
+                    fig.subplots_adjust(left=0.12, right=0.98)
 
                     # close figure so next call doesn't add to previous call's image
                     # and so memory gets gc'ed
