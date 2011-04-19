@@ -35,16 +35,28 @@ def powerset(iterable):
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 def plot_one():
+    begin = datetime.datetime.now()
     for country in ['ML']:
         for v in ['opv']:
             analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
             print analysis.plot()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
 
 def plot_all():
+    begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
         for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
             analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
             print analysis.plot()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
 
 def analyze_all():
     for country in ['ML', 'TD', 'SN']:
