@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-12 20:15+0000\n"
+"POT-Creation-Date: 2011-04-19 15:45+0000\n"
 "PO-Revision-Date: 2011-03-15 17:15\n"
 "Last-Translator: <m@m.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n>1\n"
 
 #: static/javascripts/vax.js:48
-msgid "est. daily cons."
+msgid "estimated daily consumption"
 msgstr ""
 
 #: static/javascripts/vax.js:49
@@ -66,8 +66,8 @@ msgid "Total number of doses to be delivered on any purchased orders."
 msgstr ""
 
 #: static/javascripts/vax.js:63
-msgid "reference date"
-msgstr "date de référence"
+msgid "situation as of"
+msgstr ""
 
 #: static/javascripts/vax.js:64
 msgid ""
@@ -88,57 +88,68 @@ msgstr ""
 "Note: les totaux première et dernière année peuvent ne pas refléter "
 "l'ensemble des 12 mois"
 
-#: static/javascripts/vax.js:72
-msgid "total consumed"
-msgstr "totale consommée"
+#: static/javascripts/vax.js:71
+msgid "Trend"
+msgstr ""
 
 #: static/javascripts/vax.js:73
+msgid "usage (doses)"
+msgstr ""
+
+#: static/javascripts/vax.js:74
 msgid "Total number of doses issued from national store."
 msgstr ""
 
-#: static/javascripts/vax.js:75
-msgid "annual demand"
+#: static/javascripts/vax.js:76
+#, fuzzy
+msgid "annual demand (doses)"
 msgstr "demande annuelle"
 
-#: static/javascripts/vax.js:76
+#: static/javascripts/vax.js:77
 msgid "Annual demand as estimated in UNICEF forecasts."
 msgstr ""
 
-#: static/javascripts/vax.js:78
-msgid "actual daily cons. rate"
+#: static/javascripts/vax.js:79
+msgid "actual daily consumption rate"
 msgstr ""
 
-#: static/javascripts/vax.js:79
+#: static/javascripts/vax.js:80
 msgid ""
 "Average daily consumption rate, based on total consumption during number of "
 "days included in stocklevel datapoints."
 msgstr ""
 
-#: static/javascripts/vax.js:81
+#: static/javascripts/vax.js:82
 msgid "buffer stock level"
 msgstr ""
 
-#: static/javascripts/vax.js:82
+#: static/javascripts/vax.js:83
 msgid "Three month buffer stock level, based on annual demand."
 msgstr ""
 
-#: static/javascripts/vax.js:84
+#: static/javascripts/vax.js:85
 msgid "overstock level"
 msgstr ""
 
-#: static/javascripts/vax.js:85
+#: static/javascripts/vax.js:86
 msgid "Nine month overstock level, based on annual demand."
 msgstr ""
 
-#: static/javascripts/vax.js:87
-msgid "number of days"
+#: static/javascripts/vax.js:88
+msgid "number of days with stocklevel information"
 msgstr ""
 
-#: static/javascripts/vax.js:88
+#: static/javascripts/vax.js:89
 msgid ""
 "Number of days included between the first stock level datapoint of the year "
 "and the last stock level datapoint of the year"
 msgstr ""
+
+#~ msgid "reference date"
+#~ msgstr "date de référence"
+
+#~ msgid "total consumed"
+#~ msgstr "totale consommée"
 
 #, fuzzy
 #~ msgid "Percent coverage of annual need delivered to date"

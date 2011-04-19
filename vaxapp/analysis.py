@@ -2,9 +2,11 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 import datetime
+import calendar
 import locale
 from itertools import chain
 from itertools import combinations
+import operator
 
 # allow this to run on a headless server
 # (otherwise pylab will use TkAgg backend)
@@ -14,7 +16,7 @@ import pylab
 
 from pylab import figure, axes, pie, title
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
+from matplotlib.dates import YearLocator, MonthLocator, DateFormatter, num2date, date2num
 from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot
 
@@ -31,6 +33,12 @@ def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+def plot_one():
+    for country in ['ML']:
+        for v in ['opv']:
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
+            print analysis.plot()
 
 def plot_all():
     for country in ['ML', 'TD', 'SN']:
@@ -215,11 +223,12 @@ class Analysis(object):
 
     def set_plot_options(self, options_str):
         try:
-            self.display_buffers = bool('B' in options_str)
-            self.display_forecast_projection = bool('F' in options_str)
-            self.display_purchased_projection = bool('P' in options_str)
-            self.display_theoretical_forecast = bool('C' in options_str)
-            self.display_adjusted_theoretical_forecast = bool('U' in options_str)
+            # https://twitter.com/#!/raymondh/status/60058896752066560
+            self.display_buffers = not not ('B' in options_str)
+            self.display_forecast_projection = not not ('F' in options_str)
+            self.display_purchased_projection = not not ('P' in options_str)
+            self.display_theoretical_forecast = not not ('C' in options_str)
+            self.display_adjusted_theoretical_forecast = not not ('U' in options_str)
         except Exception,e:
             print 'ERROR SET PLOT OPTIONS'
             print e
@@ -325,7 +334,7 @@ class Analysis(object):
                 try:
                     # documentation sez figsize is in inches (!?)
                     #fig = figure(figsize=(15,12))
-                    fig = figure(figsize=(9,6))
+                    fig = figure(figsize=(8.5,5.5))
 
                     # lookup country name and vaccine abbreviation in given language
                     _country_name = getattr(self.cs.country, lang)
@@ -341,6 +350,7 @@ class Analysis(object):
                         locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
                     # get localized datetime string
                     loc_datetime = datetime.datetime.now().strftime(locale.nl_langinfo(locale.D_T_FMT))
+
                     # reset locale to initial locale
                     locale.setlocale(locale.LC_ALL, loc)
 
@@ -388,38 +398,64 @@ class Analysis(object):
                 try:
 
                     years    = YearLocator()   # every year
-                    months   = MonthLocator()  # every month
+                    months   = MonthLocator(interval=3)
                     yearsFmt = DateFormatter('%Y')
 
-                    def add_sep(num, pos, sep=','):
-                        ''' called by FuncFormatter, below, with
-                            num as numpy.Float64 and a pos that
-                            I ignore '''
-                        s = str(int(num))
-                        out = ''
-                        while len(s) > 3:
-                            out = sep + s[-3:] + out
-                            s = s[:-3]
-                        return s + out
+                    def loc_mon(d, pos):
+                        # get current locale
+                        loc = locale.setlocale(locale.LC_ALL, '')
+                        if lang == 'fr':
+                            # if we are making a french chart, change locale
+                            locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
+                        localized = calendar.month_abbr[num2date(d).month]
+                        # reset locale to initial locale
+                        locale.setlocale(locale.LC_ALL, loc)
+                        return localized
 
-                    unitFmt = FuncFormatter(add_sep)
-                    ax.yaxis.set_major_formatter(unitFmt)
-                    ax.yaxis.set_label_text(translation.ugettext('Number of doses'))
+                    def add_sep(num, pos, sep=','):
+                        return locale.format("%d", num, grouping=True)
 
                     # format the ticks
+                    unitFmt = FuncFormatter(add_sep)
+                    ax.yaxis.set_major_formatter(unitFmt)
+                    ax.yaxis.set_label_text(translation.ugettext('Number of doses'), size='small')
+
+                    monthsFmt = FuncFormatter(loc_mon)
+                    ax.xaxis.set_minor_locator(months)
+                    ax.xaxis.set_minor_formatter(monthsFmt)
+
                     ax.xaxis.set_major_locator(years)
                     ax.xaxis.set_major_formatter(yearsFmt)
-                    ax.xaxis.set_minor_locator(months)
-                    ax.xaxis.set_label_text(translation.ugettext('Year'))
+                    ax.xaxis.set_label_text(translation.ugettext('Time'), size='small')
                     ax.autoscale_view()
 
                     ax.grid(True)
 
                     fig.autofmt_xdate()
+                    # matplotlib seems to ignore set_pad() calls...
+                    pylab.rcParams['xtick.minor.pad']='10'
+                    pylab.rcParams['xtick.major.pad']='24'
+
+                    #ax.axis["right"].set_visible(False)
+                    #ax.axis["top"].set_visible(False)
+
+                    #six_months = datetime.timedelta(days=180)
+                    #map(lambda t: t[0].set_pad(15), ax.xaxis.iter_ticks())
+                    map(operator.methodcaller('set_fontsize', 'x-small'), ax.get_xticklabels() + ax.get_yticklabels())
+                    map(operator.methodcaller('set_fontsize', 'x-small'), ax.get_xminorticklabels())
+                    map(operator.methodcaller('set_fontsize', 'small'), ax.get_xmajorticklabels())
+
+                    map(operator.methodcaller('set_horizontalalignment', 'center'), ax.get_xmajorticklabels() + ax.get_xminorticklabels())
+                    map(operator.methodcaller('set_verticalalignment', 'top'), ax.get_xmajorticklabels() + ax.get_xminorticklabels())
+
+                    map(operator.methodcaller('set_rotation', 0), ax.get_xminorticklabels() + ax.get_xmajorticklabels())
+
+                    fig.subplots_adjust(left=0.15, right=0.9)
 
                     # close figure so next call doesn't add to previous call's image
                     # and so memory gets gc'ed
                     matplotlib.pyplot.close(fig)
+
                     self.plotted = True
 
                     if self.save_chart:
@@ -432,6 +468,8 @@ class Analysis(object):
                             print e
 
                     if self.upload_chart_to_s3:
+                        # TODO queue uploading with celery so uploading
+                        # will not delay generation of next chart
                         try:
                             s3_key = "%s_%s_%s_%s.png" % (lang, self.country_pk, self.group_slug, self.variant_str)
                             s3_path = "%s/%s/%s/" % (lang, self.country_pk, self.group_slug)
