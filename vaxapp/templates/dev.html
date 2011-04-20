@@ -6,7 +6,8 @@
 {% endblock %}
 {% block javascripts %}
 {{ block.super }}
-<script src="/assets/js/vax.js"></script>
+<script src="/assets/js/dygraph-combined.js"></script>
+<script src="/assets/js/vax-dev.js"></script>
 <script src="/assets/js/jquery.sparkline.min.js"></script>
 {% endblock %}
 
@@ -74,9 +75,7 @@
 {% load i18n %}
     <div class="module" id="module-chart">
         <h3>{% trans "Chart" %}</h3>
-        <img id="chart" src="">
-        <div class="toolbar">
-        </div>
+        <div id="chart" style="width:600px;height:400px;">
     </div>
     <div class="module expanded" id="module-hist">
         <h3>{% trans "Historical" %}</h3>
@@ -87,4 +86,20 @@
 	</table>
 	</div>
     </div>
+<script type="text/javascript">
+    new Dygraph(document.getElementById("chart"),
+		"/assets/csv/ML_opv_stocks.csv",  // CSV file with headers
+		{ 
+		    rollPeriod: 1,
+		    title: 'ML opv stocks',
+		    ylabel: 'Doses',
+		    xlabel: 'Time',
+		    axisLabelFontSize: 10,
+		    labelsKMB: true,
+		    stacked: true,
+		    connectSeparatedPoints: true,
+		    gridLineColor: '#eee',
+		    stepPlot: true,
+		}); // options
+</script>
 {% endblock %}

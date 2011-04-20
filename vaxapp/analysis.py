@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
+import csv
 import datetime
 import calendar
 import locale
@@ -113,6 +114,7 @@ class Analysis(object):
 
         # configuration options
         self.save_chart = True
+        self.dump = True
         self.upload_chart_to_s3 = True
         self.generate_all_charts = True
         self.lookahead = datetime.timedelta(90)
@@ -337,6 +339,42 @@ class Analysis(object):
         except Exception, e:
             print 'BANG calculations'
             print e
+
+        try:
+            if self.dump:
+                filename = "%s_%s_stocks.csv" % (self.country_pk, self.group_slug)
+                with open(filename, 'wb') as f:
+                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
+                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(self.dates, self.levels)))
+                filename = "%s_%s_3mobuffers.csv" % (self.country_pk, self.group_slug)
+                with open(filename, 'wb') as f:
+                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
+                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(first_and_last_days, self.three_month_buffers)))
+                filename = "%s_%s_9mobuffers.csv" % (self.country_pk, self.group_slug)
+                with open(filename, 'wb') as f:
+                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
+                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(first_and_last_days, self.nine_month_buffers)))
+                filename = "%s_%s_ff.csv" % (self.country_pk, self.group_slug)
+                with open(filename, 'wb') as f:
+                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
+                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_ff_dates, projected_ff_levels)))
+                filename = "%s_%s_fp.csv" % (self.country_pk, self.group_slug)
+                with open(filename, 'wb') as f:
+                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
+                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_fp_dates, projected_fp_levels)))
+                filename = "%s_%s_co.csv" % (self.country_pk, self.group_slug)
+                with open(filename, 'wb') as f:
+                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
+                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_co_dates, projected_co_levels)))
+                filename = "%s_%s_un.csv" % (self.country_pk, self.group_slug)
+                with open(filename, 'wb') as f:
+                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
+                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_un_dates, projected_un_levels)))
+                return
+        except Exception, e:
+            print 'BANG dump'
+            print e
+            import ipdb; ipdb.set_trace()
 
         for variant in powerset(self.options_str):
             self.variant_str = "".join(sorted(str(c) for c in variant))
