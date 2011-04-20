@@ -180,6 +180,10 @@ div.module div.toolbar {
 		width: 100%;
 	}
 
+	div.module table tr{
+		height: 2.66em;
+	}
+
 	div.module table tbody tr td{
 		border-bottom: 1px solid #aaa;
 		border-right: 1px solid #aaa;
@@ -221,6 +225,7 @@ div.module div.toolbar {
 .headings {
     font-style: italic;
     background: #ddd;
+    text-align: center;
 }
 
 .spark {
@@ -229,10 +234,12 @@ div.module div.toolbar {
 
 .data {
     text-align: right;
+    font-family: Andale Mono, monospace;
+    letter-spacing: 0.0125em;
 }
 
 .chart-legend {
-    font-size: 250%;
+    font-size: 200%;
     letter-spacing: 0.2em;
     padding-left: 0.2em;
     vertical-align: middle;

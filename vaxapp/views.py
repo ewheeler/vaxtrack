@@ -58,6 +58,8 @@ def alerts(req, country_pk, group_slug):
             return HttpResponse([], 'application/javascript')
 
 def add_sep(num, sep=','):
+    if num is None:
+        return None
     s = str(int(num))
     out = ''
     while len(s) > 3:
@@ -71,7 +73,7 @@ def stats(req, country_pk, group_slug):
             countrystock = CountryStock.objects.filter(country=country_pk, group__slug=group_slug)
             if countrystock.count() > 0:
                 css = countrystock[0].latest_stats
-                if css is None:
+                if not css.has_stock_data:
                     return HttpResponse([], 'application/javascript')
                 # TODO this is insane
                 # instead of the fields, i'd like the properties that return
@@ -115,6 +117,8 @@ def stats(req, country_pk, group_slug):
                         stats[date_attr] = getattr(css, date_attr).strftime("%d/%m/%Y")
 
                 if len(stats):
+                    if None in stats.values():
+                        stats.update((k, v) for k, v in stats.iteritems() if v is not None)
                     data = simplejson.dumps([stats])
                 else:
                     data = simplejson.dumps([])

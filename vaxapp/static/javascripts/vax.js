@@ -45,7 +45,7 @@ $(document).ready(function(){
     var strings = {};
 
     /* 	strings for stats jsi18n */
-    strings["est_daily_cons_txt"] = gettext("est. daily cons.");
+    strings["est_daily_cons_txt"] = gettext("estimated daily consumption");
     strings["est_daily_cons_tip"] = gettext("Estimated daily consumption based on annual demand provided in UNICEF forecasts");
 
     strings["days_of_stock_txt"] = gettext("days of stock");
@@ -60,7 +60,7 @@ $(document).ready(function(){
     strings["doses_on_orders_txt"] = gettext("doses on order");
     strings["doses_on_orders_tip"] = gettext("Total number of doses to be delivered on any purchased orders.");
 
-    strings["reference_date_txt"] = gettext("reference date");
+    strings["reference_date_txt"] = gettext("situation as of");
     strings["reference_date_tip"] = gettext("Reference date that is the basis for chart, alerts, and statistical analysis.");
 
     strings["analyzed_txt"] = gettext("analysis date");
@@ -68,14 +68,15 @@ $(document).ready(function(){
 
     /* strings for hist jsi18n */
     strings["historical_note_txt"] = gettext("Note: first and last year totals may not reflect full 12 months");
+    strings["trends_txt"] = gettext("Trend");
 
-    strings["consumed_in_year_txt"] = gettext("total consumed");
+    strings["consumed_in_year_txt"] = gettext("usage (doses)");
     strings["consumed_in_year_tip"] = gettext("Total number of doses issued from national store.");
 
-    strings["annual_demand_txt"] = gettext("annual demand");
+    strings["annual_demand_txt"] = gettext("annual demand (doses)");
     strings["annual_demand_tip"] = gettext("Annual demand as estimated in UNICEF forecasts.");
 
-    strings["actual_cons_rate_txt"] = gettext("actual daily cons. rate");
+    strings["actual_cons_rate_txt"] = gettext("actual daily consumption rate");
     strings["actual_cons_rate_tip"] = gettext("Average daily consumption rate, based on total consumption during number of days included in stocklevel datapoints.");
 
     strings["three_by_year_txt"] = gettext("buffer stock level");
@@ -84,7 +85,7 @@ $(document).ready(function(){
     strings["nine_by_year_txt"] = gettext("overstock level");
     strings["nine_by_year_tip"] = gettext("Nine month overstock level, based on annual demand.");
 
-    strings["days_of_stock_data_txt"] = gettext("number of days");
+    strings["days_of_stock_data_txt"] = gettext("number of days with stocklevel information");
     strings["days_of_stock_data_tip"] = gettext("Number of days included between the first stock level datapoint of the year and the last stock level datapoint of the year");
 
     /*	set inputs to values of global variables */
@@ -97,6 +98,7 @@ $(document).ready(function(){
     (which is decided by django i18n based on
     browser's default lang or django cookie) */
     lang = $("#auth select").val();
+    update_abbrs();
 
     /*	update url hash, fetch chart & tables based on globals */
     update_url();
@@ -110,11 +112,19 @@ $(document).ready(function(){
 	update url hash, fetch new chart & tables */
     $("#auth select").change(function(){
 	lang = $("#auth select").val();
+	update_abbrs();
 	update_url();
         get_chart();
 	get_alerts();
 	get_stats();
     });
+
+    function update_abbrs(){
+	$("#vaccines label").each(function() {
+	    var to_use = $(this).attr(lang);
+	    $(this).text(to_use);
+	});
+    };
 
     /* 	whenever a plot option checkbox is clicked,
 	reset global options to currently checked
@@ -168,8 +178,11 @@ $(document).ready(function(){
 	and country flag */
     function get_chart(){
 	chart_opts = options.sort().join("");
-        chart_name = lang + "/" + country + "/" + group + "/" + chart_opts + ".png";
-        $("#chart").attr('src', "/charts/" + chart_name);
+
+	var path = lang + "/" + country + "/" + group + "/"
+	var filename = lang + "_" + country + "_" + group + "_" + chart_opts + ".png"
+	var chart_url = "https://s3.amazonaws.com/vaxtrack_charts/" + path + filename
+        $("#chart").attr('src', chart_url);
         $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
     };
 
@@ -211,7 +224,7 @@ $(document).ready(function(){
 			};
 
 			/* build first row of hist table */
-			var first_row = "<tr class='headings'><td class='note'><em>" + strings["historical_note_txt"] + "</em></td><td class='spark'></td>";
+			var first_row = "<tr class='headings'><td class='note'><em>" + strings["historical_note_txt"] + "</em></td><td class='spark'>" + strings["trends_txt"] + "</td>";
 			for (y in stats[s].years){
 				first_row = first_row + "<td>" + stats[s].years[y] + "</td>";
 			};
