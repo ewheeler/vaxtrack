@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-04-19 20:42+0000\n"
-"PO-Revision-Date: 2011-04-20 06:46\n"
+"PO-Revision-Date: 2011-04-26 09:29\n"
 "Last-Translator: Anthony Bellon <abellon@unicef.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -81,17 +81,19 @@ msgstr "inconnu(e)"
 
 #: models.py:549
 msgid "delay or reduce shipment"
-msgstr "retarder / diminuer la quantité d'une prochaine livraison"
+msgstr "retarder / diminuer le volume d'une prochaine livraison"
 
 #: models.py:550
-#, fuzzy
 msgid "order immediately, insufficient doses on upcoming deliveries"
 msgstr ""
+"Passer une commande au plus vite, le nombre total de doses des "
+"prochaines livraisons est insuffisant"
 
 #: models.py:551
-#, fuzzy
 msgid "order immediately, purchase forecasted delivery"
 msgstr ""
+"Passer une commande au plus vite (matérialiser la prochaine livraison "
+"prévue)"
 
 #: models.py:552
 msgid "order immediately, no doses on PO or forecasted in next 3 months"
@@ -104,9 +106,8 @@ msgid "delay shipment, excessive doses on upcoming deliveries"
 msgstr "Retarder la prochaine livraison (risque de surstockage)"
 
 #: models.py:554
-#, fuzzy
 msgid "delay order, delay purchase of forecasted delivery"
-msgstr "Afin délai, l'achat retard de livraison prévu"
+msgstr "Retarder la prochaine livraison prévue"
 
 #: models.py:555
 msgid "major difference between forecast and actual consumption rates"
@@ -123,9 +124,8 @@ msgid "Uploaded"
 msgstr "Mis en ligne"
 
 #: models.py:577
-#, fuzzy
 msgid "Stored Remotely"
-msgstr ""
+msgstr "Stockés à distance"
 
 #: models.py:578
 msgid "Queued"
@@ -137,7 +137,7 @@ msgstr "En cours de traitement"
 
 #: models.py:580
 msgid "Finished"
-msgstr "terminé"
+msgstr "Terminé"
 
 #: models.py:581
 msgid "Processing Error"
@@ -160,9 +160,8 @@ msgid "Local Document"
 msgstr "Document local"
 
 #: models.py:596
-#, fuzzy
 msgid "Remote Document"
-msgstr ""
+msgstr "Document stocké à distance"
 
 #: models.py:597
 #, fuzzy
@@ -170,32 +169,28 @@ msgid "Remote Processing Status"
 msgstr ""
 
 #: models.py:598
-#, fuzzy
 msgid "Processing Exception"
-msgstr ""
+msgstr "Traitement de l'exception en cours"
 
 #: models.py:600
 msgid "Date Uploaded"
 msgstr "Date de mise en ligne"
 
 #: models.py:601
-#, fuzzy
 msgid "Date Stored Remotely"
-msgstr ""
+msgstr "Date stockée à distance"
 
 #: models.py:602
 msgid "Date Queued"
 msgstr "Date en attente"
 
 #: models.py:603
-#, fuzzy
 msgid "Date Process Started"
-msgstr ""
+msgstr "Traitement de la date en cours"
 
 #: models.py:604
-#, fuzzy
 msgid "Date Process Completed"
-msgstr ""
+msgstr "Traitement de la date terminé"
 
 #: models.py:605
 #, fuzzy
@@ -220,13 +215,12 @@ msgid "%s's uploaded document."
 msgstr ""
 
 #: templates/index.html:5 templates/layout.html:51
-#, fuzzy
 msgid "Dashboard"
 msgstr "Tableau de bord"
 
 #: templates/index.html:19
 msgid "Chart options"
-msgstr "Options du visualisation"
+msgstr "Options de visualisation"
 
 #: templates/index.html:21
 msgid "Country"
@@ -241,55 +235,48 @@ msgid "Select an indicator"
 msgstr "Sélectionner un indicateur"
 
 #: templates/index.html:40
-#, fuzzy
 msgid "Show actual stock"
 msgstr "niveau de stock actuel"
 
 #: templates/index.html:42
-#, fuzzy
 msgid ""
 "Show 3 month buffer stock (minimum stock level) and 9 month overstock "
 "(maximum stock level)."
 msgstr ""
-"Voir la zone de tampon (3 mois de consomation) ainsi que la limite de\n"
-"\n"
-"Voir les 3 stock tampon mois (niveau de stock minimum) et 9 encombrent mois (niveau de stock maximum)."
+"Voir la zone de tampon (équivalent à 3 mois de consomation) ainsi que "
+"l'indicateur de surstockage (équivalent à 9 mois de consomation)"
 
 #: templates/index.html:42
-#, fuzzy
 msgid "Show buffer stock  &amp; overstock indicators"
-msgstr "indicateurs de stock tampon de Show &amp; encombrent"
+msgstr "Voir la zone de tampon ainsi que l'indicateur de surstockage"
 
 #: templates/index.html:44
-#, fuzzy
 msgid ""
 "Show forecasted stock level for the future based on planned deliveries "
 "from  UNICEF country office's annual forecasts."
 msgstr ""
-"Voir les prévisions du niveau des stocks pour l'avenir fondées sur les"
-" livraisons prévues à partir des prévisions annuelles des bureaux de "
-"pays de l'UNICEF."
+"Voir les prévisions du niveau des stocks basées sur les livraisons "
+"prévues à partir des prévisions annuelles remplies par le bureau-pays "
+"de l'UNICEF."
 
 #: templates/index.html:44
-#, fuzzy
 msgid "Show current forecasted orders (on forecast)"
-msgstr "stock théorique basé sur les prévisions"
+msgstr ""
+"stock théorique basé sur les commandes prévues (mais pas encore "
+"matérialisées)"
 
 #: templates/index.html:46
-#, fuzzy
 msgid ""
 "Show forecasted stock level for the future based on planned deliveries "
 "that are on purchase order (payment has been made, though delivery date"
 " may vary)."
 msgstr ""
-"Voir les prévisions du niveau des stocks pour l'avenir fondées sur les"
-" livraisons prévues qui sont sur le bon de commande (paiement a été "
-"fait, si la date de livraison peuvent varier)."
+"Voir les prévisions du niveau des stocks basées sur les livraisons "
+"prévues et matérialisée (dont le paiement a été effectué)"
 
 #: templates/index.html:46
-#, fuzzy
 msgid "Show current forecasted orders (on purchase)"
-msgstr "Afficher les commandes actuelles prévisions (à l'achat)"
+msgstr "Afficher les commandes actuelles (dont le paiement a été effectué)"
 
 #: templates/index.html:48
 #, fuzzy
@@ -304,9 +291,10 @@ msgstr ""
 "examiner les prévisions antérieures)."
 
 #: templates/index.html:48
-#, fuzzy
 msgid "Show original projected stock level (based on country office forecast)"
-msgstr "stock des prévisions fondées sur les prévisions"
+msgstr ""
+"Voir le niveau de stock théorique basé sur la prévision originelle du "
+"bureau-pays"
 
 #: templates/index.html:50
 #, fuzzy
@@ -338,9 +326,8 @@ msgid "Historical"
 msgstr "Historique"
 
 #: templates/layout.html:29
-#, fuzzy
 msgid "Go"
-msgstr "Go"
+msgstr "Valider"
 
 #: templates/layout.html:32
 msgid "Logged in as"
@@ -351,7 +338,6 @@ msgid "Logout"
 msgstr "Déconnexion"
 
 #: templates/layout.html:34
-#, fuzzy
 msgid "Welcome, please"
 msgstr "Bienvenue"
 
@@ -384,7 +370,6 @@ msgid "Upload data"
 msgstr "Mise en ligne de données"
 
 #: templates/layout.html:63
-#, fuzzy
 msgid "Copyright"
 msgstr "Copyright"
 
@@ -394,12 +379,11 @@ msgstr "Tous droits réservés"
 
 #: templates/layout.html:65
 msgid "software is available under"
-msgstr "logiciel disponible sous"
+msgstr "logiciel disponible:"
 
 #: templates/layout.html:66
-#, fuzzy
 msgid "the BSD license"
-msgstr "la licence BSD"
+msgstr "Licence BSD"
 
 #: templates/loggedout.html:8
 msgid "Thanks for visiting VisualVaccines!"
@@ -418,19 +402,20 @@ msgid "Log in"
 msgstr "Connectez-vous"
 
 #: templates/login.html:11 templates/register.html:11
-#, fuzzy
 msgid "Oops. Your username and password didn't match. Please try again."
 msgstr ""
+"Attention! Mot de passe ou nom d'utilisateur incorrect. Merci "
+"d'essayer à nouveau!"
 
 #: templates/login.html:15
-#, fuzzy
 msgid "Oops. You may not have permission to view the page you requested."
 msgstr ""
+"Attention! Vous n'avez peut-être pas la permission d'afficher la page "
+"desirée"
 
 #: templates/login.html:19
-#, fuzzy
 msgid "Please log in to VisualVaccines"
-msgstr ""
+msgstr "Merci de vous connecter à VisualVaccines"
 
 #: templates/register.html:4
 msgid "Register"
