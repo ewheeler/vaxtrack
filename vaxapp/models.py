@@ -484,7 +484,7 @@ class Dicty(models.Model):
 
     @property
     def as_dict(self):
-        return dict(((kv.key, kv.val) for kv in self.keyval_set.all()))
+        return dict(((kv.key, kv.val) for kv in self.keyval_set.all() if kv.val is not None))
 
 class KeyVal(models.Model):
     dicty = models.ForeignKey(Dicty)
