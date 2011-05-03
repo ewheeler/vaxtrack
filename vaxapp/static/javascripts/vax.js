@@ -9,9 +9,9 @@ $(document).ready(function(){
 
     if (document.location.hash == ""){
         /* default chart options, vax, and country */
-        options = new Array("B", "F", "P", "C", "U");
+        options = new Array("B", "F", "P");
         group = "bcg";
-	country = "ML";
+	country = "1312";
 	chart_name = "";
     } else {
 	update_from_hash();
@@ -179,11 +179,11 @@ $(document).ready(function(){
     function get_chart(){
 	chart_opts = options.sort().join("");
 
-	var path = lang + "/" + country + "/" + group + "/"
-	var filename = lang + "_" + country + "_" + group + "_" + chart_opts + ".png"
-	var chart_url = "https://s3.amazonaws.com/vaxtrack_charts/" + path + filename
+	var path = lang + "/" + country + "/" + group + "/";
+	var filename = lang + "_" + country + "_" + group + "_" + chart_opts + ".png";
+	var chart_url = "https://s3.amazonaws.com/vaxtrack_charts/" + path + filename;
         $("#chart").attr('src', chart_url);
-        $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
+        //$("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
     };
 
     /* 	fetch alerts for current country/vax and build table rows if needed */

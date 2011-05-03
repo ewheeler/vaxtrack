@@ -8,6 +8,7 @@ import hashlib
 from operator import attrgetter
 from operator import itemgetter
 import itertools
+import string
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -24,6 +25,12 @@ def _split_term(term):
         for char in ["_", "-", "+", "(", ")"]:
             term = term.replace(char, " ")
         return list(set(term.lower().split()))
+
+def letter_position(letter):
+    ''' Given a letter, returns the letter's position in the alphabet.'''
+    pos = string.uppercase.find(letter.upper()) + 1
+    if pos:
+        return pos
 
 class AltCountry(models.Model):
     country = models.ForeignKey("Country")
@@ -47,12 +54,19 @@ class Country(models.Model):
         verbose_name_plural = _("countries")
 
     @property
+    def anon(self):
+        ''' Pseudo-anonymized country code, with letters as position in alphabet. '''
+        return "".join([str(letter_position(l)).zfill(2) for l in self.iso2_code])
+
+    @property
     def en(self):
-        return self.name
+        #return self.name
+        return "Country " + self.anon
 
     @property
     def fr(self):
-        return self.name_fr
+        #return self.name_fr
+        return "Pays " + self.anon
 
     @classmethod
     def lookup(klass, term):

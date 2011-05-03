@@ -114,11 +114,12 @@ class Analysis(object):
 
         # configuration options
         self.save_chart = True
-        self.dump = True
+        self.dump = False
         self.upload_chart_to_s3 = True
         self.generate_all_charts = True
         self.lookahead = datetime.timedelta(90)
         self.cons_rate_diff_threshold = 0.25
+        self.anon = True
 
         # TODO XXX back to the present!
         #self.today = datetime.datetime.today().date()
@@ -526,8 +527,12 @@ class Analysis(object):
                         # TODO queue uploading with celery so uploading
                         # will not delay generation of next chart
                         try:
-                            s3_key = "%s_%s_%s_%s.png" % (lang, self.country_pk, self.group_slug, self.variant_str)
-                            s3_path = "%s/%s/%s/" % (lang, self.country_pk, self.group_slug)
+                            country_code = self.country_pk
+                            if self.anon:
+                                country_code = "".join([str(letter_position(l)).zfill(2) for l in self.country_pk])
+
+                            s3_key = "%s_%s_%s_%s.png" % (lang, country_code, self.group_slug, self.variant_str)
+                            s3_path = "%s/%s/%s/" % (lang, country_code, self.group_slug)
                             upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
                             print s3_key
                         except Exception, e:

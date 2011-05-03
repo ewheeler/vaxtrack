@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 import itertools
+import string
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
@@ -46,7 +47,10 @@ def index(req, country_pk=None):
 def alerts(req, country_pk, group_slug):
     if req.is_ajax():
         try:
-            countrystock = CountryStock.objects.filter(country=country_pk, group__slug=group_slug)
+            country_code = country_pk
+            if str(country_pk).isdigit():
+                country_code = string.uppercase[int(country_pk[:2]) -1] + string.uppercase[int(country_pk[2:]) -1]
+            countrystock = CountryStock.objects.filter(country=country_code, group__slug=group_slug)
             alerts = Alert.objects.filter(countrystock=countrystock)
             if len(alerts) == 0:
                 return HttpResponse([], 'application/javascript')
@@ -70,7 +74,10 @@ def add_sep(num, sep=','):
 def stats(req, country_pk, group_slug):
     if req.is_ajax():
         try:
-            countrystock = CountryStock.objects.filter(country=country_pk, group__slug=group_slug)
+            country_code = country_pk
+            if str(country_pk).isdigit():
+                country_code = string.uppercase[int(country_pk[:2]) -1] + string.uppercase[int(country_pk[2:]) -1]
+            countrystock = CountryStock.objects.filter(country=country_code, group__slug=group_slug)
             if countrystock.count() > 0:
                 css = countrystock[0].latest_stats
                 if not css.has_stock_data:
