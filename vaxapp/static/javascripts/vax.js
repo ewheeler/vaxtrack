@@ -239,8 +239,12 @@ $(document).ready(function(){
 				row = "<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + "</td>";
 				row = row + "<td class='spark' id='" + row_name + "'</td>";
 				for (y in stats[s].years){
-					row = row + "<td class='int data'>" + stats[s][row_name][y] + "</td>";
-					data.push(stats[s][row_name][y]);
+					if (y in stats[s][row_name]){
+					    row = row + "<td class='int data'>" + stats[s][row_name][y] + "</td>";
+					    data.push(stats[s][row_name][y]);
+					} else {
+					    row = row + "<td class='int data'></td>";
+					};
 				};
 				$("#hist > tbody:last").append(row + "</tr>");
 				if (row_name != 'actual_cons_rate' & row_name != 'days_of_stock_data'){
