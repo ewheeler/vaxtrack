@@ -6,10 +6,19 @@ $(document).ready(function(){
     var country;
     var chart_name;
     var lang;
+    var g;
+
+    /* array of all possible chart options, used to check for plot visibility */
+    var all_options = new Array("T", "N", "F", "P", "C", "U");
+    /* map of plot options to position in csv file -- and dygraph visibility settings */
+    var vis_map = {"T":1,"N":2, "F":3, "P":4, "C":5, "U":6};
+    /* array of visibility settings used while initializing dygraphs,
+        by default, show stock level, buffer stock, and overstock plots */
+    var vis_bools = new Array(true, true, true, false, false, false, false);
 
     if (document.location.hash == ""){
         /* default chart options, vax, and country */
-        options = new Array("B", "F", "P", "C", "U");
+        options = new Array("T", "N", "F", "P");
         group = "bcg";
 	country = "ML";
 	chart_name = "";
@@ -24,8 +33,11 @@ $(document).ready(function(){
 	country = hash_parts[2].replace(/[\#\-\!]/g,"");
 	group = hash_parts[3];
 	options = new Array();
-	for (i=0; i< hash_parts[4].length; i++){
+	/* clean slate of chart options with only stock levels visible */
+	vis_bools = new Array(true, false, false, false, false, false, false);
+	for ( var i=0; i< hash_parts[4].length; i++){
 	    options.push(hash_parts[4].charAt(i));
+	    vis_bools[vis_map[hash_parts[4].charAt(i)]] = true;
 	}
 	$("#plot_options :input").val(options);
         $("#checkbox-S").attr("checked", "checked");
@@ -136,7 +148,7 @@ $(document).ready(function(){
 	});
         $("#checkbox-S").attr("checked", "checked");
 	update_url();
-        get_chart();
+	set_vis();
     });
 
     /* 	whenever a vaccine radio button is clicked,
@@ -177,15 +189,67 @@ $(document).ready(function(){
     /* 	fetch url for appropriate chart (based on current globals)
 	and country flag */
     function get_chart(){
-	chart_opts = options.sort().join("");
-/*
-	var path = lang + "/" + country + "/" + group + "/"
-	var filename = lang + "_" + country + "_" + group + "_" + chart_opts + ".png"
-	var chart_url = "https://s3.amazonaws.com/vaxtrack_charts/" + path + filename
-        $("#chart").attr('src', chart_url);
-        $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
-*/
+	$("#chart").html('');
+	g = new Dygraph(document.getElementById("chart"),
+		    "/assets/csv/" + country + "_" + group + "_all.csv",
+		    {
+			rollPeriod: 1,
+			title: country + " " + group,
+			ylabel: 'Doses',
+			xlabel: 'Time',
+			axisLabelFontSize: 10,
+			labelsKMB: true,
+			stacked: true,
+			connectSeparatedPoints: true,
+			gridLineColor: '#eee',
+			visibility: vis_bools,
+			labels: [ "Date", "Actual stock", "Buffer stock", "Overstock", "Forcasted orders (on forcast)", "Forecasted orders (on purchase)", "CO forecast", "CO forecast w/ deliveries" ],
+			labelsSeparateLines: true,
+			legend: "always",
+			colors: ["blue", "red", "salmon", "purple", "cyan", "green", "orange"],
+			labelsDiv: document.getElementById("legend"),
+			labelsShowZeroValues: false,
+			"Actual stock": {
+			    stepPlot: true,
+			    strokeWidth: 2
+			},
+			"Buffer stock": {
+			    stepPlot: false,
+			    strokeWidth: 1
+			},
+			"Overstock": {
+			    stepPlot: false,
+			    strokeWidth: 1
+			},
+			"Forecasted orders (on forcast)": {
+			    stepPlot: false,
+			    strokeWidth: 2
+			},
+			"Forecasted orders (on purchase)": {
+			    stepPlot: false,
+			    strokeWidth: 2
+			},
+			"CO forecast": {
+			    stepPlot: false,
+			    strokeWidth: 2
+			},
+			"CO forecast w/ deliveries": {
+			    stepPlot: false,
+			    strokeWidth: 2
+			}
+		    }); // options
+        //`$("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
+    };
 
+    function set_vis(){
+	for (n in all_options){
+	    var opt = all_options[n]
+	    if ($.inArray(opt, options) != -1){
+		g.setVisibility(parseInt(vis_map[opt]),true);
+	    } else {
+		g.setVisibility(parseInt(vis_map[opt]),false);
+	    };
+	};
     };
 
     /* 	fetch alerts for current country/vax and build table rows if needed */
