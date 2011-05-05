@@ -50,7 +50,8 @@ def plot_one():
 def plot_all():
     begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
-        for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
+        #for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
+        for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
             analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
             print analysis.plot()
     end = datetime.datetime.now()
@@ -114,7 +115,7 @@ class Analysis(object):
 
         # configuration options
         self.save_chart = True
-        self.dump = False
+        self.dump = True
         self.upload_chart_to_s3 = True
         self.generate_all_charts = True
         self.lookahead = datetime.timedelta(90)
@@ -343,34 +344,66 @@ class Analysis(object):
 
         try:
             if self.dump:
-                filename = "%s_%s_stocks.csv" % (self.country_pk, self.group_slug)
+
+                sl = dict(zip(self.dates, self.levels))
+                ff = dict(zip(projected_ff_dates, projected_ff_levels))
+                fp = dict(zip(projected_fp_dates, projected_fp_levels))
+                co = dict(zip(projected_co_dates, projected_co_levels))
+                un = dict(zip(projected_un_dates, projected_un_levels))
+
+                all_years = set(self.f_years + self.s_years)
+                first_date = datetime.date(min(all_years), 1, 1)
+                last_date = datetime.date(max(all_years), 12, 31)
+                possible_days = last_date - first_date
+                one_day = datetime.timedelta(days=1)
+                day_pointer = first_date
+                time_series = list()
+                for day in range(possible_days.days):
+                    this_day = day_pointer
+                    if sl.has_key(this_day):
+                        td = this_day.isoformat()
+                        sto = sl[this_day]
+                        if self.three_by_year.has_key(this_day.year):
+                            tmo = self.three_by_year[this_day.year]
+                        else:
+                            tmo = ""
+                        if self.nine_by_year.has_key(this_day.year):
+                            nmo = self.nine_by_year[this_day.year]
+                        else:
+                            nmo = ""
+                        if ff.has_key(this_day):
+                            ffl = str(ff[this_day])
+                            if ffl == "0":
+                                ffl = ""
+                        else:
+                            ffl = ""
+                        if fp.has_key(this_day):
+                            fpl = str(fp[this_day])
+                            if fpl == "0":
+                                fpl = ""
+                        else:
+                            fpl = ""
+                        if co.has_key(this_day):
+                            col = str(co[this_day])
+                            if col == "0":
+                                col = ""
+                        else:
+                            col = ""
+                        if un.has_key(this_day):
+                            unl = str(un[this_day])
+                            if unl == "0":
+                                unl = ""
+                        else:
+                            unl = ""
+                        time_series.append([td, sto, tmo, nmo, ffl, fpl, col, unl])
+
+                    day_pointer = this_day + one_day
+
+                filename = "%s_%s_all.csv" % (self.country_pk, self.group_slug)
                 with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(self.dates, self.levels)))
-                filename = "%s_%s_3mobuffers.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(first_and_last_days, self.three_month_buffers)))
-                filename = "%s_%s_9mobuffers.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(first_and_last_days, self.nine_month_buffers)))
-                filename = "%s_%s_ff.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_ff_dates, projected_ff_levels)))
-                filename = "%s_%s_fp.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_fp_dates, projected_fp_levels)))
-                filename = "%s_%s_co.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_co_dates, projected_co_levels)))
-                filename = "%s_%s_un.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_un_dates, projected_un_levels)))
+                    csvwriter = csv.writer(f, delimiter=',')
+                    csvwriter.writerows(time_series)
+
                 return
         except Exception, e:
             print 'BANG dump'
