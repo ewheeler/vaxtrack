@@ -1,0 +1,200 @@
+{% extends "layout-split-2.html" %}
+{% block title %}
+    {% load i18n %}
+    {% trans "Enter data" %}
+{% endblock %}
+{% block stylesheets %}
+{{ block.super }}
+<link rel="stylesheet" href="/assets/css/slick/slick.grid.css" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="/assets/css/slick/jquery-ui-1.8.5.custom.css" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="/assets/css/slick/examples.css" type="text/css" media="screen" charset="utf-8" />
+{% endblock %}
+{% block right %}
+{% load i18n %}
+	<h3>{% trans "Enter data" %}</h3>
+        <div style="position:relative">
+		<div style="width:600px;">
+			<div id="myGrid" style="width:100%;height:400px;"></div>
+		</div>
+
+		<div class="options-panel">
+            <h2>Instructions:</h2>
+
+            <ul>
+                <li>Put in yr data</li>
+            </ul>
+		</div>
+
+        </div>
+
+		<script src="/assets/js/slick/firebugx.js"></script>
+		<script src="/assets/js/slick/jquery-1.4.3.min.js"></script>
+		<script src="/assets/js/slick/jquery-ui-1.8.5.custom.min.js"></script>
+		<script src="/assets/js/slick/jquery.event.drag-2.0.min.js"></script>
+        	<script src="/assets/js/slick/slick.core.js"></script>
+		<script src="/assets/js/slick/slick.autotooltips.js"></script>
+		<script src="/assets/js/slick/slick.cellrangedecorator.js"></script>
+		<script src="/assets/js/slick/slick.cellrangeselector.js"></script>
+		<script src="/assets/js/slick/slick.cellcopymanager.js"></script>
+		<script src="/assets/js/slick/slick.cellselectionmodel.js"></script>
+		<script src="/assets/js/slick/slick.editors.js"></script>
+		<script src="/assets/js/slick/slick.grid.js"></script>
+
+		<script>
+		var grid;
+		var data = [];
+        var options = {
+            editable: true,
+            enableAddRow: true,
+            enableCellNavigation: true,
+            asyncEditorLoading: false,
+            autoEdit: false
+        };
+
+	var columns = [{
+            id: "selector",
+            name: "",
+            field: "num",
+            width: 30
+        },
+	{   id: "date",
+	    name: "Date",
+	    editor: DateCellEditor,
+	    width: 80,
+	    field: "date"
+	},
+	{   id: "doses",
+	    name: "Doses",
+	    editor: IntegerCellEditor,
+	    width: 80,
+	    field: "doses"
+	},
+	{   id: "affiliation",
+	    name: "Affiliation",
+	    options: "{{ affiliations }}",
+	    editor: SelectCellEditor,
+	    width: 80,
+	    field: "affiliation"
+	},
+	{   id: "group",
+	    name: "Product group",
+	    options: "{{ groups }}",
+	    editor: SelectCellEditor,
+	    width: 80,
+	    field: "group"
+	},
+	{   id: "datatype",
+	    name: "Data type",
+	    options: "original country office forecast, national warehouse stock level, UNICEF delivery, Future delivery on forecast, Future delivery on purchase",
+	    editor: SelectCellEditor,
+	    width: 80,
+	    field: "datatype"
+	},
+	{   id: "country",
+	    name: "Country",
+	    options: "{{ countries }}",
+	    editor: SelectCellEditor,
+	    width: 80,
+	    field: "country"
+	},
+	{
+	    id: "product",
+	    name: "Product",
+	    editor: FormulaEditor,
+	    width: 80,
+	    field: "product"
+	}];
+
+
+        /***
+         * A proof-of-concept cell editor with Excel-like range selection and insertion.
+         */
+        function FormulaEditor(args) {
+            var _self = this;
+            var _editor = new TextCellEditor(args);
+            var _selector;
+
+            $.extend(this, _editor);
+
+            function init() {
+                // register a plugin to select a range and append it to the textbox
+                // since events are fired in reverse order (most recently added are executed first),
+                // this will override other plugins like moverows or selection model and will
+                // not require the grid to not be in the edit mode
+                _selector = new Slick.CellRangeSelector();
+                _selector.onCellRangeSelected.subscribe(_self.handleCellRangeSelected);
+                args.grid.registerPlugin(_selector);
+            }
+
+            this.destroy = function() {
+                _selector.onCellRangeSelected.unsubscribe(_self.handleCellRangeSelected);
+                grid.unregisterPlugin(_selector);
+                _editor.destroy();
+            };
+
+            this.handleCellRangeSelected = function(e, args) {
+                _editor.setValue(
+                        _editor.getValue() +
+                        grid.getColumns()[args.range.fromCell].name +
+                        args.range.fromRow +
+                        ":" +
+                        grid.getColumns()[args.range.toCell].name +
+                        args.range.toRow
+                        );
+            };
+
+
+            init();
+        }
+
+
+
+		$(function()
+		{
+			for (var i=0; i<10; i++) {
+				var d = (data[i] = {});
+                d["num"] = i + 1;
+			}
+
+			grid = new Slick.Grid("#myGrid", data, columns, options);
+
+            grid.setSelectionModel(new Slick.CellSelectionModel());
+            grid.registerPlugin(new Slick.AutoTooltips());
+
+            // set keyboard focus on the grid
+            grid.getCanvasNode().focus();
+
+            var copyManager = new Slick.CellCopyManager();
+            grid.registerPlugin(copyManager);
+
+            copyManager.onPasteCells.subscribe(function(e,args) {
+                if (args.from.length !== 1 || args.to.length !== 1) {
+                    throw "This implementation only supports single range copy and paste operations";
+                }
+
+                var from = args.from[0];
+                var to = args.to[0];
+                var val;
+                for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+                    for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                        if (i <= to.toRow - to.fromRow && j <= to.toCell - to.fromCell) {
+                            val = data[from.fromRow + i][columns[from.fromCell + j].field];
+                            data[to.fromRow + i][columns[to.fromCell + j].field] = val;
+                            grid.invalidateRow(to.fromRow + i);
+                        }
+                    }
+                }
+                grid.render();
+            });
+
+            grid.onAddNewRow.subscribe(function(e, args) {
+                var item = args.item;
+                var column = args.column;
+                grid.invalidateRow(data.length);
+                data.push(item);
+                grid.updateRowCount();
+                grid.render();
+            });
+		})
+		</script>
+{% endblock %}

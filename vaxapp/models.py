@@ -174,6 +174,10 @@ class VaccineGroup(models.Model):
     def __unicode__(self):
         return self.slug
 
+    @classmethod
+    def as_tuples(klass):
+        return [(g.slug, g.abbr_en + " (" + g.abbr_fr + ")") for g in klass.objects.all()]
+
     @property
     def en(self):
         return self.abbr_en

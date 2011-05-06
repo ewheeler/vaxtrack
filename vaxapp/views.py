@@ -7,8 +7,10 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import RequestContext
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.models import Group
 from django.core import serializers
 from django.utils import simplejson
+from django.forms.formsets import formset_factory
 
 from .models import *
 from .analysis import *
@@ -169,6 +171,16 @@ def upload(req):
             {"document_form": form,
             "tab": "upload"},\
             context_instance=RequestContext(req))
+
+def entry(req):
+    affiliations = ",".join(Group.objects.all().values_list('name', flat=True))
+    groups = ",".join(VaccineGroup.objects.all().values_list('abbr_en', flat=True))
+    countries = ",".join(Country.objects.all().values_list('printable_name', flat=True))
+    return render_to_response("enter.html",\
+        {'affiliations': affiliations,
+         'groups': groups,
+         'countries': countries},
+        context_instance=RequestContext(req))
 
 def get_chart(req, lang='en', country_pk=None, group_slug=None, chart_opts=""):
     path = "%s/%s/%s/" % (lang, country_pk, group_slug)
