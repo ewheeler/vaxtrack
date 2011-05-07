@@ -153,6 +153,14 @@ def sdb_get_all_cs():
     result = cs.select(query)
     return result
 
+def sdb_clear_all_cs():
+    sdb = boto.connect_sdb()
+    cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+    query = "SELECT * FROM `%s` WHERE `type`='CS'" % (SDB_DOMAIN_TO_USE)
+    result = cs.select(query)
+    for res in result:
+        res.delete()
+
 def sdb_clear_all_except_sl():
     sdb = boto.connect_sdb()
     cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
@@ -169,10 +177,13 @@ def sdb_clear_cf():
     for res in result:
         res.delete()
 
-def sdb_clear_allocations():
+def sdb_clear_allocations(year=None):
     sdb = boto.connect_sdb()
     cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
-    query = "SELECT * FROM `%s` WHERE `type`!='SL' AND `type`!='CF' AND `type`!='CS'" % (SDB_DOMAIN_TO_USE)
+    if year is None:
+        query = "SELECT * FROM `%s` WHERE `type`!='SL' AND `type`!='CF' AND `type`!='CS'" % (SDB_DOMAIN_TO_USE)
+    else:
+        query = "SELECT * FROM `%s` WHERE `year`='%s' AND `type`!='SL' AND `type`!='CF' AND `type`!='CS'" % (SDB_DOMAIN_TO_USE, year)
     result = cs.select(query)
     for res in result:
         res.delete()
@@ -271,6 +282,9 @@ def get_group_all_stocklevels_asc(country, group):
 
 def get_group_all_forecasts_asc(country, group):
     return sort_results_asc(decode_results(group_all_type(country, group, 'CF')), 'year')
+
+def get_group_all_fforecasts_asc(country, group):
+    return sort_results_asc(decode_results(group_all_type(country, group, 'FF')), 'year')
 
 def get_group_all_deliveries_for_type_asc(country, group, type):
     return sort_results_asc(decode_results(group_all_type(country, group, type)), 'date')

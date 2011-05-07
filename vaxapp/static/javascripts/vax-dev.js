@@ -209,6 +209,7 @@ $(document).ready(function(){
 			colors: ["blue", "red", "salmon", "purple", "cyan", "green", "orange"],
 			labelsDiv: document.getElementById("legend"),
 			labelsShowZeroValues: false,
+			stepPlot: true,
 			"Actual stock": {
 			    stepPlot: true,
 			    strokeWidth: 2

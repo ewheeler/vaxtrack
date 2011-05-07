@@ -413,13 +413,11 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                 amount = forecast_doses
                 if approx_date <= date.today():
                     # original CO forecast (CO)
-                    #allocation_type = 'CO'
-                    pass
+                    allocation_type = 'CO'
                 else:
                     # future delivery on forecast (FF)
                     allocation_type = 'FF'
-
-            if po_doses > 0:
+            elif po_doses > 0:
                 amount = po_doses
                 if approx_date <= date.today():
                     # unicef deliveries (UN)
@@ -428,13 +426,12 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                     # future delivery on PO (FP)
                     allocation_type = 'FP'
 
-            if co_forecast is not None:
-                amount = co_forecast
-                allocation_type = 'CO'
+            elif co_forecast is not None:
+                pass
+                #amount = co_forecast
+                #allocation_type = 'CO'
 
             if allocation_type is None:
-                #print 'unknown allocation_type!'
-                #print rd
                 continue
 
             # TODO save row number

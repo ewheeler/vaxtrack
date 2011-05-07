@@ -45,17 +45,18 @@ class StartupMiddlewareHack():
 
                 except KeyError:
                     # if vaccine or country lookup fails, move on
-                    print 'PROBLEM WITH COUNTRY STOCK'
-                    print 'MAKE SURE SDB DOMAIN SETTING IS CORRECT'
                     continue
 
-                # create countrystock if its not here locally
-                countrystock, created = CountryStock.objects.get_or_create(country=country, group=group)
-                if created:
-                    # save hash to local db so it will be found next time around
-                    countrystock.set_md5()
-                    print 'NEW COUNTRYSTOCK:'
-                    print countrystock
+                try:
+                    # create countrystock if its not here locally
+                    countrystock, created = CountryStock.objects.get_or_create(country=country, group=group)
+                    if created:
+                        # save hash to local db so it will be found next time around
+                        countrystock.set_md5()
+                        print 'NEW COUNTRYSTOCK:'
+                        print countrystock
+                except Exception, e:
+                    print e
 
         # finally, tell django not to use this 
         # middleware for any subsequent requests

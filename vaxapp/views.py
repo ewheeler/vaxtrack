@@ -36,7 +36,8 @@ def index(req, country_pk=None):
         countrystocks = CountryStock.objects.filter(country=country_pk)
     else:
         countrystocks = False
-    countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
+    countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+        
     countries = list(set([c.country for c in countrystocks]))
     groups = list(set([g.group for g in countrystocks]))
     return render_to_response("index.html",\
@@ -79,11 +80,14 @@ def stats(req, country_pk, group_slug):
             country_code = country_pk
             if str(country_pk).isdigit():
                 country_code = string.uppercase[int(country_pk[:2]) -1] + string.uppercase[int(country_pk[2:]) -1]
+                print country_code
             countrystock = CountryStock.objects.filter(country=country_code, group__slug=group_slug)
+            print countrystock
             if countrystock.count() > 0:
                 css = countrystock[0].latest_stats
-                if not css.has_stock_data:
-                    return HttpResponse([], 'application/javascript')
+                # XXX why isnt this working?
+                #if not css.has_stock_data:
+                #    return HttpResponse([], 'application/javascript')
                 # TODO this is insane
                 # instead of the fields, i'd like the properties that return
                 # a dict of the related obj rather than pks of related obj

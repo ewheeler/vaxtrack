@@ -445,7 +445,8 @@ class CountryStock(models.Model):
     @property
     def has_stock_data(self):
         if self.latest_stats is not None:
-            return self.latest_stats.has_stock_data
+            if self.latest_stats.has_stock_data is not None:
+                return self.latest_stats.has_stock_data
         else:
             sl_count = sdb_stocklevel_count(self.country.iso2_code, self.group.slug)
             if sl_count > 0:

@@ -62,7 +62,7 @@ def plot_all():
 
 def analyze_all():
     for country in ['ML', 'TD', 'SN']:
-        for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
+        for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
             analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
             print analysis.save_stats()
 
@@ -103,9 +103,7 @@ class Analysis(object):
 
         country = Country.objects.get(iso2_code=self.country_pk)
         group = VaccineGroup.objects.get(slug=self.group_slug)
-        self.cs = CountryStock.objects.get(country=country, group=group)
-        if self.cs is None:
-            return 'couldnt find countrystock'
+        self.cs, new_cs = CountryStock.objects.get_or_create(country=country, group=group)
 
         # loosely keep track of what we've done,
         # so we don't call save_stats before plotting
@@ -115,7 +113,7 @@ class Analysis(object):
 
         # configuration options
         self.save_chart = True
-        self.dump = True
+        self.dump = False
         self.upload_chart_to_s3 = True
         self.generate_all_charts = True
         self.lookahead = datetime.timedelta(90)
@@ -124,7 +122,7 @@ class Analysis(object):
 
         # TODO XXX back to the present!
         #self.today = datetime.datetime.today().date()
-        self.today = datetime.date(2010, 10, 1)
+        self.today = datetime.date(2011, 3, 31)
 
 
         try:
@@ -134,11 +132,14 @@ class Analysis(object):
             self.levels = Analysis.values_list(self.stocklevels, 'amount')
 
             self.forecasts = get_group_all_forecasts_asc(self.country_pk, self.group_slug)
+            self.fforecasts = get_group_all_fforecasts_asc(self.country_pk, self.group_slug)
 
             self.annual_demand = {}
             # get list of years we are dealing with
             self.f_years = list(set(Analysis.values_list(self.forecasts, 'year')))
             print self.f_years
+            self.ff_years = list(set(Analysis.values_list(self.fforecasts, 'year')))
+            print self.ff_years
             self.s_years = list(set(Analysis.values_list(self.stocklevels, 'year')))
             print self.s_years
             for year in self.f_years:
@@ -164,8 +165,8 @@ class Analysis(object):
             filtered_deliveries = get_group_all_deliveries_for_type_asc(self.country_pk, self.group_slug, delivery_type)
             #print 'deliveries:'
             #print len(filtered_deliveries)
-            if len(filtered_deliveries) == 0:
-                return [], []
+            #if len(filtered_deliveries) == 0:
+            #    return [], []
 
             def _est_daily_consumption_for_year(year):
                 ''' Return daily consumption based on estimated annual demand '''
@@ -173,6 +174,9 @@ class Analysis(object):
                     forecast = self.annual_demand[year]
                     return int(float(forecast)/float(365.0))
                 else:
+                    if (year - 1) in self.annual_demand:
+                        old = self.annual_demand[year-1]
+                        return int(float(old)/float(365.0))
                     return 0
 
             # timedelta representing a change of one day
@@ -188,9 +192,9 @@ class Analysis(object):
             #print days_to_plot
 
             # variables to keep track of running totals while we loop
+            annual_begin_levels = {}
             if begin_level is None:
                 if delivery_type in ["CO", "UN"]:
-                    annual_begin_levels = {}
                     for f in get_group_all_forecasts_asc(self.country_pk, self.group_slug):
                         if f['initial'] is not None:
                             annual_begin_levels.update({f['year']:f['initial']})
@@ -325,19 +329,19 @@ class Analysis(object):
             # constructing multiple figs
             if self.calc_forecast_projection and (len(self.stocklevels) > 0):
                 projected_ff_dates, projected_ff_levels = self._calc_stock_levels(\
-                    "FF", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
+                    "FF", self.stocklevels[-1]['date'], self.stocklevels[-1]['amount'])
 
             if self.calc_purchased_projection and (len(self.stocklevels) > 0):
                 projected_fp_dates, projected_fp_levels = self._calc_stock_levels(\
-                    "FP", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
+                    "FP", self.stocklevels[-1]['date'], self.stocklevels[-1]['amount'])
 
             if self.calc_theoretical_forecast and (len(self.stocklevels) > 0):
                 projected_co_dates, projected_co_levels = self._calc_stock_levels(\
-                    "CO", self.stocklevels[0]['date'])
+                    "CO", self.stocklevels[0]['date'], None, self.today)
 
             if self.calc_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
                 projected_un_dates, projected_un_levels = self._calc_stock_levels(\
-                    "UN", self.stocklevels[0]['date'])
+                    "UN", self.stocklevels[0]['date'], None, self.today)
         except Exception, e:
             print 'BANG calculations'
             print e
@@ -351,7 +355,7 @@ class Analysis(object):
                 co = dict(zip(projected_co_dates, projected_co_levels))
                 un = dict(zip(projected_un_dates, projected_un_levels))
 
-                all_years = set(self.f_years + self.s_years)
+                all_years = set(self.f_years + self.ff_years + self.s_years)
                 first_date = datetime.date(min(all_years), 1, 1)
                 last_date = datetime.date(max(all_years), 12, 31)
                 possible_days = last_date - first_date
@@ -360,42 +364,44 @@ class Analysis(object):
                 time_series = list()
                 for day in range(possible_days.days):
                     this_day = day_pointer
+                    td = this_day.isoformat()
                     if sl.has_key(this_day):
-                        td = this_day.isoformat()
                         sto = sl[this_day]
-                        if self.three_by_year.has_key(this_day.year):
-                            tmo = self.three_by_year[this_day.year]
-                        else:
-                            tmo = ""
-                        if self.nine_by_year.has_key(this_day.year):
-                            nmo = self.nine_by_year[this_day.year]
-                        else:
-                            nmo = ""
-                        if ff.has_key(this_day):
-                            ffl = str(ff[this_day])
-                            if ffl == "0":
-                                ffl = ""
-                        else:
+                    else:
+                        sto = ""
+                    if self.three_by_year.has_key(this_day.year):
+                        tmo = self.three_by_year[this_day.year]
+                    else:
+                        tmo = ""
+                    if self.nine_by_year.has_key(this_day.year):
+                        nmo = self.nine_by_year[this_day.year]
+                    else:
+                        nmo = ""
+                    if ff.has_key(this_day):
+                        ffl = str(ff[this_day])
+                        if ffl == "0":
                             ffl = ""
-                        if fp.has_key(this_day):
-                            fpl = str(fp[this_day])
-                            if fpl == "0":
-                                fpl = ""
-                        else:
+                    else:
+                        ffl = ""
+                    if fp.has_key(this_day):
+                        fpl = str(fp[this_day])
+                        if fpl == "0":
                             fpl = ""
-                        if co.has_key(this_day):
-                            col = str(co[this_day])
-                            if col == "0":
-                                col = ""
-                        else:
+                    else:
+                        fpl = ""
+                    if co.has_key(this_day):
+                        col = str(co[this_day])
+                        if col == "0":
                             col = ""
-                        if un.has_key(this_day):
-                            unl = str(un[this_day])
-                            if unl == "0":
-                                unl = ""
-                        else:
+                    else:
+                        col = ""
+                    if un.has_key(this_day):
+                        unl = str(un[this_day])
+                        if unl == "0":
                             unl = ""
-                        time_series.append([td, sto, tmo, nmo, ffl, fpl, col, unl])
+                    else:
+                        unl = ""
+                    time_series.append([td, sto, tmo, nmo, ffl, fpl, col, unl])
 
                     day_pointer = this_day + one_day
 
