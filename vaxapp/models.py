@@ -154,6 +154,16 @@ class Country(models.Model):
         return [(c.iso3_code,c.name) for c in klass.objects.all()]
 
     @classmethod
+    def as_tuples_en(klass):
+        ''' Returns a list of 2-tuples for choices field. '''
+        return [(c.anon,c.en) for c in klass.objects.all()]
+
+    @classmethod
+    def as_tuples_fr(klass):
+        ''' Returns a list of 2-tuples for choices field. '''
+        return [(c.anon,c.fr) for c in klass.objects.all()]
+
+    @classmethod
     def as_tuples_for_admin(klass):
         ''' Returns a list of 2-tuples for choices field. '''
         return [(c.iso3_code, c.iso3_code + " (" + c.name + ")") for c in klass.objects.all()]
@@ -180,11 +190,17 @@ class VaccineGroup(models.Model):
 
     @property
     def en(self):
-        return self.abbr_en
+        if self.abbr_en not in ["", " ", None]:
+            return self.abbr_en
+        else:
+            return unicode(self)
 
     @property
     def fr(self):
-        return self.abbr_fr
+        if self.abbr_fr not in ["", " ", None]:
+            return self.abbr_fr
+        else:
+            return self.en
 
     @classmethod
     def generate_slugs(klass):
@@ -234,13 +250,17 @@ class Vaccine(models.Model):
 
     @property
     def en(self):
-        if self.abbr_en is not None:
+        if self.abbr_en not in ["", " ", None]:
             return self.abbr_en
+        else:
+            return unicode(self)
 
     @property
     def fr(self):
-        if self.abbr_fr is not None:
+        if self.abbr_fr not in ["", " ", None]:
             return self.abbr_fr
+        else:
+            return self.en
 
     @classmethod
     def lookup_slug(klass, term):
@@ -663,3 +683,23 @@ class Document(models.Model):
             doc.save()
             return True
         return False
+
+class DataEntry(models.Model):
+    user = models.ForeignKey(User, verbose_name=_('user'))
+    status = models.CharField(_("Remote Processing Status"), default='U', max_length=1, choices=DOCUMENT_STATES)
+    exception = models.TextField(_("Processing Exception"), null=True, blank=True)
+
+    date_stored = models.DateTimeField(_("Date Stored Remotely"), null=True, blank=True)
+    date_queued = models.DateTimeField(_("Date Queued"), null=True, blank=True)
+    date_process_start = models.DateTimeField(_("Date Process Started"), null=True, blank=True)
+    date_process_end = models.DateTimeField(_("Date Process Completed"), null=True, blank=True)
+    date_exception = models.DateTimeField(_("Date of Exception"), null=True, blank=True)
+
+    date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow)
+
+    class Meta:
+        verbose_name = _('entry')
+        verbose_name_plural = _('entries')
+
+    def __unicode__(self):
+        return unicode(_("%s's entered data." % self.user))

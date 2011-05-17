@@ -1,0 +1,28 @@
+/* vim:tabstop=2:expandtab */
+
+#entry table tr td {
+  border: 1px solid #AAAAAA;
+}
+
+#addrow {
+  background-image: url("../icons/silk/add.png");
+  background-repeat: no-repeat;
+  background-position: -1 50%;
+  height: 2em;
+  width: 100%;
+  margin: 1em;
+}
+
+#addrow a{
+  padding-left: 2em;
+}
+
+#submit {
+  padding:1em;
+  margin-left: 1em;
+  margin-bottom: 1em;
+}
+
+.hidden{
+  display:none;
+}

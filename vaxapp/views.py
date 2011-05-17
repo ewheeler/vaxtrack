@@ -21,7 +21,8 @@ def index_dev(req, country_pk=None):
         countrystocks = CountryStock.objects.filter(country=country_pk)
     else:
         countrystocks = False
-    countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
+    #countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
+    countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
     countries = list(set([c.country for c in countrystocks]))
     groups = list(set([g.group for g in countrystocks]))
     return render_to_response("dev.html",\
@@ -80,9 +81,7 @@ def stats(req, country_pk, group_slug):
             country_code = country_pk
             if str(country_pk).isdigit():
                 country_code = string.uppercase[int(country_pk[:2]) -1] + string.uppercase[int(country_pk[2:]) -1]
-                print country_code
             countrystock = CountryStock.objects.filter(country=country_code, group__slug=group_slug)
-            print countrystock
             if countrystock.count() > 0:
                 css = countrystock[0].latest_stats
                 # XXX why isnt this working?
@@ -176,15 +175,26 @@ def upload(req):
             "tab": "upload"},\
             context_instance=RequestContext(req))
 
+@permission_required('vaxapp.can_upload')
 def entry(req):
-    affiliations = ",".join(Group.objects.all().values_list('name', flat=True))
-    groups = ",".join(VaccineGroup.objects.all().values_list('abbr_en', flat=True))
-    countries = ",".join(Country.objects.all().values_list('printable_name', flat=True))
-    return render_to_response("enter.html",\
-        {'affiliations': affiliations,
-         'groups': groups,
-         'countries': countries},
-        context_instance=RequestContext(req))
+    if req.method == 'POST':
+        entry_forms = [forms.EntryForm(request.POST, prefix=str(x)) for x in range(0,10)]
+        #if all((f.is_valid() for f in entry_forms)):
+        for entry_form in entry_forms:
+            if entry_form.is_valid():
+                f = entry_form.save(commit=False)
+                f.user = req.user
+                f.date_entered = datetime.datetime.utcnow()
+                f.save()
+                #process_file.delay(doc)
+                return HttpResponseRedirect('/')
+    else:
+        form = forms.EntryForm()
+        entry_forms = [forms.EntryForm(prefix=str(x)) for x in range(0,10)]
+    return render_to_response("entry.html",\
+            {"entry_forms": entry_forms,\
+            "tab": "entry"},\
+            context_instance=RequestContext(req))
 
 def get_chart(req, lang='en', country_pk=None, group_slug=None, chart_opts=""):
     path = "%s/%s/%s/" % (lang, country_pk, group_slug)

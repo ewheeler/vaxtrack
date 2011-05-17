@@ -51,6 +51,7 @@
 			<ul id=tabs>
 				<li{% ifequal tab "dashboard" %} class="active"{% endifequal %}><a href="/">{% trans "Dashboard" %}</a></li>
 				<li{% ifequal tab "upload" %} class="active"{% endifequal %}><a href="{% url upload %}">{% trans "Upload data" %}</a></li>
+				<li{% ifequal tab "entry" %} class="active"{% endifequal %}><a href="{% url entry %}">{% trans "Enter data" %}</a></li>
 			</ul>
 		</div>
 		<div id="inner">

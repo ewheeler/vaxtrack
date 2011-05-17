@@ -66,6 +66,8 @@ $(document).ready(function(){
     strings["analyzed_txt"] = gettext("analysis date");
     strings["analyzed_tip"] = gettext("Date statistical analysis was performed.");
 
+    strings["no_data_txt"] = gettext("no data");
+
     /* strings for hist jsi18n */
     strings["historical_note_txt"] = gettext("Note: first and last year totals may not reflect full 12 months");
     strings["trends_txt"] = gettext("Trend");
@@ -220,7 +222,11 @@ $(document).ready(function(){
 			var stat_rows = ['est_daily_cons', 'days_of_stock', 'percent_coverage', 'doses_delivered_this_year', 'doses_on_orders', 'reference_date', 'analyzed'];
 			for (row_index in stat_rows){
 				var row_name = stat_rows[row_index];
-				$("#stats > tbody:last").append("<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + ":</td><td class='data'>" + stats[s][row_name] + "</td></tr>");
+				var row_data = stats[s][row_name];
+				if (row_data == null){
+					row_data = strings["no_data_txt"];
+				};
+				$("#stats > tbody:last").append("<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + ":</td><td class='data'>" + row_data + "</td></tr>");
 			};
 
 			/* build first row of hist table */

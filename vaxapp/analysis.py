@@ -632,6 +632,17 @@ class Analysis(object):
 
             print self.actual_cons_rate
 
+            # "Query 2" Order Lead Time
+            # see if there are forecasted deliveries and/or purchased deliveries
+            # scheduled for the near future
+            print 'Query 2'
+            self.forecasted_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FF", self.today.year)
+            self.on_po_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FP", self.today.year)
+
+            self.upcoming_on_po = [d for d in self.on_po_this_year if ((d['date'] - self.today) <= self.lookahead)]
+            self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.on_po_this_year, 0)
+            self.upcoming_forecasted = [d for d in self.forecasted_this_year if ((d['date'] - self.today) <= self.lookahead)]
+
             if self.today.year not in self.f_years:
                 # if there is no forecast for the reference date's year,
                 # don't perform any of these queries
@@ -643,6 +654,7 @@ class Analysis(object):
                 return
             else:
                 self.has_stock_data = True
+
 
             # "Query 1" Forecast Accuracy
             # for this year, see how actual consumption rate compares to estimated daily rate
@@ -661,15 +673,6 @@ class Analysis(object):
                     alert.analyzed = datetime.datetime.now()
                     alert.save()
 
-            # "Query 2" Order Lead Time
-            # see if there are forecasted deliveries and/or purchased deliveries
-            # scheduled for the near future
-            print 'Query 2'
-            self.forecasted_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FF", self.today.year)
-            self.on_po_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FP", self.today.year)
-
-            self.upcoming_on_po = [d for d in self.on_po_this_year if ((d['date'] - self.today) <= self.lookahead)]
-            self.upcoming_forecasted = [d for d in self.forecasted_this_year if ((d['date'] - self.today) <= self.lookahead)]
 
             # "Query 3" Stock Management
             # see how many months worth of supply are in stock
@@ -702,7 +705,7 @@ class Analysis(object):
                 self.deliveries_this_year = get_group_type_for_year(self.country_pk, self.group_slug, "UN", self.today.year)
 
                 self.doses_delivered_this_year = reduce(lambda s,d: s + d['amount'], self.deliveries_this_year, 0)
-                self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.upcoming_on_po, 0)
+                #self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.upcoming_on_po, 0)
 
                 self.demand_for_period = self.lookahead.days * self.est_daily_cons
 

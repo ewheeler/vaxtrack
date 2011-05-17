@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% block title %}
+    {% load i18n %}
+    {% trans "Enter data" %}
+{% endblock %}
+
+{% block stylesheets %}
+{{ block.super }}
+<link type="text/css" rel="stylesheet" href="/assets/css/forms.css" />
+{% endblock %}
+
+{% block javascripts %}
+{{ block.super }}
+<script src="/assets/js/forms.js"></script>
+{% endblock %}
+
+{% block content %}
+{% load i18n %}
+{% load getattribute %}
+
+<div class="module">
+<h3>{% trans "Enter data" %}</h3>
+    <form id="entry" method="post" action="{% url entry %}">
+    {# based on http://djangosnippets.org/snippets/1442/ #}
+    <table id="formset" class="form">
+    {% for form in entry_forms %}
+	{% if forloop.first %}
+	<thead><tr>
+	    {% for field in form.visible_fields %}
+	    <th>{{ field.label|capfirst }}</th>
+	    {% endfor %}
+	</tr></thead>
+	{% endif %}
+
+	{% ifequal forloop.counter 1 %}
+		<tr class="{% cycle row1,row2 %}">
+	{% else %}
+		<tr class="{% cycle row1,row2 %} hidden" id="row-{{ forloop.counter }}">
+	{% endifequal %}
+
+	{% for field in form.visible_fields %}
+	    <td>
+	    {# Include the hidden fields in the form #}
+	    {% if forloop.first %}
+		{% for hidden in form.hidden_fields %}
+			{{ hidden }}
+		{% endfor %}
+	    {% endif %}
+	    {{ field.errors.as_ul }}
+	    {{ field }}
+	    </td>
+	{% endfor %}
+	</tr>
+    {% endfor %}
+    </table>
+	{% csrf_token %}
+	<div id="controls">
+	<div id="addrow"><a href="#">Click to add another row of data</a></div>
+        <input id="submit" type="submit" value="{% trans "submit" %}" />
+	</div>
+    </form>
+ 
+</div>
+{% endblock %}
