@@ -48,6 +48,15 @@ def index(req, country_pk=None):
             "tab": "dashboard"},\
             context_instance=RequestContext(req))
 
+def get_data(req, country_pk, group_slug, sit_year, sit_month, sit_day):
+    print "DATA"
+    if req.is_ajax():
+        data_url_path = "https://s3.amazonaws.com/vaxtrack_csv/" + country_pk + "/" + group_slug + "/" + sit_year + "/" + sit_month + "/"
+        data_url_file = country_pk + "_" + group_slug + "_" + sit_year + "_" + sit_month + "_" + sit_day + ".csv"
+        data_url = data_url_path + data_url_file
+        print data_url
+        return HttpResponseRedirect(data_url)
+
 def alerts(req, country_pk, group_slug):
     if req.is_ajax():
         try:

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
+
+import os
+import errno
 import csv
 import datetime
 import calendar
@@ -35,11 +38,11 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-def plot_one():
+def plot_one(sit_year=2011, sit_month=3, sit_day=31):
     begin = datetime.datetime.now()
     for country in ['ML']:
         for v in ['opv']:
-            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
             print analysis.plot()
     end = datetime.datetime.now()
     delta = end - begin
@@ -47,13 +50,28 @@ def plot_one():
     print end
     print delta
 
-def plot_all():
+def plot_all(sit_year=2011, sit_month=3, sit_day=31):
     begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
         #for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
         for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
-            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
             print analysis.plot()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
+
+def plot_historical():
+    begin = datetime.datetime.now()
+    for country in ['ML', 'TD', 'SN']:
+        for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
+            for y in [2007,2008,2009,2010,2011]:
+                for m in range(13)[1:]:
+                    for d in [1,15]:
+                        analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=y, sit_month=m, sit_day=d)
+                        print analysis.plot()
     end = datetime.datetime.now()
     delta = end - begin
     print begin
@@ -84,7 +102,7 @@ class Analysis(object):
         return matches
 
 
-    def __init__(self, country_pk=None, group_slug=None, vaccine_abbr=None, lang=None):
+    def __init__(self, country_pk=None, group_slug=None, vaccine_abbr=None, lang=None, sit_year=None, sit_month=None, sit_day=None):
         self.country_pk = country_pk
         self.vaccine_abbr = vaccine_abbr
         self.group_slug = group_slug
@@ -113,7 +131,11 @@ class Analysis(object):
 
         # configuration options
         self.save_chart = True
-        self.dump = False
+
+        self.dump = True
+        self.dump_column_names = False
+        self.upload_csv_to_s3 = False
+
         self.upload_chart_to_s3 = True
         self.generate_all_charts = True
         self.lookahead = datetime.timedelta(90)
@@ -122,11 +144,15 @@ class Analysis(object):
 
         # TODO XXX back to the present!
         #self.today = datetime.datetime.today().date()
-        self.today = datetime.date(2011, 3, 31)
+        if sit_year and sit_month and sit_day:
+            self.today = datetime.date(sit_year, sit_month, sit_day)
+        else:
+            self.today = datetime.date(2011, 3, 31)
 
 
         try:
-            self.stocklevels = get_group_all_stocklevels_asc(self.country_pk, self.group_slug)
+            # fetch all stocklevels up to 'today'
+            self.stocklevels = [s for s in get_group_all_stocklevels_asc(self.country_pk, self.group_slug) if s['date'] < self.today]
 
             self.dates = Analysis.values_list(self.stocklevels, 'date')
             self.levels = Analysis.values_list(self.stocklevels, 'amount')
@@ -327,18 +353,26 @@ class Analysis(object):
             # perform any required calculations before beginning fig
             # construction, so they won't have to be repeated when
             # constructing multiple figs
+            projected_ff_dates = []
+            projected_ff_levels = []
             if self.calc_forecast_projection and (len(self.stocklevels) > 0):
                 projected_ff_dates, projected_ff_levels = self._calc_stock_levels(\
                     "FF", self.stocklevels[-1]['date'], self.stocklevels[-1]['amount'])
 
+            projected_fp_dates = []
+            projected_fp_levels = []
             if self.calc_purchased_projection and (len(self.stocklevels) > 0):
                 projected_fp_dates, projected_fp_levels = self._calc_stock_levels(\
                     "FP", self.stocklevels[-1]['date'], self.stocklevels[-1]['amount'])
 
+            projected_co_dates = []
+            projected_co_levels = []
             if self.calc_theoretical_forecast and (len(self.stocklevels) > 0):
                 projected_co_dates, projected_co_levels = self._calc_stock_levels(\
                     "CO", self.stocklevels[0]['date'], None, self.today)
 
+            projected_un_dates = []
+            projected_un_levels = []
             if self.calc_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
                 projected_un_dates, projected_un_levels = self._calc_stock_levels(\
                     "UN", self.stocklevels[0]['date'], None, self.today)
@@ -357,11 +391,13 @@ class Analysis(object):
 
                 all_years = set(self.f_years + self.ff_years + self.s_years)
                 first_date = datetime.date(min(all_years), 1, 1)
-                last_date = datetime.date(max(all_years), 12, 31)
+                last_date = datetime.date(self.today.year, 12, 31)
                 possible_days = last_date - first_date
                 one_day = datetime.timedelta(days=1)
                 day_pointer = first_date
                 time_series = list()
+                if self.dump_column_names:
+                    time_series.append(["date", "actual stock level", "3 month buffer stock level", "9 month overstock level", "future delivery on forecast", "future delivery on purchase", "original country office forecast", "unicef delivery"])
                 for day in range(possible_days.days):
                     this_day = day_pointer
                     td = this_day.isoformat()
@@ -401,14 +437,42 @@ class Analysis(object):
                             unl = ""
                     else:
                         unl = ""
+                    # date, stocklevel, 3mo buffer, 9mo overstock, future on forecast, future on po, orig country forecast, unicef delivery
                     time_series.append([td, sto, tmo, nmo, ffl, fpl, col, unl])
 
                     day_pointer = this_day + one_day
 
-                filename = "%s_%s_all.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
+                #file_name = "/tmp/%s_%s_all.csv" % (self.country_pk, self.group_slug)
+                file_path = "/home/ubuntu/vax/vaxapp/static/csvs/%s/%s/%s/" % (self.country_pk, self.group_slug, self.today.year)
+                file_name = "%s_%s_%s_%s_%s.csv" % (self.country_pk, self.group_slug, self.today.year, self.today.month, self.today.day)
+                local_file = file_path + file_name
+                try:
+                    os.makedirs(file_path)
+                except OSError, e:
+                    # don't raise if the path already exists,
+                    # only if there is another error (permission, etc)
+                    if e.errno != errno.EEXIST:
+                        raise
+
+                with open(local_file, 'wb') as f:
                     csvwriter = csv.writer(f, delimiter=',')
                     csvwriter.writerows(time_series)
+
+                if self.upload_csv_to_s3:
+                    # TODO queue uploading with celery so uploading
+                    # will not delay generation of next csv
+                    try:
+                        country_code = self.country_pk
+                        if self.anon:
+                            country_code = "".join([str(letter_position(l)).zfill(2) for l in self.country_pk])
+
+                        s3_key = "%s_%s_%s_%s_%s.csv" % (country_code, self.group_slug, self.today.year, self.today.month, self.today.day)
+                        s3_path = "%s/%s/%s/" % (country_code, self.group_slug, self.today.year)
+                        upload_file(filename, 'vaxtrack_csv', s3_path + s3_key, True)
+                        print s3_key
+                    except Exception, e:
+                        print 'ERROR UPLOADING'
+                        print e
 
                 return
         except Exception, e:

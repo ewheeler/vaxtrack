@@ -6,7 +6,15 @@ $(document).ready(function(){
     var country;
     var chart_name;
     var lang;
+
+    // graph
     var g;
+
+    var data_url;
+    var data;
+    var sit_year = 2011;
+    var sit_month = 3;
+    var sit_day = 15;
 
     /* array of all possible chart options, used to check for plot visibility */
     var all_options = new Array("T", "N", "F", "P", "C", "U");
@@ -14,7 +22,7 @@ $(document).ready(function(){
     var vis_map = {"T":1,"N":2, "F":3, "P":4, "C":5, "U":6};
     /* array of visibility settings used while initializing dygraphs,
         by default, show stock level, buffer stock, and overstock plots */
-    var vis_bools = new Array(true, true, true, false, false, false, false);
+    var vis_bools = new Array(true, true, true, true, true, false, false);
 
     if (document.location.hash == ""){
         /* default chart options, vax, and country */
@@ -22,6 +30,8 @@ $(document).ready(function(){
         group = "bcg";
 	country = "ML";
 	chart_name = "";
+	//data_url = "/csv/1312/opv/2011/3/31/";
+	data_url = "/assets/csvs/ML/opv/2011/ML_bcg_2011_3_15.csv";
     } else {
 	update_from_hash();
     };
@@ -45,6 +55,9 @@ $(document).ready(function(){
 	$("#vaccines :input").filter("[value=" + group + "]").attr("checked", "checked");
 	$("#country").val(country);
 	$("#auth select").val(lang);
+	$("#sit_year").val(sit_year);
+	$("#sit_month").val(sit_month);
+	$("#sit_day").val(sit_day);
     };
 
     /* 	whenever url hash is changed, update global variables
@@ -73,7 +86,7 @@ $(document).ready(function(){
     strings["doses_on_orders_tip"] = gettext("Total number of doses to be delivered on any purchased orders.");
 
     strings["reference_date_txt"] = gettext("situation as of");
-    strings["reference_date_tip"] = gettext("Reference date that is the basis for chart, alerts, and statistical analysis.");
+    strings["reference_date_tip"] = gettext("Reference date that is the basis for alerts and statistical analysis.");
 
     strings["analyzed_txt"] = gettext("analysis date");
     strings["analyzed_tip"] = gettext("Date statistical analysis was performed.");
@@ -179,6 +192,19 @@ $(document).ready(function(){
 	get_stats();
     });
 
+    $("#sit_year").change(function(){
+	sit_year= $(this).val();
+	get_chart();
+    });
+    $("#sit_month").change(function(){
+	sit_month = $(this).val();
+	get_chart();
+    });
+    $("#sit_day").change(function(){
+	sit_day= $(this).val();
+	get_chart();
+    });
+
 
     /*	alter url hash to reflect current values of global variables */
     function update_url(){
@@ -192,8 +218,15 @@ $(document).ready(function(){
 	and country flag */
     function get_chart(){
 	$("#chart").html('');
+	//data_url = "/csv/" + country + "/" + group + "/" + sit_year + "/" + sit_month + "/" + sit_day;
+	//data_url = "/assets/csv/" + country + "_" + group + "_all.csv";
+	data_path = "/assets/csv/" + country + "/" + group + "/" + sit_year + "/";
+	data_file = country + "_" + group + "_" +  sit_year + "_" + sit_month + "_" + sit_day + ".csv";
+	//data_url = "/assets/csv/" + country + "_" + group + "_all.csv";
+	data_url = data_path + data_file
+
 	g = new Dygraph(document.getElementById("chart"),
-		    "/assets/csv/" + country + "_" + group + "_all.csv",
+		    data_url,
 		    {
 			rollPeriod: 1,
 			title: country + " " + group,
@@ -242,6 +275,7 @@ $(document).ready(function(){
 			}
 		    }); // options
         //`$("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
+	$("#download a").attr('href', data_url);
     };
 
     function set_vis(){

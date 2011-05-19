@@ -244,3 +244,21 @@ div.module div.toolbar {
     padding-left: 0.2em;
     vertical-align: middle;
 }
+
+#download {
+  background-image: url("../icons/silk/page_excel.png");
+  background-repeat: no-repeat;
+  background-position: -1 50%;
+  height: 2em;
+  width: 100%;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 1em;
+  vertical-align: bottom;
+  font-size: 75%;
+}
+
+#download a{
+  padding-left: 2em;
+}
+

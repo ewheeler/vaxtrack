@@ -52,6 +52,38 @@
                 <input type="checkbox" id="checkbox-U" value="U" checked="checked" />
                 <label for="checkbox-U" class='tipoff' title="{% trans "Show projected stock level for past and future based on planned deliveries adjusted to include actual deliveries to date (theoretical, intended as tool to examine past forecasting)."%}">{% trans "Show original projected stock level (based on forecast and deliveries)" %}</label><br />
             </form>
+
+    	    <div id="download"><a href="#">{% trans "Download data for this chart"%}</a></div>
+
+            <h5>{% trans "Situation as of" %}</h5>
+            <form id="situation" action="">
+                <select id="sit_year">
+                <option value="2011">2011</option>
+                <option value="2010">2010</option>
+                <option value="2009">2009</option>
+                <option value="2008">2008</option>
+                <option value="2007">2007</option>
+                </select>
+                <select id="sit_month">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                </select>
+                <select id="sit_day">
+                <option value="1">1</option>
+                <option value="15">15</option>
+                </select>
+                <img id="flag" src="">
+            </form>
         </div>
     </div>
     {% endif %}
