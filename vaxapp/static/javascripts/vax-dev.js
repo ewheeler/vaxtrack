@@ -28,10 +28,10 @@ $(document).ready(function(){
         /* default chart options, vax, and country */
         options = new Array("T", "N", "F", "P");
         group = "bcg";
-	country = "ML";
+	country = "1312";
 	chart_name = "";
 	//data_url = "/csv/1312/opv/2011/3/31/";
-	data_url = "/assets/csvs/ML/opv/2011/ML_bcg_2011_3_15.csv";
+	data_url = "/assets/csvs/1312/opv/2011/1312_bcg_2011_3_15.csv";
     } else {
 	update_from_hash();
     };
@@ -229,7 +229,7 @@ $(document).ready(function(){
 		    data_url,
 		    {
 			rollPeriod: 1,
-			title: country + " " + group,
+			title: country + " " + group.toUpperCase(),
 			ylabel: 'Doses',
 			yValueFormatter: function(x) {
 				var shift = Math.pow(10, 5)

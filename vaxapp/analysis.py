@@ -38,7 +38,7 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-def plot_one(sit_year=2011, sit_month=3, sit_day=31):
+def plot_one(sit_year=2011, sit_month=4, sit_day=1):
     begin = datetime.datetime.now()
     for country in ['ML']:
         for v in ['opv']:
@@ -50,7 +50,7 @@ def plot_one(sit_year=2011, sit_month=3, sit_day=31):
     print end
     print delta
 
-def plot_all(sit_year=2011, sit_month=3, sit_day=31):
+def plot_all(sit_year=2011, sit_month=4, sit_day=1):
     begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
         #for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
@@ -79,7 +79,7 @@ def plot_historical():
     print delta
 
 
-def analyze_all(sit_year=2011, sit_month=3, sit_day=31):
+def analyze_all(sit_year=2011, sit_month=4, sit_day=1):
     begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
         #for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
@@ -451,8 +451,11 @@ class Analysis(object):
                     day_pointer = this_day + one_day
 
                 #file_name = "/tmp/%s_%s_all.csv" % (self.country_pk, self.group_slug)
-                file_path = "/home/ubuntu/vax/vaxapp/static/csvs/%s/%s/%s/" % (self.country_pk, self.group_slug, self.today.year)
-                file_name = "%s_%s_%s_%s_%s.csv" % (self.country_pk, self.group_slug, self.today.year, self.today.month, self.today.day)
+                country_code = self.country_pk
+                if self.anon:
+                    country_code = "".join([str(letter_position(l)).zfill(2) for l in self.country_pk])
+                file_path = "/home/ubuntu/vax/vaxapp/static/csvs/%s/%s/%s/" % (country_code, self.group_slug, self.today.year)
+                file_name = "%s_%s_%s_%s_%s.csv" % (country_code, self.group_slug, self.today.year, self.today.month, self.today.day)
                 local_file = file_path + file_name
                 try:
                     os.makedirs(file_path)
@@ -788,8 +791,8 @@ class Analysis(object):
                 print '%s percent coverage' % str(self.percent_coverage)
 
             else:
-                self.analyzed = True
-                return
+                self.percent_coverage = 0
+                self.demand_for_period = 0
 
             # check if there is insufficient stock (less than three months' worth)
             if self.days_of_stock <= 90:

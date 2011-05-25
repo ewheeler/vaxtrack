@@ -19,7 +19,7 @@ from decimal import Decimal as D
 
 from vaxapp.models import *
 
-SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'mangocountrystocks')
+SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'papayacountrystocks')
 
 # a few helper functions
 def day_of_year_to_date(year, day_of_year):
@@ -90,8 +90,8 @@ def reconcile_vaccine_interactively(term, country_pk):
             if choice not in [None, "", " "]:
                 choice_num = int(choice)
                 vax = matches[choice_num]
-                #alt = AltVaccine(vaccine=vax, alternate=term)
-                #alt.save()
+                alt = AltVaccine(vaccine=vax, alternate=term)
+                alt.save()
                 return vax
             else:
                 return None
@@ -252,6 +252,7 @@ def import_who(file=None):
                         item.add_value("date", str(day))
                         item.add_value("year", str(year))
                         item.add_value("amount", str(amount))
+                        item.add_value("activity", "unknown")
                         item.save()
                         print item
                     except Exception, e:
@@ -964,8 +965,8 @@ def import_unicef(file=""):
         if year is None:
             print 'no year!'
         if year is not None:
-            #sdb = boto.connect_sdb()
-            #domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
+            sdb = boto.connect_sdb()
+            domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
 
             try:
                 if forecast_doses > 0:
@@ -1011,21 +1012,23 @@ def import_unicef(file=""):
 
             # TODO save row number
             try:
-                '''
                 item_name = hashlib.md5()
                 item_name.update(str(country.iso2_code))
                 item_name.update(str(vax_slug))
                 item_name.update(str(vax_group))
                 item_name.update(allocation_type)
-                item_name.update(str(approx_date))
+                if allocation_type != 'CF':
+                    item_name.update(str(approx_date))
                 item_name.update(str(amount))
+                item_name.update(str(activity))
 
                 item = domain.new_item(item_name.hexdigest())
                 item.add_value("country", str(country.iso2_code))
                 item.add_value("product", str(vax_slug))
                 item.add_value("group", str(vax_group))
                 item.add_value("type", allocation_type)
-                item.add_value("date", str(approx_date))
+                if allocation_type != 'CF':
+                    item.add_value("date", str(approx_date))
                 item.add_value("year", str(year))
                 item.add_value("amount", str(amount))
                 item.add_value("activity", str(activity))
@@ -1047,11 +1050,11 @@ def import_unicef(file=""):
                 if allocation_type == 'CF':
                     item['initial'] = str(init_quant)
                 print item
+                '''
             except Exception, e:
                 print 'error creating stock level'
                 print e
                 import ipdb;ipdb.set_trace()
-            '''
             try:
                 cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
                 cs_item = domain.new_item(cs_item_name)
@@ -1067,7 +1070,6 @@ def import_unicef(file=""):
                 print 'error creating countrystock item'
                 print e
                 import ipdb;ipdb.set_trace()
-            '''
     print set(products)
     print set(unmatched_products)
     print set(matched_groups)
