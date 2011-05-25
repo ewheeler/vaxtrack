@@ -78,11 +78,19 @@ def plot_historical():
     print end
     print delta
 
-def analyze_all():
+
+def analyze_all(sit_year=2011, sit_month=3, sit_day=31):
+    begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
+        #for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
         for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
-            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
             print analysis.save_stats()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
 
 class Analysis(object):
     # helper methods
@@ -147,7 +155,7 @@ class Analysis(object):
         if sit_year and sit_month and sit_day:
             self.today = datetime.date(sit_year, sit_month, sit_day)
         else:
-            self.today = datetime.date(2011, 3, 31)
+            self.today = datetime.date(2011, 4, 1)
 
 
         try:
@@ -222,7 +230,7 @@ class Analysis(object):
             if begin_level is None:
                 if delivery_type in ["CO", "UN"]:
                     for f in get_group_all_forecasts_asc(self.country_pk, self.group_slug):
-                        if f['initial'] is not None:
+                        if f['initial'] not in [0, '0', '', ' ', None]:
                             annual_begin_levels.update({f['year']:f['initial']})
             if begin_level is not None:
                 est_stock_level = begin_level
@@ -778,6 +786,10 @@ class Analysis(object):
                 print 'Query 5'
                 self.percent_coverage = float(self.first_level_this_year + self.doses_delivered_this_year)/float(self.annual_demand[self.today.year])
                 print '%s percent coverage' % str(self.percent_coverage)
+
+            else:
+                self.analyzed = True
+                return
 
             # check if there is insufficient stock (less than three months' worth)
             if self.days_of_stock <= 90:

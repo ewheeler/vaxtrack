@@ -10,7 +10,6 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import Group
 from django.core import serializers
 from django.utils import simplejson
-from django.forms.formsets import formset_factory
 
 from .models import *
 from .analysis import *

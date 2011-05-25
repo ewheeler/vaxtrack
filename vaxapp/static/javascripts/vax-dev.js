@@ -13,8 +13,8 @@ $(document).ready(function(){
     var data_url;
     var data;
     var sit_year = 2011;
-    var sit_month = 3;
-    var sit_day = 15;
+    var sit_month = 4;
+    var sit_day = 1;
 
     /* array of all possible chart options, used to check for plot visibility */
     var all_options = new Array("T", "N", "F", "P", "C", "U");
@@ -231,6 +231,10 @@ $(document).ready(function(){
 			rollPeriod: 1,
 			title: country + " " + group,
 			ylabel: 'Doses',
+			yValueFormatter: function(x) {
+				var shift = Math.pow(10, 5)
+				return Math.round(x * shift) / shift
+			},
 			xlabel: 'Time',
 			axisLabelFontSize: 10,
 			labelsKMB: true,

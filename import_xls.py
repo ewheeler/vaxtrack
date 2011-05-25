@@ -371,6 +371,7 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
         if vax_slug not in products:
             products.append(vax_slug)
 
+        activity = rd['Type of Activity']
         allocation_type = None
 
         try:
@@ -452,6 +453,7 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
                 item.add_value("date", str(approx_date))
                 item.add_value("year", str(year))
                 item.add_value("amount", str(amount))
+                item.add_value("activity", str(activity))
                 item.save()
                 print item
             except Exception, e:
@@ -494,8 +496,9 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
     sheet = None
     if 'allocations' in sheets:
         sheet = book.sheet_by_name('allocations')
-
-    if sheet is None:
+    elif 'Allocations' in sheets:
+        sheet = book.sheet_by_name('Allocations')
+    else:
         return "oops. expecting sheet named 'allocations'"
 
     column_names = sheet.row_values(0)
@@ -561,6 +564,7 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
         vax_group = vaccine.group.slug
         allocation_type = 'CO'
 
+        activity = rd['Type of Activity']
         amount = int(rd['Doses - CO Forecast'])
 
         year = int(rd['YYYY'])
@@ -592,6 +596,7 @@ def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xl
                 item.add_value("date", str(approx_date))
                 item.add_value("year", str(year))
                 item.add_value("amount", str(amount))
+                item.add_value("activity", str(activity))
                 item.save()
                 print item
             except Exception, e:
@@ -705,6 +710,7 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
             products.append(vax_slug)
 
         allocation_type = 'CF'
+        activity = rd['Activity']
 
         try:
             amount = int(rd['Total no. of doses'])
@@ -739,6 +745,7 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
                 item.add_value("year", str(year))
                 item.add_value("amount", str(amount))
                 item.add_value("initial", str(init_quant))
+                item.add_value("activity", str(activity))
                 item.save()
                 print item
             except Exception, e:
@@ -761,6 +768,306 @@ def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting D
                 print e
                 import ipdb;ipdb.set_trace()
 
+    print set(products)
+    print set(unmatched_products)
+    print set(matched_groups)
+
+def import_all_unicef():
+    # 2008
+    print import_unicef("UNICEF SD - 2008 Country Forecasting Data.xls")
+    print import_unicef("UNICEF SD - 2008 YE Allocations + Country Office Forecasts 2008.xls")
+    # 2009
+    print import_unicef("UNICEF SD - 2009 Country Forecasting Data.xls")
+    print import_unicef("UNICEF SD - 2009 YE Allocations + Country Office Forecasts 2009.xls")
+    # 2010
+    print import_unicef("UNICEF SD - 2010 Country Forecasting Data.xls")
+    print import_unicef("UNICEF SD -  Country Office Forecasts 2010.xls")
+    print import_unicef("2010_12 UNICEF SD - All Table Vaccines.xls")
+    # 2011
+    print import_unicef("UNICEF SD - 2011 Country Forecasting Data - CLEANED COUNTRY NAMES.xls")
+    print import_unicef("UNICEF SD - 2011 Country Office Forecasts - CLEANED COUNTRY NAMES.xls")
+    print import_unicef("2011_03 UNICEF SD - All Table Vaccines - CLEANED.xls")
+
+def import_unicef(file=""):
+    print file
+    book = xlrd.open_workbook(file)
+
+    if book.datemode not in (0,1):
+        return "oops. unknown datemode!"
+
+    def xldate_to_datetime(xldate):
+        return datetime.datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
+
+    def xldate_to_date(xldate):
+        if isinstance(xldate, int):
+            return xldate_to_datetime(xldate).date()
+        else:
+            return None
+
+    sheets = book.sheet_names()
+    # grab any sheets starting with 'forecasting'
+    forecasting_sheets = [s for s in sheets if s.startswith("forecasting")]
+    sheet = None
+
+    # find the target sheet...
+    # which is usually allocations for country forecasts
+    # and allocations files, but sometimes Sheet1
+    if 'allocations' in sheets:
+        sheet = book.sheet_by_name('allocations')
+    elif 'Allocations' in sheets:
+        sheet = book.sheet_by_name('Allocations')
+    elif 'Sheet1' in sheets:
+        sheet = book.sheet_by_name('Sheet1')
+    else:
+        if len(forecasting_sheets) > 0:
+            # the desired sheet in country forecasting files 
+            # includes the year, so it varies
+            sheet = book.sheet_by_name(forecasting_sheets[0])
+            # we need to know the year later on, so parse out and save
+            year = int(forecasting_sheets[0].split()[1])
+        else:
+            return "oops. could not find valid sheet"
+
+    column_names = sheet.row_values(0)
+
+    # XXX temp
+    products = []
+    unmatched_products = []
+    matched_groups = []
+
+    # countries to skip
+    skips = ['', ' ']
+    # products to skip
+    vax_skips = ['', ' ']
+    for r in range(int(sheet.nrows))[1:]:
+        rd = dict(zip(column_names, sheet.row_values(r)))
+        try:
+            country = None
+            if rd['Country'] not in skips:
+                country = reconcile_country_interactively(rd['Country'])
+            if country is None:
+                if rd['Country'] not in skips:
+                    print "cannot reconcile '%s'" % (rd['Country'])
+                    print "moving on..."
+                    skips.append(rd['Country'])
+                continue
+        except Exception, e:
+            print 'BANG'
+            print e
+            import ipdb;ipdb.set_trace()
+            #continue
+
+        chad = Country.objects.get(iso2_code='TD')
+        senegal = Country.objects.get(iso2_code='SN')
+        mali = Country.objects.get(iso2_code='ML')
+
+        if country not in [senegal, chad, mali]:
+            continue
+
+        vax = rd['Product']
+
+        try:
+            if vax not in vax_skips:
+                vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
+            if vaccine is None:
+                #print "cannot find vax: '%s'" % (vax)
+                if vax not in vax_skips:
+                    print "cannot reconcile '%s'" % (vax)
+                    print "moving on..."
+                    vax_skips.append(vax)
+                if vax not in unmatched_products:
+                    unmatched_products.append(vax)
+                continue
+            if isinstance(vaccine, str):
+                #print vaccine
+                if vax not in matched_groups:
+                    matched_groups.append(vax)
+                continue
+            vax_slug = vaccine.slug
+            vax_group = vaccine.group.slug
+            if vax_slug not in products:
+                products.append(vax_slug)
+        except Exception, e:
+            print e
+            print "cannot find vax: '%s'" % (vax)
+            continue
+
+        vax_slug = vaccine.slug
+        vax_group = vaccine.group.slug
+        if vax_slug not in products:
+            products.append(vax_slug)
+
+        # see if this is a Routine or Supplementary activity
+        if 'Type of Activity' in rd:
+            activity = rd['Type of Activity']
+        elif 'Activity' in rd:
+            activity = rd['Activity']
+        else:
+            activity = 'Unknown'
+
+        allocation_type = None
+
+        try:
+            forecast_doses = int(rd['Doses- Forecast '])
+        except ValueError:
+            forecast_doses = None
+        except KeyError:
+            forecast_doses = None
+
+        try:
+            po_doses = int(rd['Doses- On PO'])
+        except ValueError:
+            po_doses = None
+        except KeyError:
+            po_doses = None
+
+        try:
+            co_forecast = int(rd['Doses- CO Forecast '])
+        except ValueError:
+            co_forecast = None
+        except KeyError:
+            co_forecast = None
+            try:
+                co_forecast = int(rd['Doses - CO Forecast'])
+            except ValueError:
+                co_forecast = None
+            except KeyError:
+                co_forecast = None
+
+        try:
+            co_forecasting = int(rd['Total no. of doses'])
+            current_stock = rd['Current Stock Qty']
+            if current_stock not in ['', ' ', None]:
+                init_quant = int(current_stock)
+            else:
+                init_quant = 0
+        except ValueError:
+            co_forecasting = None
+        except KeyError:
+            co_forecasting = None
+
+        approx_date = None
+        if 'YYYY' in rd:
+            if rd['YYYY'] not in [None, '', ' ']:
+                year = int(rd['YYYY'])
+        if 'YYYY-MM' in rd:
+            year_month = rd['YYYY-MM']
+            if year_month not in [None, '', ' ']:
+                yr, month = year_month.split('-')
+                approx_date = date(int(yr), int(month), 15)
+        if 'YYYY-WW' in rd:
+            year_week = rd['YYYY-WW']
+            if year_week not in [None, '', ' ']:
+                yr, week = year_week.split('-')
+                approx_date = first_monday_of_week(yr, week)
+
+        if year is None:
+            print 'no year!'
+        if year is not None:
+            #sdb = boto.connect_sdb()
+            #domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
+
+            try:
+                if forecast_doses > 0:
+                    amount = forecast_doses
+                    if approx_date <= date.today():
+                        # original CO forecast (CO)
+                        # from allocations table
+                        allocation_type = 'CO'
+                    else:
+                        # future delivery on forecast (FF)
+                        # from allocations table
+                        allocation_type = 'FF'
+                elif po_doses > 0:
+                    amount = po_doses
+                    if approx_date <= date.today():
+                        # unicef deliveries (UN)
+                        # from allocations table
+                        allocation_type = 'UN'
+                    else:
+                        # future delivery on PO (FP)
+                        # from allocations table
+                        allocation_type = 'FP'
+
+                elif co_forecast is not None:
+                    # original CO forecast (CO)
+                    # from country forecasts file
+                    amount = co_forecast
+                    allocation_type = 'CO'
+
+                elif co_forecasting is not None:
+                    # country forecasts (annual demand and initial stock)
+                    # from country forecasting file
+                    amount = co_forecasting
+                    allocation_type = 'CF'
+
+                else:
+                    if allocation_type is None:
+                        continue
+            except Exception, e:
+                print 'BANG determine type'
+                print e
+                import pdb;pdb.set_trace()
+
+            # TODO save row number
+            try:
+                '''
+                item_name = hashlib.md5()
+                item_name.update(str(country.iso2_code))
+                item_name.update(str(vax_slug))
+                item_name.update(str(vax_group))
+                item_name.update(allocation_type)
+                item_name.update(str(approx_date))
+                item_name.update(str(amount))
+
+                item = domain.new_item(item_name.hexdigest())
+                item.add_value("country", str(country.iso2_code))
+                item.add_value("product", str(vax_slug))
+                item.add_value("group", str(vax_group))
+                item.add_value("type", allocation_type)
+                item.add_value("date", str(approx_date))
+                item.add_value("year", str(year))
+                item.add_value("amount", str(amount))
+                item.add_value("activity", str(activity))
+                if allocation_type == 'CF':
+                    item.add_value("initial", str(init_quant))
+                item.save()
+                print item
+                '''
+                item = dict()
+                item['country'] = str(country.iso2_code)
+                item['product'] = str(vax_slug)
+                item['group'] = str(vax_group)
+                item['type'] = allocation_type
+                if allocation_type != 'CF':
+                    item['date'] = str(approx_date)
+                item['year'] = str(year)
+                item['amount'] = str(amount)
+                item['activity'] = str(activity)
+                if allocation_type == 'CF':
+                    item['initial'] = str(init_quant)
+                print item
+            except Exception, e:
+                print 'error creating stock level'
+                print e
+                import ipdb;ipdb.set_trace()
+            '''
+            try:
+                cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
+                cs_item = domain.new_item(cs_item_name)
+                cs_item.add_value("country", str(country.iso2_code))
+                cs_item.add_value("product", str(vax_slug))
+                cs_item.add_value("type", "CS")
+                cs_item.save()
+                cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
+                cs.products.add(vaccine)
+                cs.md5_hash = cs_item_name
+                cs.save()
+            except Exception, e:
+                print 'error creating countrystock item'
+                print e
+                import ipdb;ipdb.set_trace()
+            '''
     print set(products)
     print set(unmatched_products)
     print set(matched_groups)
