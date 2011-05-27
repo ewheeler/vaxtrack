@@ -9,6 +9,7 @@
 <script src="/assets/js/dygraph-combined.js"></script>
 <script src="/assets/js/vax-dev.js"></script>
 <script src="/assets/js/jquery.sparkline.min.js"></script>
+<script src="/assets/js/module-help.js"></script>
 {% endblock %}
 
 {% block left %}
@@ -44,9 +45,9 @@
                 <input type="checkbox" id="checkbox-N" value="N" checked="checked" />
                 <label for="checkbox-N" class='tipoff' title="{% trans "Show 9 month overstock (maximum stock level)." %}">{% trans "Show overstock indicator" %}</label><br />
                 <input type="checkbox" id="checkbox-F" value="F" checked="checked" />
-                <label for="checkbox-F" class='tipoff' title="{% trans "Show forecasted stock level for the future based on planned deliveries from  UNICEF country office's annual forecasts."%}">{% trans "Show current forecasted orders (on forecast)" %}</label><br />
+                <label for="checkbox-F" class='tipoff' title="{% trans "Show forecasted stock level for the future based on planned deliveries from  UNICEF country office's annual forecasts."%}">{% trans "Show forecasted stock level based on theoretical usage (and including forecasted orders)" %}</label><br />
                 <input type="checkbox" id="checkbox-P" value="P" checked="checked" />
-                <label for="checkbox-P" class='tipoff' title="{% trans "Show forecasted stock level for the future based on planned deliveries that are on purchase order (payment has been made, though delivery date may vary)."%}">{% trans "Show current forecasted orders (on purchase)" %}</label><br />
+                <label for="checkbox-P" class='tipoff' title="{% trans "Show forecasted stock level for the future based on planned deliveries that are on purchase order (payment has been made, though delivery date may vary)."%}">{% trans "Show forecasted stock level based on theoretical usage (and including placed orders)" %}</label><br />
                 <input type="checkbox" id="checkbox-C" value="C" checked="checked" />
                 <label for="checkbox-C" class='tipoff' title="{% trans "Show projected stock level for past and future based on planned deliveries from UNICEF country office's annual forecasts (theoretical, intended as tool to examine past forecasting)."%}">{% trans "Show original projected stock level (based on country office forecast)" %}</label><br />
                 <input type="checkbox" id="checkbox-U" value="U" checked="checked" />
@@ -109,6 +110,7 @@
 {% load i18n %}
     <div class="module" id="module-chart">
         <h3>{% trans "Chart" %}</h3>
+	<div class="help"><p>{% trans "Click and drag on chart to select a portion and zoom in; double-click on chart to zoom out." %}</p></div>
         <div id="legend" style="float:right;"></div>
         <div id="chart" style="width:800px;height:600px;"></div>
     </div>

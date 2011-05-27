@@ -28,10 +28,10 @@ $(document).ready(function(){
         /* default chart options, vax, and country */
         options = new Array("T", "N", "F", "P");
         group = "bcg";
-	country = "1312";
+	country = "1914";
 	chart_name = "";
 	//data_url = "/csv/1312/opv/2011/3/31/";
-	data_url = "/assets/csvs/1312/opv/2011/1312_bcg_2011_3_15.csv";
+	data_url = "/assets/csvs/1914/opv/2011/1914_bcg_2011_4_1.csv";
     } else {
 	update_from_hash();
     };
@@ -68,6 +68,20 @@ $(document).ready(function(){
 
     /*	dictionary for jsi18n strings */
     var strings = {};
+
+    /* strings for chart labels */
+    strings["date_lbl"] = gettext("Date");
+    strings["actual_stock_lbl"] = gettext("Actual stock");
+    strings["buffer_lbl"] = gettext("Buffer stock");
+    strings["overstock_lbl"] = gettext("Overstock");
+    strings["on_forecast_lbl"] = gettext("Forecasted stock level based on theoretical usage (and including forecasted orders)");
+    strings["on_purchase_lbl"] = gettext("Forecasted stock level based on theoretical usage (and including purchased orders)");
+    strings["co_forecast_lbl"] = gettext("CO forecast");
+    strings["deliveries_lbl"] = gettext("CO forecast w/ deliveries");
+
+    strings["doses_lbl"] = gettext("Doses");
+    strings["country_lbl"] = gettext("Country");
+    strings["time_lbl"] = gettext("Time");
 
     /* 	strings for stats jsi18n */
     strings["est_daily_cons_txt"] = gettext("estimated daily consumption");
@@ -229,20 +243,22 @@ $(document).ready(function(){
 		    data_url,
 		    {
 			rollPeriod: 1,
-			title: country + " " + group.toUpperCase(),
-			ylabel: 'Doses',
-			yValueFormatter: function(x) {
-				var shift = Math.pow(10, 5)
-				return Math.round(x * shift) / shift
+			title: strings["country_lbl"] + " " + country + " " + group.toUpperCase(),
+			axisLabelWidth:100,
+			ylabel: strings["doses_lbl"],
+			digitsAfterDecimal:0,
+			maxNumberWidth:20,
+			yAxisLabelFormatter: function(x) {
+				return x.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")
 			},
-			xlabel: 'Time',
-			axisLabelFontSize: 10,
-			labelsKMB: true,
+			xlabel: strings["time_lbl"],
+			axisLabelFontSize: 9,
+			labelsKMB: false,
 			stacked: true,
 			connectSeparatedPoints: true,
 			gridLineColor: '#eee',
 			visibility: vis_bools,
-			labels: [ "Date", "Actual stock", "Buffer stock", "Overstock", "Forcasted orders (on forcast)", "Forecasted orders (on purchase)", "CO forecast", "CO forecast w/ deliveries" ],
+			labels: [ strings["date_lbl"], strings["actual_stock_lbl"], strings["buffer_lbl"], strings["overstock_lbl"], strings["on_forecast_lbl"], strings["on_purchase_lbl"], strings["co_forecast_lbl"], strings["deliveries_lbl"]],
 			labelsSeparateLines: true,
 			legend: "always",
 			colors: ["blue", "red", "salmon", "purple", "cyan", "green", "orange"],
@@ -261,11 +277,11 @@ $(document).ready(function(){
 			    stepPlot: false,
 			    strokeWidth: 1
 			},
-			"Forecasted orders (on forcast)": {
+			"Forecasted stock level based on theoretical usage (and including forecasted orders)": {
 			    stepPlot: false,
 			    strokeWidth: 2
 			},
-			"Forecasted orders (on purchase)": {
+			"Forecasted stock level based on theoretical usage (and including purchased orders)": {
 			    stepPlot: false,
 			    strokeWidth: 2
 			},
@@ -350,8 +366,16 @@ $(document).ready(function(){
 				row = "<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + "</td>";
 				row = row + "<td class='spark' id='" + row_name + "'</td>";
 				for (y in stats[s].years){
-					row = row + "<td class='int data'>" + stats[s][row_name][y] + "</td>";
-					data.push(stats[s][row_name][y]);
+					var cell_data = stats[s][row_name][y];
+					var push_data = true;
+					if (cell_data == null){
+						cell_data = "";
+						push_data = false;
+					};
+					row = row + "<td class='int data'>" + cell_data + "</td>";
+					if (push_data){
+						data.push(cell_data);
+					};
 				};
 				$("#hist > tbody:last").append(row + "</tr>");
 				if (row_name != 'actual_cons_rate' & row_name != 'days_of_stock_data'){

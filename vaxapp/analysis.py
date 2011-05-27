@@ -697,7 +697,7 @@ class Analysis(object):
             self.days_of_stock_data = {}
             for y in self.s_years:
                 # get all stocklevel datapoints from year
-                stocklevels_in_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, 'SL', y)
+                stocklevels_in_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, 'SL', y, 'unknown')
                 print len(stocklevels_in_year)
                 # find number of days enclosed between first stocklevel entry of year and last
                 if len(stocklevels_in_year) > 0:

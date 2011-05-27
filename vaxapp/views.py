@@ -21,7 +21,8 @@ def index_dev(req, country_pk=None):
     else:
         countrystocks = False
     #countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
-    countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    #countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
     countries = list(set([c.country for c in countrystocks]))
     groups = list(set([g.group for g in countrystocks]))
     return render_to_response("dev.html",\
@@ -99,18 +100,30 @@ def stats(req, country_pk, group_slug):
                 # instead of the fields, i'd like the properties that return
                 # a dict of the related obj rather than pks of related obj
                 props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year', 'days_of_stock_data']
-                years = []
+
+                # get a set of years that there may be historical data for
+                # by getting the years from a stocklevel stat and a forecats stat
+                # this way, if there is no forecast/unicef data for a particular year
+                # or no stocklevel data for a particular year, the other data
+                # will be shown in the correct column.
+                # TODO its probably better in the long run to build the
+                # hist tables in a way that does not depend on the orders
+                # of several lists in order for the correct data to appear
+                # in the correct column...
+                years = sorted(list(set(css.get_consumed_in_year.keys() + css.get_annual_demand.keys())))
 
                 stats = {}
                 for prop in props_to_get:
                     prop_dict = getattr(css, 'get_' + prop)
                     prop_list = []
                     if prop_dict is not None:
-                        for year in sorted(prop_dict.iterkeys()):
-                            years.append(str(year))
-                            prop_list.append(prop_dict[year])
+                        for year in years:
+                            if year in prop_dict:
+                                prop_list.append(prop_dict[year])
+                            else:
+                                prop_list.append("")
                         stats[prop] = prop_list
-                stats['years'] = sorted(list(set(years)))
+                stats['years'] = years
 
                 attrs_to_get = ['est_daily_cons','days_of_stock','doses_delivered_this_year','doses_on_orders','demand_for_period']
                 # instead of a for loop, using this strategy: http://news.ycombinator.com/item?id=2320298
