@@ -1,14 +1,30 @@
 $(document).ready(function(){
+    // graph
+    var g;
+
     var saved_history = window.history;
+
+    function set_chart_size(){
+    	// set chart width to width of col-2
+    	var col_width = $(".col-2").width();
+    	$("#chart").width(col_width);
+	// make golden rectangle based on col-2 width
+	var golden_height = (col_width/1.6180339887498948482).toFixed(2);
+	$("#chart").height(golden_height);
+    }
+    set_chart_size();
+
+    // reset chart size when window is resized
+    window.onresize = function() {
+      set_chart_size();
+      g.resize();
+    }
 
     var options;
     var group;
     var country;
     var chart_name;
     var lang;
-
-    // graph
-    var g;
 
     var data_url;
     var data;
