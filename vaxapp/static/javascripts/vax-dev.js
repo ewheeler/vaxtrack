@@ -261,7 +261,7 @@ $(document).ready(function(){
 			labels: [ strings["date_lbl"], strings["actual_stock_lbl"], strings["buffer_lbl"], strings["overstock_lbl"], strings["on_forecast_lbl"], strings["on_purchase_lbl"], strings["co_forecast_lbl"], strings["deliveries_lbl"]],
 			labelsSeparateLines: true,
 			legend: "always",
-			colors: ["blue", "red", "salmon", "purple", "cyan", "green", "orange"],
+			colors: ["#0000FF", "#FF0000", "#FA8072", "#800080", "#00FFFF", "#008000", "#FFA500"],
 			labelsDiv: document.getElementById("legend"),
 			labelsShowZeroValues: false,
 			stepPlot: true,
