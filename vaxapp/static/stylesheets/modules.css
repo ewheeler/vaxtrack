@@ -196,6 +196,10 @@ div.module div.toolbar {
 	    border-right: 1px solid #aaa;
 	    border-left: 1px solid #aaa;
 	}
+	#legend {
+		padding: .33em;
+		height: 6em;
+	}
 
 /* tooltip styling. by default the element to be styled is .tooltip  */
 .tooltip {
