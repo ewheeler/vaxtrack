@@ -86,7 +86,6 @@ Wayfinding in the codebase (and notes about important files):
         - dict-like stats are stored in embarassing Dicty and KeyVal models,
             but should be accessed through helper methods in CountryStockStat
     - Alert object creation, trigger email tasks
-    - formerly matplotlib chart generation TODO remove this code
     - creation of csv files used by dygraph and export
 - front-end is largely controlled by vaxapp/static/javascripts/vax-dev.js
     - front-end also makes use of jquery.sparklines.js and a patched version
@@ -98,6 +97,11 @@ Wayfinding in the codebase (and notes about important files):
     to offer translation editing via a web interface. see INSTALL for more notes
     some translations, such as country names and product group names, are handled
     by property methods on respective model.
+- currently, the web interface shows a single 'anonymized' country. to un-anonymize,
+   replace calls to self.anon in models.py with the commented-out self.name lines.
+   Also, in views.py, replace limited countrystock queries in index method.
+   TODO mark this code with XXX ANON for easy grepping and get rid of anon branch,
+   which is only confusing.
 
 For more information:
     please contact me! this guide is certainly not comprehensive
