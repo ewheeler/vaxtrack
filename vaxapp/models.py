@@ -12,6 +12,7 @@ import string
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -608,8 +609,16 @@ class Alert(models.Model):
             self.countrystock.group, self.get_text_display())
 
 class UserProfile(models.Model):
-    user = models.ForeignKey(User)
+    LANG_CHOICES = (
+        ('en', 'English'),#'en_US.UTF-8'
+        ('fr', 'French'),
+    )
+    # https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
+    user = models.OneToOneField(User)
     country = models.ForeignKey(Country, blank=True, null=True)
+    lang = models.CharField(max_length=10, choices=LANG_CHOICES, default='en')
+    # TODO finer grained email control?
+    alert_emails = models.BooleanField(default=True)
 
 DOCUMENT_STATES = (
     ('U', _('Uploaded')),
@@ -618,6 +627,17 @@ DOCUMENT_STATES = (
     ('P', _('Processing')),
     ('F', _('Finished')),
     ('E', _('Processing Error')))
+
+DOCUMENT_FORMAT_CHOICES = (
+    ('UNSDATV', _('UNICEF SD All Table Vaccines')),
+    ('UNSDCOF', _('UNICEF SD Country Office Foreasts')),
+    ('UNSDACOF', _('UNICEF SD YE Allocations + Country Office Forecasts')),
+    ('UNSDCFD', _('UNICEF SD Country Forecasting Data')),
+    ('WHOCS', _('WHO Country Stock')),
+    ('UNCOS', _('UNICEF CO Stock')),
+    ('TMPLT', _('Stock level template')),
+    ('TK', _('Unknown')),
+)
 
 
 DEFAULT_PATH = os.path.join(settings.MEDIA_ROOT, "uploads")
@@ -629,11 +649,13 @@ class Document(models.Model):
     A simple model which stores data about an uploaded document.
     """
     user = models.ForeignKey(User, verbose_name=_('user'))
+    affiliation = models.ForeignKey(Group, verbose_name=_('group'), null=True, blank=True)
     name = models.CharField(_("Title"), max_length=100)
     uuid = models.CharField(_('Unique Identifier'), max_length=36)
     local_document = models.FileField(_("Local Document"), null=True, blank=True, upload_to=UPLOAD_PATH)
     remote_document = models.URLField(_("Remote Document"), null=True, blank=True)
     status = models.CharField(_("Remote Processing Status"), default='U', max_length=1, choices=DOCUMENT_STATES)
+    document_format = models.CharField(_("Document format"), default='TK', max_length=12, choices=DOCUMENT_FORMAT_CHOICES)
     exception = models.TextField(_("Processing Exception"), null=True, blank=True)
 
     date_uploaded = models.DateTimeField(_("Date Uploaded"))

@@ -2,11 +2,13 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 import os
 import json
-from datetime import datetime
-from datetime import timedelta
+import datetime
+import datetime
 from uuid import uuid4
 
 from django.conf import settings
+from django.core.mail import send_mail
+from django.core.mail import send_mass_mail
 
 import boto
 
@@ -15,6 +17,16 @@ from celery.decorators import task
 from celery.task import PeriodicTask
 
 from vaxapp.models import Document
+from vaxapp.models import Alert
+import import_xls
+
+"""
+$ rabbitmqctl add_user myuser mypassword
+
+$ rabbitmqctl add_vhost myvhost
+
+$ rabbitmqctl set_permissions -p myvhost myuser ".*" ".*" ".*"
+"""
 
 #sudo ./manage.py celeryd -v 2 -B -s celery -E -l INFO
 
@@ -40,7 +52,7 @@ def queue_json_message(doc, doc_key):
 
 def upload_file_to_s3(doc):
     file_path = doc.local_document.path
-    b = boto.connect_s3().get_bucket(settings.CSV_UPLOAD_BUCKET)
+    b = boto.connect_s3().get_bucket(settings.DOCUMENT_UPLOAD_BUCKET)
     name = '%s/%s' % (doc.uuid, os.path.basename(file_path))
     k = b.new_key(name)
     k.set_contents_from_filename(file_path)
@@ -50,90 +62,47 @@ def upload_file_to_s3(doc):
 
 @task
 def process_file(doc):
-    """Transfer uploaded file to S3 and queue up message to process PDF."""
+    """Transfer uploaded file to S3 and queue up message to process"""
     key = upload_file_to_s3(doc)
     doc.remote_document = "http://%s.s3.amazonaws.com/%s" % (key.bucket.name, key.name)
-    doc.date_stored = datetime.utcnow()
+    doc.date_stored = datetime.datetime.utcnow()
     doc.status = 'S'
     doc.save()
 
     queue_json_message(doc, key)
     doc.status = 'Q'
-    doc.date_queued = datetime.utcnow()
+    doc.date_queued = datetime.datetime.utcnow()
     doc.save()
 
+    if doc.document_format in ['UNSDATV', 'UNSDCOF', 'UNSDACOF', 'UNSDCFD']:
+        # TODO XXX dry run for now!
+        print 'IMPORT UNICEF'
+        print import_xls.import_unicef(doc.local_document.path, interactive=False, dry_run=True)
+        return True
+    elif doc.document_format in ['WHOCS']:
+        # TODO XXX dry run for now!
+        print 'IMPORT WHO'
+        print import_xls.import_who(doc.local_document.path, interactive=False, dry_run=True)
+        return True
+    elif doc.document_format in ['UNCOS', 'TMPLT']:
+        print 'IMPORT TEMPLATE'
+        #TODO import script for generic stock template!
+        pass
+    else:
+        print 'IMPORT UNKNOWN'
+        #TODO do something for TKs
+        pass
     return True
 
+@task
+def handle_alert(countrystock, ref_date, status, risk, text, dry_run=False):
+    alert, created = Alert.objects.get_or_create(countrystock=countrystock,\
+        reference_date=ref_date, status=status, risk=risk, text=text)
+    alert.analyzed = datetime.datetime.now()
+    alert.save()
+    if created:
+        # only send emails if this is a new alert
+        if not dry_run:
+            # and this is not a dry run
+            pass
 
-class CheckResponseQueueTask(PeriodicTask):
-    """
-    Checks response queue for messages returned from running processes in the
-    cloud.  The messages are read and corresponding `pdf.models.Document`
-    records are updated.
-    """
-    run_every = timedelta(seconds=30)
-
-    def _dequeue_json_message(self):
-        sqs = boto.connect_sqs()
-        queue = sqs.create_queue(RESPONSE_QUEUE)
-        msg = queue.read()
-        if msg is not None:
-            data = json.loads(msg.get_body())
-            bucket = data.get('bucket', None)
-            key = data.get("key", None)
-            queue.delete_message(msg)
-            if bucket is not None and key is not None:
-                return data
-
-    def run(self, **kwargs):
-        logger = self.get_logger(**kwargs)
-        logger.info("Running periodic task!")
-        data = self._dequeue_json_message()
-        if data is not None:
-            Document.process_response(data)
-            return True
-        return False
-
-
-class CheckQueueLevelsTask(PeriodicTask):
-    """
-    Checks the number of messages in the queue and compares it with the number
-    of instances running, only booting nodes if the number of queued messages
-    exceed the number of nodes running.
-    """
-    run_every = timedelta(seconds=60)
-
-    def run(self, **kwargs):
-        ec2 = boto.connect_ec2()
-        sqs = boto.connect_sqs()
-
-        queue = sqs.create_queue(REQUEST_QUEUE)
-        num = queue.count()
-        launched = 0
-        icount = 0
-
-        reservations = ec2.get_all_instances()
-        for reservation in reservations:
-            for instance in reservation.instances:
-                if instance.state == "running" and instance.image_id == AMI_ID:
-                    icount += 1
-        to_boot = min(num - icount, MAX_INSTANCES)
-
-        if to_boot > 0:
-            '''
-            startup = BOOTSTRAP_SCRIPT % {
-                'KEY': settings.CHART_AWS_KEY,
-                'SECRET': settings.CHART_AWS_SECRET,
-                'RESPONSE_QUEUE': RESPONSE_QUEUE,
-                'REQUEST_QUEUE': REQUEST_QUEUE}
-            r = ec2.run_instances(
-                image_id=AMI_ID,
-                min_count=to_boot,
-                max_count=to_boot,
-                key_name=KEYPAIR,
-                security_groups=SECURITY_GROUPS)
-                #user_data=startup)
-            launched = len(r.instances)
-                '''
-            launched = 0
-        return launched

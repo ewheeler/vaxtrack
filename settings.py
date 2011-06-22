@@ -1,10 +1,25 @@
+from django.conf import global_settings
+FILE_UPLOAD_HANDLERS = ('uploadprogresscachedhandler.UploadProgressCachedHandler', ) \
++ global_settings.FILE_UPLOAD_HANDLERS
+CACHE_BACKEND = 'memcached://127.0.0.1:11211/'
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}
+
+# stuff for email/seacucumber
+EMAIL_BACKEND = 'seacucumber.backend.SESBackend'
+SERVER_EMAIL = 'visualvaccines@gmail.com'
+
 # Django settings for the example project.
-SDB_DOMAIN = 'mangocountrystocks'
+SDB_DOMAIN = 'papayacountrystocks'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 ROOT_URLCONF = 'examples.urls'
-TEMPLATE_DIRS = ('/Users/ewheeler/dev/vax/vaxapp/templates',)
+TEMPLATE_DIRS = ('/home/ubuntu/vax/vaxapp/templates',)
 
 DATABASE_ENGINE = 'mysql'
 DATABASE_NAME = 'vax'
@@ -16,11 +31,10 @@ BROKER_HOST = "localhost"
 BROKER_PORT = 5672
 BROKER_USER = "unicef"
 BROKER_PASSWORD = "m3p3m3p3"
-BROKER_VHOST = "curta"
+BROKER_VHOST = "vaxlg"
 CELERY_RESULT_BACKEND = "amqp"
-CELERY_IMPORTS = ("vaxapp.tasks", )
 
-CSV_UPLOAD_BUCKET = 'vaxtrack_uploads'
+DOCUMENT_UPLOAD_BUCKET = 'vaxtrack_uploads'
 
 AUTH_PROFILE_MODULE = 'vaxapp.UserProfile'
 LOGIN_URL = '/login'
@@ -47,7 +61,7 @@ USE_I18N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '/home/ewheeler/temp/'
+MEDIA_ROOT = '/home/ubuntu/temp/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -101,5 +115,7 @@ INSTALLED_APPS = (
     'south',
     'djcelery',
     'rosetta',
+    'gunicorn',
+    'seacucumber',
     #'debug_toolbar',
 )
