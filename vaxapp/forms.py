@@ -16,10 +16,11 @@ from .models import Document
 from .models import UserProfile
 from .models import VaccineGroup
 from .models import Vaccine
+from .models import DOCUMENT_FORMAT_CHOICES
 
 class DocumentValidationError(forms.ValidationError):
     def __init__(self):
-        msg = _(u'Only .csv and .xls files are valid uploads.')
+        msg = _('Sorry, only .xls files are valid uploads.')
         super(DocumentValidationError, self).__init__(msg)
 
 
@@ -29,8 +30,10 @@ class DocumentField(forms.FileField):
     def clean(self, data, initial=None):
         f = super(DocumentField, self).clean(data, initial)
         ext = os.path.splitext(f.name)[1][1:].lower()
-        extensions = ['csv', 'xls']
-        content_types = ['text/csv', 'application/vnd.ms-excel']
+        print ext
+        print f.content_type
+        extensions = ['xls']
+        content_types = ['application/vnd.ms-excel', 'application/octet-stream']
         if ext in extensions and f.content_type in content_types:
             return f
         raise DocumentValidationError()
@@ -38,9 +41,17 @@ class DocumentField(forms.FileField):
 class DocumentForm(forms.ModelForm):
     local_document = DocumentField()
 
+    affiliation = forms.ChoiceField(
+        label=_("Your group or organization"),
+        choices = [(g.pk, unicode(g)) for g in Group.objects.all()])
+
+    document_format = forms.ChoiceField(
+        label=_("Document format and/or source"),
+        choices = DOCUMENT_FORMAT_CHOICES)
+
     class Meta:
         model = Document
-        fields = ('name', 'local_document')
+        fields = ('name', 'local_document', 'document_format')
 
 class RegisterForm(forms.Form):
     first_name = forms.CharField(
@@ -116,10 +127,7 @@ class EntryForm(forms.Form):
         label=_("Product"),
         choices = [(v.pk, getattr(v, lang)) for v in Vaccine.objects.all()])
 
-    # SelectDateWidget's default is the next ten years.
-    # Instead, provide +/- 5 years
-    years = range(datetime.datetime.today().year - 5, datetime.datetime.today().year + 5)
-    date = forms.DateField(label=_("Date of delivery or stock level observation"), widget=SelectDateWidget(years=years))
+    date = forms.DateField(label=_("Date of delivery or stock level observation"), input_formats=['%d-%m-%Y', '%d/%m/%Y', '%d %m %Y'], initial='dd-mm-yyyy')
 
     amount_type = forms.ChoiceField(
         label=_("Amount type"),

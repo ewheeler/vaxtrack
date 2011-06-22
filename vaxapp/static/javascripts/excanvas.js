@@ -306,7 +306,7 @@ if (!document.createElement('canvas').getContext) {
     var el = surfaceElement.ownerDocument.createElement('div');
     el.style.width =  surfaceElement.clientWidth + 'px';
     el.style.height = surfaceElement.clientHeight + 'px';
-    el.style.overflow = 'hidden';
+    //el.style.overflow = 'hidden';
     el.style.position = 'absolute';
     surfaceElement.appendChild(el);
 

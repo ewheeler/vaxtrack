@@ -13,6 +13,7 @@ from django.utils import simplejson
 
 from .models import *
 from .analysis import *
+from vax.vaxapp.tasks import *
 from . import forms
 
 def index_dev(req, country_pk=None):
@@ -26,6 +27,43 @@ def index_dev(req, country_pk=None):
     countries = list(set([c.country for c in countrystocks]))
     groups = list(set([g.group for g in countrystocks]))
     return render_to_response("dev.html",\
+        {"countrystocks": countrystocks,\
+            "countries": countries,\
+            "groups": groups,\
+            "tab": "dashboard"},\
+            context_instance=RequestContext(req))
+
+def index_ffree(req, country_pk=None):
+    if country_pk is not None:
+        countrystocks = CountryStock.objects.filter(country=country_pk)
+    else:
+        countrystocks = False
+    #countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
+    #countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    countries = list(set([c.country for c in countrystocks]))
+    groups = list(set([g.group for g in countrystocks]))
+    return render_to_response("ffree.html",\
+        {"countrystocks": countrystocks,\
+            "countries": countries,\
+            "groups": groups,\
+            "tab": "dashboard"},\
+            context_instance=RequestContext(req))
+
+def index_fpro(req, country_pk=None):
+    if req.user.is_authenticated():
+        prof = req.user.get_profile()
+
+    if country_pk is not None:
+        countrystocks = CountryStock.objects.filter(country=country_pk)
+    else:
+        countrystocks = False
+    #countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
+    #countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    countries = list(set([c.country for c in countrystocks]))
+    groups = list(set([g.group for g in countrystocks]))
+    return render_to_response("fpro.html",\
         {"countrystocks": countrystocks,\
             "countries": countries,\
             "groups": groups,\
@@ -178,6 +216,12 @@ def register(req):
         {"register_form": forms.RegisterForm()},\
         context_instance=RequestContext(req))
 
+def get_upload_progress(request):
+  from django.utils import simplejson
+  cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], request.GET['X-Progress-ID'])
+  data = cache.get(cache_key)
+  return HttpResponse(simplejson.dumps(data))
+
 @permission_required('vaxapp.can_upload')
 def upload(req):
     if req.method == 'POST':
@@ -189,6 +233,8 @@ def upload(req):
             doc.save()
             process_file.delay(doc)
             return HttpResponseRedirect('/')
+            #return HttpResponse(simplejson.dumps({"name":doc.local_document.path,\
+            #            "url":doc.local_document.path}))
     else:
         form = forms.DocumentForm()
     return render_to_response("upload.html",\
