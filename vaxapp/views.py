@@ -33,43 +33,6 @@ def index_dev(req, country_pk=None):
             "tab": "dashboard"},\
             context_instance=RequestContext(req))
 
-def index_ffree(req, country_pk=None):
-    if country_pk is not None:
-        countrystocks = CountryStock.objects.filter(country=country_pk)
-    else:
-        countrystocks = False
-    #countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
-    #countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
-    countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
-    countries = list(set([c.country for c in countrystocks]))
-    groups = list(set([g.group for g in countrystocks]))
-    return render_to_response("ffree.html",\
-        {"countrystocks": countrystocks,\
-            "countries": countries,\
-            "groups": groups,\
-            "tab": "dashboard"},\
-            context_instance=RequestContext(req))
-
-def index_fpro(req, country_pk=None):
-    if req.user.is_authenticated():
-        prof = req.user.get_profile()
-
-    if country_pk is not None:
-        countrystocks = CountryStock.objects.filter(country=country_pk)
-    else:
-        countrystocks = False
-    #countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
-    #countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
-    countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
-    countries = list(set([c.country for c in countrystocks]))
-    groups = list(set([g.group for g in countrystocks]))
-    return render_to_response("fpro.html",\
-        {"countrystocks": countrystocks,\
-            "countries": countries,\
-            "groups": groups,\
-            "tab": "dashboard"},\
-            context_instance=RequestContext(req))
-
 def index(req, country_pk=None):
     if country_pk is not None:
         countrystocks = CountryStock.objects.filter(country=country_pk)
