@@ -9,6 +9,7 @@ from uuid import uuid4
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.mail import send_mass_mail
+from django.core.exceptions import ObjectDoesNotExist
 
 import boto
 
@@ -59,6 +60,29 @@ def upload_file_to_s3(doc):
     k.set_acl(ACL)
     return k
 
+def notify_upload_complete(doc):
+    uploader_email = doc.user.email
+    if all([doc.user.first_name, doc.user.last_name]):
+        uploader_name = "%s %s" % (doc.user.first_name, doc.user.last_name)
+    else:
+        uploader_name = doc.user.username
+    sender = 'visualvaccines@gmail.com'
+    subject = "[VisualVaccines] upload analysis complete"
+    body =
+"""
+Hello %s,
+
+The analysis of your recently uploaded document is complete.
+Please visit http://visualvaccines.com to review any relevant charts,
+which now include data from your uploaded document.
+
+Thanks,
+VisualVaccines
+""" % (uploader_name)
+    mail_tuples = []
+    mail_tuples.append((subject, body, sender, [uploader_email]))
+    mail_tuples.append((subject, body, sender, ['evanmwheeler@gmail.com']))
+    send_mass_mail(tuple(mail_tuples), fail_silently=False)
 
 @task
 def process_file(doc):
@@ -77,13 +101,27 @@ def process_file(doc):
     if doc.document_format in ['UNSDATV', 'UNSDCOF', 'UNSDACOF', 'UNSDCFD']:
         # TODO XXX dry run for now!
         print 'IMPORT UNICEF'
-        print import_xls.import_unicef(doc.local_document.path, interactive=False, dry_run=True)
-        return True
+        doc.date_process_start = datetime.datetime.utcnow()
+        doc.status = 'P'
+        doc.save()
+        if import_xls.import_unicef(doc.local_document.path, interactive=False, dry_run=True):
+            doc.date_process_end = datetime.datetime.utcnow()
+            doc.status = 'F'
+            doc.save()
+            notify_upload_complete(doc)
+            return True
     elif doc.document_format in ['WHOCS']:
         # TODO XXX dry run for now!
         print 'IMPORT WHO'
-        print import_xls.import_who(doc.local_document.path, interactive=False, dry_run=True)
-        return True
+        doc.date_process_start = datetime.datetime.utcnow()
+        doc.status = 'P'
+        doc.save()
+        if import_xls.import_who(doc.local_document.path, interactive=False, dry_run=True):
+            doc.date_process_end = datetime.datetime.utcnow()
+            doc.status = 'F'
+            doc.save()
+            notify_upload_complete(doc)
+            return True
     elif doc.document_format in ['UNCOS', 'TMPLT']:
         print 'IMPORT TEMPLATE'
         #TODO import script for generic stock template!
@@ -102,7 +140,32 @@ def handle_alert(countrystock, ref_date, status, risk, text, dry_run=False):
     alert.save()
     if created:
         # only send emails if this is a new alert
-        if not dry_run:
-            # and this is not a dry run
-            pass
+        recipients = []
+        # get all staff
+        staff = User.objects.filter(is_staff=True)
+        # find other users who list this country in their profile
+        for u in User.objects.exclude(staff):
+            try:
+                profile = u.get_profile()
+                if profile.country:
+                    if profile.country == alert.countrystock.country:
+                        recipients.append(u.email)
+            except ObjectDoesNotExist:
+                continue
+        # combine staff and other users
+        recipients = recipients + [s.email for s in staff]
+        subject = "[VisualVaccines] %s: %s %s" % (alert.countrystock, alert.status, alert.risk)
+        body = alert.text
+        sender = 'visualvaccines@gmail.com'
+        if all([subject, body, recipients]):
+            mail_tuples = []
+            for r in recipeints:
+                mail_tuples.append((subject, body, sender, [r]))
+            if not dry_run:
+                send_mass_mail(tuple(mail_tuples), fail_silently=False)
+            else:
+                for m in mail_tuples:
+                    print 'pretend send: ', m
+        else:
+            print 'failed to construct alert emails'
 
