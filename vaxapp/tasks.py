@@ -45,7 +45,7 @@ def notify_upload_complete(doc):
         uploader_name = doc.user.username
     sender = 'visualvaccines@gmail.com'
     subject = "[VisualVaccines] upload analysis complete"
-    body =
+    body =\
 """
 Hello %s,
 
@@ -56,6 +56,7 @@ which now include data from your uploaded document.
 Thanks,
 VisualVaccines
 """ % (uploader_name)
+
     mail_tuples = []
     mail_tuples.append((subject, body, sender, [uploader_email]))
     mail_tuples.append((subject, body, sender, ['evanmwheeler@gmail.com']))
@@ -80,7 +81,7 @@ def process_file(doc):
         doc.date_process_start = datetime.datetime.utcnow()
         doc.status = 'P'
         doc.save()
-        if import_xls.import_unicef(doc.local_document.path, interactive=False, dry_run=True):
+        if import_xls.import_unicef(doc.local_document.path, interactive=False, dry_run=True, upload=doc.uuid):
             doc.date_process_end = datetime.datetime.utcnow()
             doc.status = 'F'
             doc.save()
@@ -92,7 +93,7 @@ def process_file(doc):
         doc.date_process_start = datetime.datetime.utcnow()
         doc.status = 'P'
         doc.save()
-        if import_xls.import_who(doc.local_document.path, interactive=False, dry_run=True):
+        if import_xls.import_who(doc.local_document.path, interactive=False, dry_run=True, upload=doc.uuid):
             doc.date_process_end = datetime.datetime.utcnow()
             doc.status = 'F'
             doc.save()

@@ -2,6 +2,7 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 import itertools
 import string
+import uuid
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
@@ -193,6 +194,7 @@ def upload(req):
             doc = form.save(commit=False)
             doc.user = req.user
             doc.date_uploaded = datetime.datetime.utcnow()
+            doc.uuid = uuid.uuid4().hex
             doc.save()
             process_file.delay(doc)
             return HttpResponseRedirect('/')
