@@ -100,9 +100,17 @@ def process_file(doc):
             notify_upload_complete(doc)
             return True
     elif doc.document_format in ['UNCOS', 'TMPLT']:
+        # TODO XXX dry run for now!
         print 'IMPORT TEMPLATE'
-        #TODO import script for generic stock template!
-        pass
+        doc.date_process_start = datetime.datetime.utcnow()
+        doc.status = 'P'
+        doc.save()
+        if import_xls.import_template(doc.local_document.path, interactive=False, dry_run=True, upload=doc.uuid):
+            doc.date_process_end = datetime.datetime.utcnow()
+            doc.status = 'F'
+            doc.save()
+            notify_upload_complete(doc)
+            return True
     else:
         print 'IMPORT UNKNOWN'
         #TODO do something for TKs
