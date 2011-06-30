@@ -1,13 +1,4 @@
 from django.conf import global_settings
-FILE_UPLOAD_HANDLERS = ('uploadprogresscachedhandler.UploadProgressCachedHandler', ) \
-+ global_settings.FILE_UPLOAD_HANDLERS
-CACHE_BACKEND = 'memcached://127.0.0.1:11211/'
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
-        'LOCATION': '127.0.0.1:11211',
-    }
-}
 
 # stuff for email/seacucumber
 EMAIL_BACKEND = 'seacucumber.backend.SESBackend'
@@ -99,8 +90,11 @@ MIDDLEWARE_CLASSES = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.core.context_processors.i18n",
-    "django.contrib.auth.context_processors.auth",
+    'django.core.context_processors.auth',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.request',
 )
 
 ROOT_URLCONF = 'vaxapp.urls'
@@ -113,6 +107,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'vax.vaxapp',
     'south',
+    'authority',
     'djcelery',
     'rosetta',
     'gunicorn',

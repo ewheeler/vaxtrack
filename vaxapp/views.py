@@ -22,8 +22,8 @@ def index_dev(req, country_pk=None):
     else:
         countrystocks = False
     #countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
-    #countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
-    countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    #countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
     countries = list(set([c.country for c in countrystocks]))
     groups = list(set([g.group for g in countrystocks]))
     return render_to_response("dev.html",\

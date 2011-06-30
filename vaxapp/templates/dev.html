@@ -15,6 +15,7 @@
 {% block left %}
 {% load i18n %}
 {% load getattribute %}
+{% load permissions %}
 
     {% if countries %}
     <div id="module-options" class="module expanded">
@@ -24,7 +25,15 @@
             <form id="countries" action="">
                 <select id="country">
                 {% for c in countries %}
-                        <option value="{{c.anon}}">{{ c|getattribute:LANGUAGE_CODE }}</option>
+                    {% if user.is_authenticated %}
+                        {% ifhasperm "country_permission.has_country_affiliation" request.user c %}
+                            <option value="{{c.anon}}">{{ c|getattribute:LANGUAGE_CODE }}</option>
+                        {% endifhasperm %}
+                    {% else %}
+                        {% ifequal c.pk "SN" %}
+                            <option value="{{c.anon}}">{{ c|getattribute:LANGUAGE_CODE }}</option>
+                        {% endifequal %}
+                    {% endif %}
                 {% endfor %}
                 </select>
             </form>
