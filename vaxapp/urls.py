@@ -5,9 +5,11 @@ import os
 
 from django.conf.urls.defaults import *
 from django.contrib import admin
+import authority
 import views
 
 admin.autodiscover()
+authority.autodiscover()
 
 js_info_dict = {
     'domain': 'djangojs',
@@ -47,4 +49,6 @@ urlpatterns = patterns('',
     url(r'^i18n/', include('django.conf.urls.i18n')),
     url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
     url(r'^translations/', include('rosetta.urls'), name='rosetta'),
+    url(r'^authority/', include('authority.urls')),
+
 )
