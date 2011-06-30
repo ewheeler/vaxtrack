@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 import os
-import json
 import datetime
-import datetime
-from uuid import uuid4
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -12,10 +9,7 @@ from django.core.mail import send_mass_mail
 from django.core.exceptions import ObjectDoesNotExist
 
 import boto
-
-from celery.decorators import periodic_task
 from celery.decorators import task
-from celery.task import PeriodicTask
 
 from vaxapp.models import Document
 from vaxapp.models import Alert
@@ -31,24 +25,7 @@ $ rabbitmqctl set_permissions -p myvhost myuser ".*" ".*" ".*"
 
 #sudo ./manage.py celeryd -v 2 -B -s celery -E -l INFO
 
-REQUEST_QUEUE = getattr(settings, "CHART_REQUEST_QUEUE", "chart_requests")
-RESPONSE_QUEUE = getattr(settings, "CHART_RESPONSE_QUEUE", "chart_responses")
 ACL = getattr(settings, "CHART_AWS_ACL", "public-read")
-AMI_ID = getattr(settings, "CHART_AMI_ID", "ami-1641b47f")
-KEYPAIR = getattr(settings, "CHART_KEYPAIR_NAME", None)
-MAX_INSTANCES = getattr(settings, 'CHART_MAX_NODES', 20)
-SECURITY_GROUPS = getattr(settings, 'CHART_SECURITY_GROUPS', None)
-
-
-def queue_json_message(doc, doc_key):
-    key_name = doc_key.name.replace(os.path.basename(doc_key.name), "message-%s.json" % str(uuid4()))
-    key = doc_key.bucket.new_key(key_name)
-    message_data = json.dumps({'bucket': doc_key.bucket.name, 'key': doc_key.name, 'uuid': doc.uuid})
-    key.set_contents_from_string(message_data)
-    msg_body = {'bucket': key.bucket.name, 'key': key.name}
-    queue = boto.connect_sqs().create_queue(REQUEST_QUEUE)
-    msg = queue.new_message(body=json.dumps(msg_body))
-    queue.write(msg)
 
 
 def upload_file_to_s3(doc):
@@ -93,7 +70,6 @@ def process_file(doc):
     doc.status = 'S'
     doc.save()
 
-    queue_json_message(doc, key)
     doc.status = 'Q'
     doc.date_queued = datetime.datetime.utcnow()
     doc.save()

@@ -3,68 +3,105 @@ vaccine stock data (national coldstore data),
 delivery forecasts, and cold chain capacity
 tools to avoid stock outs and vaccine spoilage/wastage.
 
-DEPENDENCIES:
-    Django (http://djangoproject.com)
-    South (http://south.aeracode.org)
-    matplotlib (http://matplotlib.sourceforge.net)
-    boto
-    celery
-    django-rosetta
+Summary of features:
+- uploading of UNICEF Supply Division forecast and allocation xls files
+- uploading of WHO country stock data xls files
+- automatic post-upload analysis to generate statistics and flag potential stock issues
+- automatic email alerts of potential issues that emerge during analysis
+- dynamic charts displaying stock levels, forecasts, and purchases
+- ability to view historical perspectives (to see data-awareness/situation as of a certain date)
+- uploading and manual entry of stock information by Country Office, partners, and/or governments
+- ability to export data used to generate charts
+- web interface for entering and editing translations (English and French)
 
-DATA IMPORT/EXPORT SCRIPT DEPENDENCIES:
-    sudo pip install xlrd xlwt
+Technology stack overview:
+    Vaxtrack is a django project that uses Amazon AWS products heavily, as stock
+    datasets can quickly become large and unweildy. Vaxtrack was originally
+    intended to target IE6 web browsers, so charts were generated as images
+    using matplotlib and then stored on S3. Thankfully, the client organization
+    upgraded to IE8 in late 2010, so Vaxtrack has been altered to produce
+    javascript charts with the dygraph library. IE8 compatibility has been achieved
+    using FlashCanvas, a drop-in product for emulating the canvas tag.
+    FlashCanvas may rarely cause IE8 to crash, so using Google's Chrome Frame
+    extension to IE8 is strongly recommended.
+    Uploading, analysis, and email alerting are queued and executed via celery,
+    which uses RabbitMQ for messaging. RabbitMQ is certainly overkill for this
+    use-case, but is perhaps more reliable than some of the 'ghettomq' alternatives.
+    South is employed for MySQL database migrations.
 
-DEBIAN-BASED INSTALLATION:
-    sudo apt-get install python-pip python-dev mysql-server git-core python-mysqldb python-matplotlib rabbitmq-server gettext
-    sudo pip install setuptools boto=2.0b4 django south celery django-celery django-rosetta
+Summary of data storage:
+- vaccine stock levels, forecasts, and purchases are stored in Amazon's SimpleDB
+- user, country, product group, product, and upload information are stored in MySQL
+- uploaded documents are stored in Amazon's S3
+- CSV files for export are currently stored in local filesystem TODO move to S3
 
-    optionally:
-    sudo apt-get install vim
-    sudo pip install ipython ipdb
+Wayfinding in the codebase (and notes about important files):
+- country and product group models (and methods) are defined in models.py
+      - countries can be reconciled by ISO 2 letter code, ISO 3 letter code,
+        ISO English name, ISO French name, UN 3 number code, UNICEF SD code,
+        UNICEF SD English name, and UNICEF SD French name.
+      - product groups are used internally instead of products, because WHO
+        stock level granularity is only to product groups
+      - country, product group, and products are provided in vaxapp/fixtures
+        as database fixtures in json format
+- vaccine information in SimpleDB is accessed by helper API methods in vsdb.py
+      - boto's class-based managers were not working when development began,
+        so instead there is a dodgy approximation that should be replaced by
+        boto's offering once it is fully implemented
+      - nearly all SimpleDB items have the same structure that includes:
+            date - date amount was observed or delivery was made as str(date) AKA date.isoformat()
+            year - year from above date, as string for easier sorting
+            amount - stock level, forecast amount, or purchased amount in doses
+            type - indicates type of data:
+                'CF' - country forecast from UNICEF SD country forecasting files
+                'CO' - original country forecast from UNICEF SD country forecasts files
+                'FP' - future delivery on PO from UNICEF SD allocations table files
+                'UN' - unicef delivery from UNICEF SD allocations table files
+                'FF' - future delivery on forecast from UNICEF SD allocations table files
+                'SL' - stock level from WHO stock files or other stock level uploads
+                'CS' - no amount, just country + product + type to keep track of known inventories
+            country - country as ISO 2 letter code
+            group - product group as slug
+            product - product as slug
+            activity - 'Supplementary' or 'Routine' accoring to UNICEF SD files
+            initial - initial stock level at beginning of year (only for CFs)
+- importing scripts are located in import_xls.py
+    - import methods for UNICEF and WHO data may be called from a python
+    interpreter (or ./manage.py shell) for an interactive version that allows
+    for reconciliation of unknown country names and/or product group names.
+    Any choices made during interactive reconciliation are saved as country-aware
+    alternates, so that these specific reconciliations will be made automatically
+    in future interactive sessions and also during web-uploaded imports.
+    The code for matching and suggestion of alternatives lives in models.py and
+    employs a number of techniques for guessing, including many hand-entered
+    edge cases based on a corpus of UNICEF datasets' creative spellings. These
+    reconciliation methods are also available in country-aware versions which
+    base suggestions on a country's past stock history (will suggest products
+    that the country has stocked in the past when faced with a similar, ambiguous
+    product).
+- uploaded documents are queued and handled by celery in tasks.py
+- business logic for post-upload analysis is in analysis.py
+    - CountryStock object creation
+    - CountryStockStat object creation
+        - dict-like stats are stored in embarassing Dicty and KeyVal models,
+            but should be accessed through helper methods in CountryStockStat
+    - Alert object creation, trigger email tasks
+    - creation of csv files used by dygraph and export
+- front-end is largely controlled by vaxapp/static/javascripts/vax-dev.js
+    - front-end also makes use of jquery.sparklines.js and a patched version
+        of jquerytool's tooltip.js (included)
+    - css is mostly found in vaxapp/static/stylesheets/style.js, but additional
+        styles for modules and forms exist in separate files
+- translations are implemented using django best practices, which require
+    management commands to compile po files after editing. rosetta is employed
+    to offer translation editing via a web interface. see INSTALL for more notes
+    some translations, such as country names and product group names, are handled
+    by property methods on respective model.
+- currently, the web interface shows a single 'anonymized' country. to un-anonymize,
+   replace calls to self.anon in models.py with the commented-out self.name lines.
+   Also, in views.py, replace limited countrystock queries in index method.
+   TODO mark this code with XXX ANON for easy grepping and get rid of anon branch,
+   which is only confusing.
 
-DEBIAN-BASED DEPLOYMENT:
-    sudo apt-get insall nginx
-    sudo pip install gunicorn
-
-    Edit /etc/nginx/sites-enabled/default :
-	server {
-
-		listen   80; ## listen for ipv4
-		#listen   [::]:80 default ipv6only=on; ## listen for ipv6
-
-		server_name  myserver.com;
-
-		access_log  /var/log/nginx/localhost.access.log;
-
-		location / {
-		    proxy_pass   http://127.0.0.1:8000;
-		}
-
-
-OS X INSTALLATION:
-    i recommend homebrew for rabbitmq
-    and http://stronginference.com/scipy-superpack/ for matplotlib and its dependencies
-
-FIXTURES:
-    ./manage.py loaddata vaxapp/fixtures/countries_fr.json
-    ./manage.py loaddata vaxapp/fixtures/vaccines.json
-    ./manage.py loaddata vaxapp/fixtures/vaccine_groups.json
-    ./manage.py loaddata vaxapp/fixtures/altcountry.json
-
-I18N AFTER INSTALLATION:
-    cd vaxapp/
-    django-admin.py compilemessages
-
-I18N AFTER MODIFYING STRINGS:
-    cd vaxapp/
-    django-admin.py makemessages -l en
-    django-admin.py makemessages -l fr
-    django-admin.py makemessages -d djangojs -l en
-    django-admin.py makemessages -d djangojs -l fr
-    django-admin.py compilemessages
-
-ADD FRENCH LOCALE ON UBUNTU
-    add `fr_FR.UTF-8 UTF-8` (or similar from /usr/share/i18n/SUPPORTED)
-    to /var/lib/locales/supported.d/local
-    and then run
-    dpkg-reconfigure locales
+For more information:
+    please contact me! this guide is certainly not comprehensive
