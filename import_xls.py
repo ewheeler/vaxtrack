@@ -193,7 +193,7 @@ def reconcile_vaccine_silently(term, country_pk):
             print 'BANG lookup'
             print e
 
-def import_who(file=None, interactive=True, dry_run=False):
+def import_who(file=None, interactive=True, dry_run=False, upload=None):
     '''
     opv-50
     measles
@@ -346,6 +346,7 @@ def import_who(file=None, interactive=True, dry_run=False):
             print set(products)
             print set(unmatched_products)
             print set(matched_groups)
+    return True
 
 
 def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Office Forecasts 2008.xls"):
@@ -859,7 +860,7 @@ def import_all_unicef():
     print import_unicef("UNICEF SD - 2011 Country Office Forecasts - CLEANED COUNTRY NAMES.xls")
     print import_unicef("2011_03 UNICEF SD - All Table Vaccines - CLEANED.xls")
 
-def import_unicef(file="", interactive=True, dry_run=False):
+def import_unicef(file="", interactive=True, dry_run=False, upload=None):
     print file
     book = xlrd.open_workbook(file)
 
@@ -1151,3 +1152,4 @@ def import_unicef(file="", interactive=True, dry_run=False):
     print set(products)
     print set(unmatched_products)
     print set(matched_groups)
+    return True
