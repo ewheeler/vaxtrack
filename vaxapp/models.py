@@ -17,6 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
+from django.core.exceptions import ObjectDoesNotExist
 
 from dameraulevenshtein import dameraulevenshtein as dm
 from vax.vsdb import *
@@ -666,18 +667,66 @@ class Document(models.Model):
     date_exception = models.DateTimeField(_("Date of Exception"), null=True, blank=True)
 
     date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow)
+    imported_countries = models.ManyToManyField(Country, null=True, blank=True)
+    imported_groups = models.ManyToManyField(VaccineGroup, null=True, blank=True)
+    imported_years = models.CommaSeparatedIntegerField(max_length=200, null=True, blank=True)
 
     class Meta:
         verbose_name = _('document')
         verbose_name_plural = _('documents')
 
     def __unicode__(self):
-        return unicode(_("%s's uploaded document." % self.user))
+        return unicode(_("%s document uploaded %s by %s") % (self.get_document_format_display(), self.date_uploaded, self.user))
 
     def save(self, **kwargs):
         if self.id is None:
             self.uuid = str(uuid.uuid4())
         super(Document, self).save(**kwargs)
+
+    @property
+    def get_imported_countries(self):
+        countries = self.imported_countries.all()
+        if countries:
+            return ', '.join((str(c) for c in countries))
+
+    @property
+    def get_imported_groups(self):
+        groups = self.imported_groups.all()
+        if groups:
+            return ', '.join((str(g) for g in groups))
+
+    @property
+    def get_imported_years(self):
+        if self.imported_years:
+            return self.imported_years
+
+    def save_import_report(self, import_report_tuple):
+        country_pks = import_report_tuple[0]
+        if country_pks:
+            for cpk in country_pks:
+                try:
+                    country = Country.objects.get(pk=cpk)
+                    self.imported_countries.add(country)
+                    self.save()
+                except ObjectDoesNotExist:
+                    continue
+        group_slugs = import_report_tuple[1]
+        if group_slugs:
+            for gslug in group_slugs:
+                try:
+                    group = VaccineGroup.objects.get(slug=gslug)
+                    self.imported_groups.add(group)
+                    self.save()
+                except ObjectDoesNotExist:
+                    continue
+        years = import_report_tuple[2]
+        if years:
+            self.imported_years = ",".join((str(y) for y in years))
+            self.save()
+        errors = import_report_tuple[3]
+        if errors:
+            self.exception = ", ".join(errors)
+            self.save()
 
     @staticmethod
     def process_response(data):

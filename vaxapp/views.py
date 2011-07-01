@@ -2,7 +2,6 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 import itertools
 import string
-import uuid
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
@@ -157,7 +156,7 @@ def stats(req, country_pk, group_slug):
                     data = simplejson.dumps([stats])
                 else:
                     data = simplejson.dumps([])
-                
+
                 return HttpResponse(data, 'application/javascript')
             else:
                 data = simplejson.dumps([])
@@ -187,20 +186,23 @@ def get_upload_progress(request):
   return HttpResponse(simplejson.dumps(data))
 
 @permission_required('vaxapp.can_upload')
-def upload(req):
+def upload(req, up_id=None):
     if req.method == 'POST':
         form = forms.DocumentForm(req.POST, req.FILES)
         if form.is_valid():
             doc = form.save(commit=False)
             doc.user = req.user
             doc.date_uploaded = datetime.datetime.utcnow()
-            doc.uuid = uuid.uuid4().hex
             doc.save()
             process_file.delay(doc)
             return HttpResponseRedirect('/')
             #return HttpResponse(simplejson.dumps({"name":doc.local_document.path,\
             #            "url":doc.local_document.path}))
     else:
+        if up_id:
+            doc = get_object_or_404(Document, uuid=up_id)
+            return render_to_response("upload_detail.html",\
+                    {"doc":doc}, context_instance=RequestContext(req))
         form = forms.DocumentForm()
     return render_to_response("upload.html",\
             {"document_form": form,

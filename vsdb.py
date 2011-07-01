@@ -168,8 +168,8 @@ def group_type_for_year(country, year, group_slug, type, activity):
     search.update(str(activity))
     hashed = search.hexdigest()
 
-    if hashed in cached_year_results:
-        result = cached_year_results[hashed]
+    if hashed in group_cached_year_results:
+        result = group_cached_year_results[hashed]
     else:
         sdb = boto.connect_sdb()
         cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
@@ -190,8 +190,8 @@ def group_all_type(country, group_slug, type, activity):
     search.update(str(activity))
     hashed = search.hexdigest()
 
-    if hashed in cached_results:
-        result = cached_results[hashed]
+    if hashed in group_cached_results:
+        result = group_cached_results[hashed]
     else:
         sdb = boto.connect_sdb()
         cs = sdb.get_domain(SDB_DOMAIN_TO_USE)

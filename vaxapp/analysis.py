@@ -18,6 +18,7 @@ from django.utils import translation
 from vax.vsdb import *
 from vax.vs3 import upload_file
 from .tasks import process_file
+from .tasks import handle_alert
 from .models import *
 
 def powerset(iterable):
@@ -37,6 +38,30 @@ def plot_one(sit_year=2011, sit_month=4, sit_day=1):
     print end
     print delta
 
+def plot_and_analyze(sit_year=2011, sit_month=12, sit_day=15, country_pks=None, group_slugs=None):
+    assert country_pks is not None
+    assert group_slugs is not None
+    begin = datetime.datetime.now()
+    for country in country_pks:
+        for slug in group_slugs:
+            analysis = Analysis(country_pk=country, group_slug=slug, vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
+            print analysis.save_stats()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
+
+def plot(sit_year=2011, sit_month=12, sit_day=15, country='SN', group_slug='bcg'):
+    begin = datetime.datetime.now()
+    analysis = Analysis(country_pk=country, group_slug=group_slug, vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
+    print analysis.save_stats()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
+
 def plot_all(sit_year=2011, sit_month=4, sit_day=1):
     begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
@@ -50,7 +75,7 @@ def plot_all(sit_year=2011, sit_month=4, sit_day=1):
     print end
     print delta
 
-def plot_historical():
+def plot_all_historical():
     begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
         for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
@@ -65,6 +90,20 @@ def plot_historical():
     print end
     print delta
 
+def plot_historical(country_pks, group_slugs, years):
+    begin = datetime.datetime.now()
+    for country in country_pks:
+        for v in group_slugs:
+            for y in years:
+                for m in range(13)[1:]:
+                    for d in [1,15]:
+                        analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=y, sit_month=m, sit_day=d)
+                        print analysis.plot()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
 
 def analyze_all(sit_year=2011, sit_month=4, sit_day=1):
     begin = datetime.datetime.now()
@@ -564,10 +603,8 @@ class Analysis(object):
                 if rate_difference > self.cons_rate_diff_threshold:
                     print '***FLAG***'
                     print 'major difference between forecast and actual consumption rates'
-                    alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                    handle_alert(countrystock=self.cs,\
                         reference_date=self.today, status='W', risk='F', text='C')
-                    alert.analyzed = datetime.datetime.now()
-                    alert.save()
 
 
             # "Query 3" Stock Management
@@ -588,10 +625,8 @@ class Analysis(object):
                     if (len(self.upcoming_forecasted) > 0) or (len(self.upcoming_on_po) > 0):
                         print '***FLAG***'
                         print 'delay or reduce shipment'
-                        alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                        handle_alert(countrystock=self.cs,\
                             reference_date=self.today, status='U', risk='O', text='D')
-                        alert.analyzed = datetime.datetime.now()
-                        alert.save()
                     else:
                         print '---OK---'
 
@@ -628,10 +663,8 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of stockout'
                             print 'order immediately -- not enough on upcoming deliveries'
-                            alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                            handle_alert(countrystock=self.cs,\
                                 reference_date=self.today, status='U', risk='S', text='I')
-                            alert.analyzed = datetime.datetime.now()
-                            alert.save()
                         else:
                             print '---OK---'
 
@@ -639,19 +672,15 @@ class Analysis(object):
                         print '***FLAG***'
                         print 'risk of stockout'
                         print 'order immediately - purchase forecasted delivery'
-                        alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                        handle_alert(countrystock=self.cs,\
                             reference_date=self.today, status='U', risk='S', text='F')
-                        alert.analyzed = datetime.datetime.now()
-                        alert.save()
 
                     else:
                         print '***FLAG***'
                         print 'risk of stockout'
                         print 'order immediately - no supply on PO or forecasted for next 3 months'
-                        alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                        handle_alert(countrystock=self.cs,\
                             reference_date=self.today, status='U', risk='S', text='P')
-                        alert.analyzed = datetime.datetime.now()
-                        alert.save()
 
                 if self.percent_coverage > (0.5 + float(self.today.month)/12.0):
 
@@ -664,10 +693,8 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of overstocking'
                             print 'delay shipment -- more than enough on upcoming deliveries'
-                            alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                            handle_alert(countrystock=self.cs,\
                                 reference_date=self.today, status='U', risk='O', text='E')
-                            alert.analyzed = datetime.datetime.now()
-                            alert.save()
 
                     elif (len(self.upcoming_forecasted) > 0):
                         self.forecasts_next_month = [d for d in self.upcoming_forecasted if d['date'].month == (self.today.month + 1)]
@@ -675,7 +702,7 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of overstocking'
                             print 'delay order - delay purchase of forecasted delivery'
-                            alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                            handle_alert(countrystock=self.cs,\
                                 reference_date=self.today, status='U', risk='O', text='O')
                             alert.analyzed = datetime.datetime.now()
                             alert.save()

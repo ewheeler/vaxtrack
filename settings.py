@@ -3,6 +3,8 @@ from django.conf import global_settings
 # stuff for email/seacucumber
 EMAIL_BACKEND = 'seacucumber.backend.SESBackend'
 SERVER_EMAIL = 'visualvaccines@gmail.com'
+CELERY_DISABLE_RATE_LIMITS = False
+CUCUMBER_RATE_LIMIT = 1
 
 # Django settings for the example project.
 SDB_DOMAIN = 'papayacountrystocks'

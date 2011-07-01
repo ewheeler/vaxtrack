@@ -376,12 +376,6 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
     def xldate_to_datetime(xldate):
         return datetime.datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
 
-    def xldate_to_date(xldate):
-        if isinstance(xldate, int):
-            return xldate_to_datetime(xldate).date()
-        else:
-            return None
-
     sheets = book.sheet_names()
     # grab any sheets starting with 'forecasting'
     forecasting_sheets = [s for s in sheets if s.startswith("forecasting")]
@@ -662,6 +656,17 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
     return True
 
 def import_template(file=None, interactive=True, dry_run=False, upload=None):
+    if dry_run:
+        print 'dry run...'
+    else:
+        print 'NOT dry run...'
+
+    imported_countries = []
+    imported_groups = []
+    imported_years = []
+    import_errors = []
+    imported_dates = []
+
     book = xlrd.open_workbook(file)
 
     if book.datemode not in (0,1):
@@ -669,12 +674,6 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
 
     def xldate_to_datetime(xldate):
         return datetime.datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
-
-    def xldate_to_date(xldate):
-        if isinstance(xldate, int):
-            return xldate_to_datetime(xldate).date()
-        else:
-            return None
 
     sheets = book.sheet_names()
     sheet = None
@@ -690,17 +689,21 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
             unmatched_products = []
             matched_groups = []
 
+            column_names = sheet.row_values(0)
             skips = ["", " "]
             vax_skips = ["", " "]
-            for r in range(int(sheet.nrows)):
+            for r in range(int(sheet.nrows))[2:]:
+                row = sheet.row_values(r)
                 try:
                     country = None
-                    term = values[0]
+                    term = row[0]
                     if term not in skips:
                         if interactive:
                             country = reconcile_country_interactively(term)
                         else:
                             country = reconcile_country_silently(term)
+                            if country.iso2_code not in imported_countries:
+                                imported_countries.append(country.iso2_code)
                     if country is None:
                         if term not in skips:
                             print "cannot reconcile '%s'" % (term)
@@ -710,11 +713,16 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
 
                 except Exception, e:
                     print 'BANG'
+                    if interactive:
+                        import pdb;pdb.set_trace()
+                    import_errors.append(e)
                     break
 
-                year = int(values[1])
+                year = int(row[1])
+                if year not in imported_years:
+                    imported_years.append(year)
 
-                vax = values[3]
+                vax = row[3]
                 try:
                     if vax not in vax_skips:
                         if interactive:
@@ -737,18 +745,41 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
                         continue
                     vax_slug = vaccine.slug
                     vax_group = vaccine.group.slug
+                    if vax_group not in imported_groups:
+                        imported_groups.append(vax_group)
                     if vax_slug not in products:
                         products.append(vax_slug)
                 except Exception, e:
                     print e
                     print "cannot find vax: '%s'" % (vax)
+                    import_errors.append(e)
                     continue
 
-                amount = int(values[4])
-                obs_date = xldate_to_date(values[5])
+                try:
+                    amount = int(row[4])
+                except ValueError, e:
+                    error = "'%s' is not a valid amount" % (row[4])
+                    import_errors.append(error)
+                    continue
+
+                if amount < 0:
+                    error = "negative stock values are not allowed. '%d' has been replaced with 0" % (amount)
+                    import_errors.append(error)
+                    amount = 0
+
+                try:
+                    obs_date = xldate_to_datetime(row[5]).date()
+                    if obs_date not in imported_dates:
+                        imported_dates.append(obs_date)
+                except Exception, e:
+                    error = "error importing '%s' as date" % (row[5])
+                    import_errors.append(error)
+                    continue
+
                 # TODO save row number
                 try:
                     if not dry_run:
+                        print 'not dry run, saving to sdb..'
                         item_name = hashlib.md5()
                         item_name.update(str(country.iso2_code))
                         item_name.update(str(vax_slug))
@@ -765,10 +796,12 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
                         item.add_value("date", str(obs_date))
                         item.add_value("year", str(year))
                         item.add_value("amount", str(amount))
+                        item.add_value("activity", "unknown")
                         item.add_value("upload", upload)
                         item.save()
                         print item
                     else:
+                        print 'dry run, printing dict...'
                         item = dict()
                         item['country'] = str(country.iso2_code)
                         item['product'] = str(vax_slug)
@@ -777,11 +810,13 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
                         item['date'] = str(obs_date)
                         item['year'] = str(year)
                         item['amount'] = str(amount)
+                        item['activity'] = "unknown"
                         item['upload'] = upload
                         print item
                 except Exception, e:
                     print 'error creating stock level'
                     print e
+                    import_errors.append(e)
                     if interactive:
                         import ipdb;ipdb.set_trace()
                 try:
@@ -799,9 +834,13 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
                 except Exception, e:
                     print 'error creating countrystock item'
                     print e
+                    import_errors.append(e)
                     if interactive:
                         import ipdb;ipdb.set_trace()
         print set(products)
         print set(unmatched_products)
         print set(matched_groups)
-    return True
+
+    first_date = min(imported_dates)
+    last_date = max(imported_dates)
+    return (set(imported_countries), set(imported_groups), list(set(imported_years)), import_errors, first_date, last_date)

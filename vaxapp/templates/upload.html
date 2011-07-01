@@ -4,42 +4,17 @@
     {% trans "Upload data" %}
 {% endblock %}
 
-{% block javascripts %}
-{{ block.super }}
-<script src="/assets/js/jquery-ui-1.8.13.custom.min.js"></script>
-<script src="/assets/fileupload/jquery.fileupload.js"></script>
-<script src="/assets/fileupload/jquery.fileupload-ui.js"></script>
-<script src="/assets/fileupload/jquery.iframe-transport.js"></script>
-{% endblock %}
-
-{% block stylesheets %}
-{{ block.super }}
-<link type="text/css" rel="stylesheet" href="/assets/fileupload/jquery.fileupload-ui.css" />
-{% endblock %}
-
 {% block right %}
 {% load i18n %}
-
-<script>
-$(document).ready(function(){
-	$('#form_submit_input').click(function(){
-	    $('#form_upload').fileupload({
-		    url: '{% url upload %}',
-		    sequentialUploads: true
-	    });
-	})
-});
-</script>
 
 <div class="module">
 	<h3>{% trans "Upload data" %}</h3>
         <div id="vaxform">
 	<a href="/assets/xls/visualvaccines_stock_levels_upload_format.xls">{% trans "Example excel format for UNICEF CO and other stock level template uploads" %}</a><br/>
 	<a href="/assets/xls/visualvaccines_country_names_and_codes.xls">{% trans "UNICEF SD Country names and codes for use in stock level template uploads" %}</a>
-	<form id="form_upload" action="#" method="post" enctype="multipart/form-data">
+	<form id="form_upload" action="/upload" method="post" enctype="multipart/form-data">
 		{{ document_form.as_p }}
 		{% csrf_token %}
-		<input type="hidden" id="X-Progress-ID" name="X-Progress-ID" value=""/>
 		<input type="hidden" id="id" name="id" value=""/>
 		<div class="submit">
 			<input type="submit" id="form_submit_input" value="{% trans "Upload" %}" />

@@ -13,6 +13,7 @@ from celery.decorators import task
 
 from vaxapp.models import Document
 from vaxapp.models import Alert
+from vaxapp.analysis import *
 import import_xls
 
 """
@@ -100,17 +101,22 @@ def process_file(doc):
             notify_upload_complete(doc)
             return True
     elif doc.document_format in ['UNCOS', 'TMPLT']:
-        # TODO XXX dry run for now!
         print 'IMPORT TEMPLATE'
         doc.date_process_start = datetime.datetime.utcnow()
         doc.status = 'P'
         doc.save()
-        if import_xls.import_template(doc.local_document.path, interactive=False, dry_run=True, upload=doc.uuid):
-            doc.date_process_end = datetime.datetime.utcnow()
-            doc.status = 'F'
-            doc.save()
-            notify_upload_complete(doc)
-            return True
+        import_report = import_xls.import_template(doc.local_document.path, interactive=False, dry_run=False, upload=doc.uuid)
+        print import_report
+        doc.date_process_end = datetime.datetime.utcnow()
+        doc.status = 'F'
+        doc.save()
+        doc.save_import_report(import_report)
+        print 'import complete'
+        last_date = import_report[5]
+        print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=import_report[0], group_slugs=import_report[1])
+        print plot_historical(import_report[0], import_report[1], import_report[2])
+        notify_upload_complete(doc)
+        return True
     else:
         print 'IMPORT UNKNOWN'
         #TODO do something for TKs
@@ -118,14 +124,17 @@ def process_file(doc):
     return True
 
 @task
-def handle_alert(countrystock, ref_date, status, risk, text, dry_run=False):
+def handle_alert(countrystock, reference_date, status, risk, text, dry_run=False):
+    print 'handling alert...'
     alert, created = Alert.objects.get_or_create(countrystock=countrystock,\
-        reference_date=ref_date, status=status, risk=risk, text=text)
+        reference_date=reference_date, status=status, risk=risk, text=text)
     alert.analyzed = datetime.datetime.now()
     alert.save()
-    if created:
+    print 'alert created!'
+    if 1:
         # only send emails if this is a new alert
         recipients = []
+        '''
         # get all staff
         staff = User.objects.filter(is_staff=True)
         # find other users who list this country in their profile
@@ -138,14 +147,17 @@ def handle_alert(countrystock, ref_date, status, risk, text, dry_run=False):
             except ObjectDoesNotExist:
                 continue
         # combine staff and other users
-        recipients = recipients + [s.email for s in staff]
-        subject = "[VisualVaccines] %s: %s %s" % (alert.countrystock, alert.status, alert.risk)
-        body = alert.text
+        #recipients = recipients + [s.email for s in staff]
+        '''
+        recipients = ['evanmwheeler@gmail.com', 'anthonybellon.contact@gmail.com']
+        subject = "[VisualVaccines] %s: %s %s" % (alert.countrystock, alert.get_status_display(), alert.get_risk_display())
+        body = alert.get_text_display()
         sender = 'visualvaccines@gmail.com'
         if all([subject, body, recipients]):
             mail_tuples = []
-            for r in recipeints:
+            for r in recipients:
                 mail_tuples.append((subject, body, sender, [r]))
+            print mail_tuples
             if not dry_run:
                 send_mass_mail(tuple(mail_tuples), fail_silently=False)
             else:
