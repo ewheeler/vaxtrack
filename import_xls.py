@@ -154,7 +154,7 @@ def reconcile_vaccine_interactively(term, country_pk):
                     country = Country.objects.get(iso2_code=country_pk)
                     alt = AltVaccine(vaccine=vax, country=country, alternate=term)
                     alt.save()
-                    return vax 
+                    return vax
                 else:
                     return None
         except Exception, e:

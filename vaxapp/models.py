@@ -742,7 +742,7 @@ class Document(models.Model):
             errors = import_report_tuple[3]
             if errors:
                 print errors
-                self.exception = ", ".join(errors)
+                self.exception = ",\n ".join(errors)
                 self.save()
                 print self.exception
             data_begin = import_report_tuple[4]
