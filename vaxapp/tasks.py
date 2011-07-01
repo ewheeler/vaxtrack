@@ -145,6 +145,7 @@ def handle_alert(countrystock, reference_date, status, risk, text, dry_run=False
     if 1:
         # only send emails if this is a new alert
         recipients = []
+        # TODO XXX TEMPORARY
         '''
         # get all staff
         staff = User.objects.filter(is_staff=True)
