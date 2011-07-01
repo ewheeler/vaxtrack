@@ -12,19 +12,21 @@
         <div id="doc-detail">
             <p>{% trans "You may refresh this page for updates about your uploaded document. You will receive an email once VisualVaccines' analysis is complete and new charts are ready to view."%}</p>
             <table>
-                <tbody>
+		<thead>
                     <tr>
-                        <td>{% trans "Uploaded by" %}</td>
-                        <td>{% trans "Document format" %}</td>
-                        <td>{% trans "Title" %}</td>
-                        <td>{% trans "Date Uploaded" %}</td>
-                        <td>{% trans "Date Process Started" %}</td>
-                        <td>{% trans "Date Process Completed" %}</td>
-                        <td>{% trans "Countries included" %}</td>
-                        <td>{% trans "Product groups included" %}</td>
-                        <td>{% trans "Years included" %}</td>
-                        <td>{% trans "Processing errors" %}</td>
+                        <th>{% trans "Uploaded by" %}</th>
+                        <th>{% trans "Document format" %}</th>
+                        <th>{% trans "Title" %}</th>
+                        <th>{% trans "Date Uploaded" %}</th>
+                        <th>{% trans "Date Process Started" %}</th>
+                        <th>{% trans "Date Process Completed" %}</th>
+                        <th>{% trans "Countries included" %}</th>
+                        <th>{% trans "Product groups included" %}</th>
+                        <th>{% trans "Years included" %}</th>
+                        <th>{% trans "Processing errors" %}</th>
                     </tr>
+		</thead>
+                <tbody>
                     <tr>
                         <td>{{ doc.user }}</td>
                         <td>{{ doc.get_document_format_display }}</td>

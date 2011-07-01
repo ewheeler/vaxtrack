@@ -38,6 +38,28 @@ def upload_file_to_s3(doc):
     k.set_acl(ACL)
     return k
 
+@task
+def process_revert_upload(doc, reverter):
+    sdb_revert_upload(doc.uuid)
+    doc.date_revert_start = datetime.datetime.utcnow()
+    doc.reverted_by = reverter
+    doc.status = 'P'
+    doc.save()
+    country_pks = (c.iso2_code for c in doc.imported_countries.all())
+    print country_pks
+    group_slugs = (g.slug for g in doc.imported_groups.all())
+    print group_slugs
+    years = doc.imported_years.split(',')
+    print years
+    last_date = doc.date_data_end
+    print last_date
+    print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=country_pks, group_slugs=group_slugs)
+    print plot_historical(country_pks, group_slugs, years)
+    doc.date_revert_end = datetime.datetime.utcnow()
+    doc.status = 'R'
+    doc.save()
+    return True
+
 def notify_upload_complete(doc):
     uploader_email = doc.user.email
     if all([doc.user.first_name, doc.user.last_name]):
@@ -111,7 +133,7 @@ def process_file(doc):
         doc.save()
         doc.save_import_report(import_report)
         print 'import complete'
-        last_date = import_report[5]
+        last_date = doc.date_data_end
         print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=import_report[0], group_slugs=import_report[1])
         print plot_historical(import_report[0], import_report[1], import_report[2])
         doc.status = 'F'

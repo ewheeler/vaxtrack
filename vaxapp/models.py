@@ -627,6 +627,7 @@ DOCUMENT_STATES = (
     ('Q', _('Queued')),
     ('P', _('Processing')),
     ('F', _('Finished')),
+    ('R', _('Reverted')),
     ('E', _('Processing Error')))
 
 DOCUMENT_FORMAT_CHOICES = (
@@ -649,7 +650,7 @@ class Document(models.Model):
     """
     A simple model which stores data about an uploaded document.
     """
-    user = models.ForeignKey(User, verbose_name=_('user'))
+    user = models.ForeignKey(User, verbose_name=_('user'), related_name="uploaded_document")
     affiliation = models.ForeignKey(Group, verbose_name=_('group'), null=True, blank=True)
     name = models.CharField(_("Title"), max_length=100)
     uuid = models.CharField(_('Unique Identifier'), max_length=36)
@@ -665,11 +666,16 @@ class Document(models.Model):
     date_process_start = models.DateTimeField(_("Date Process Started"), null=True, blank=True)
     date_process_end = models.DateTimeField(_("Date Process Completed"), null=True, blank=True)
     date_exception = models.DateTimeField(_("Date of Exception"), null=True, blank=True)
+    date_revert_start = models.DateTimeField(_("Date Revert Started"), null=True, blank=True)
+    date_revert_end = models.DateTimeField(_("Date Revert Completed"), null=True, blank=True)
+    reverted_by = models.ForeignKey(User, verbose_name=_('user'), null=True, blank=True, related_name="reverted_document")
 
     date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow)
     imported_countries = models.ManyToManyField(Country, null=True, blank=True)
     imported_groups = models.ManyToManyField(VaccineGroup, null=True, blank=True)
     imported_years = models.CommaSeparatedIntegerField(max_length=200, null=True, blank=True)
+    date_data_begin = models.DateField(_("Date data begin"), null=True, blank=True)
+    date_data_end = models.DateField(_("Date data end"), null=True, blank=True)
 
     class Meta:
         verbose_name = _('document')
@@ -719,14 +725,35 @@ class Document(models.Model):
                     self.save()
                 except ObjectDoesNotExist:
                     continue
-        years = import_report_tuple[2]
-        if years:
-            self.imported_years = ",".join((str(y) for y in years))
-            self.save()
-        errors = import_report_tuple[3]
-        if errors:
-            self.exception = ", ".join(errors)
-            self.save()
+        try:
+            years = import_report_tuple[2]
+            if years:
+                print years
+                self.imported_years = ",".join((str(y) for y in years))
+                self.save()
+                print self.imported_years
+            errors = import_report_tuple[3]
+            if errors:
+                print errors
+                self.exception = ", ".join(errors)
+                self.save()
+                print self.exception
+            data_begin = import_report_tuple[4]
+            if data_begin:
+                print data_begin
+                self.date_data_begin = data_begin
+                self.save()
+                print self.date_data_begin
+            data_end = import_report_tuple[5]
+            if data_end:
+                print data_end
+                self.date_data_end = data_end
+                self.save()
+                print self.date_data_end
+        except Exception, e:
+            print 'BANG'
+            print e
+            print 'failed to save import_report_tuple'
 
     @staticmethod
     def process_response(data):

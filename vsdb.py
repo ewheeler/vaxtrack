@@ -64,7 +64,7 @@ def _decode_item(item):
             if field in ['year', 'amount']:
                 decoded += 2147483648
             dict.update({field:decoded})
-    return dict 
+    return dict
 
 def decode_results(results):
     ''' Decodes all results from a boto SelectResultSet.
@@ -98,6 +98,14 @@ def sort_results_asc(list, attr):
 
 def sort_results_desc(list, attr):
     return sorted(list, key=itemgetter(attr), reverse=True)
+
+def sdb_revert_upload(uuid):
+    sdb = boto.connect_sdb()
+    cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+    query = "SELECT * FROM `%s` WHERE `upload`='%s'" % (SDB_DOMAIN_TO_USE, uuid)
+    result = cs.select(query)
+    for res in result:
+        res.delete()
 
 def sdb_get_all_cs():
     sdb = boto.connect_sdb()

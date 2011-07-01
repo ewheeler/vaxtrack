@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block title %}
+    {% load i18n %}
+    {% trans "Uploaded documents" %}
+{% endblock %}
+
+{% block content %}
+{% load i18n %}
+
+<div class="module">
+    <h3>{% trans "Uploaded documents" %}</h3>
+        <div id="doc-list">
+            <table>
+		<thead>
+                    <tr>
+                        <th>{% trans "Uploaded by" %}</th>
+                        <th>{% trans "Document format" %}</th>
+                        <th>{% trans "Title" %}</th>
+                        <th>{% trans "Date Uploaded" %}</th>
+                        <th>{% trans "Date Process Started" %}</th>
+                        <th>{% trans "Date Process Completed" %}</th>
+                        <th>{% trans "Countries included" %}</th>
+                        <th>{% trans "Product groups included" %}</th>
+                        <th>{% trans "Years included" %}</th>
+                        <th>{% trans "Processing errors" %}</th>
+                        <th>{% trans "Revert upload" %}</th>
+                    </tr>
+		</thead>
+                <tbody>
+		    {% for doc in docs %}
+			<tr>
+				<td>{{ doc.user }}</td>
+				<td>{{ doc.get_document_format_display }}</td>
+				<td>{{ doc.name }}</td>
+				<td>{{ doc.date_uploaded }}</td>
+				<td>{{ doc.date_process_start }}</td>
+				<td>{{ doc.date_process_end }}</td>
+				<td>{{ doc.get_imported_countries }}</td>
+				<td>{{ doc.get_imported_groups }}</td>
+				<td>{{ doc.get_imported_years }}</td>
+				<td>{{ doc.date_exception }}</td>
+				<td>
+					{% if doc.date_revert_begin %}
+						{% if doc.date_revert_end %}
+							{% trans "Revert process completed at" %} {{ doc.date_revert_end }} {% trans "initiated by" %} {{ doc.reverted_by }}
+						{% else %}
+							{% trans "Revert process underway or failed. Started at" %} {{ doc.date_revert_begin }} {% trans "initiated by" %} {{ doc.reverted_by }}
+						{% endif %}
+					{% else %}
+					<form id="revert-{{doc.uuid}}" action="{% url revert-upload %}" method="post">
+						{% csrf_token %}
+						<input type="hidden" id="uuid" name="uuid" value="{{doc.uuid}}"/>
+						<input type="submit" id="submit-revert-{{doc.uuid}}" value="{% trans 'Revert' %}"/>
+				    	</form>
+					{% endif %}
+				</td>
+			</tr>
+		    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+</div>
+{% endblock %}

@@ -207,6 +207,22 @@ def upload(req, up_id=None):
             "tab": "upload"},\
             context_instance=RequestContext(req))
 
+@permission_required('vaxapp.delete_document')
+def uploads(req, user=None):
+    return render_to_response("uploads.html",\
+            {"docs": Document.objects.all().order_by('-date_uploaded')},\
+            context_instance=RequestContext(req))
+
+@permission_required('vaxapp.delete_document')
+def revert_upload(req):
+    if req.method == 'POST':
+        up_id = req.POST['uuid']
+        print up_id
+        doc = get_object_or_404(Document, uuid=up_id)
+        print doc
+        process_revert_upload.delay(doc, req.user)
+        return HttpResponseRedirect("/uploads/")
+
 @permission_required('vaxapp.can_upload')
 def entry(req):
     if req.method == 'POST':
