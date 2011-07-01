@@ -196,6 +196,10 @@ div.module div.toolbar {
 	    border-right: 1px solid #aaa;
 	    border-left: 1px solid #aaa;
 	}
+	#legend {
+		padding: .33em;
+		height: 6em;
+	}
 
 /* tooltip styling. by default the element to be styled is .tooltip  */
 .tooltip {
@@ -244,3 +248,21 @@ div.module div.toolbar {
     padding-left: 0.2em;
     vertical-align: middle;
 }
+
+#download {
+  background-image: url("../icons/silk/page_excel.png");
+  background-repeat: no-repeat;
+  background-position: -1 50%;
+  height: 2em;
+  width: 100%;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 1em;
+  vertical-align: bottom;
+  font-size: 75%;
+}
+
+#download a{
+  padding-left: 2em;
+}
+

@@ -6,14 +6,16 @@
 {% endblock %}
 {% block javascripts %}
 {{ block.super }}
-<script src="/assets/js/dygraph-combined.js"></script>
+<!--[if lt IE 9]><script src="/assets/flashcanvas/pro/flashcanvas.js"></script><![endif]-->
 <script src="/assets/js/vax-dev.js"></script>
+<script src="/assets/js/dygraph-combined.js"></script>
 <script src="/assets/js/jquery.sparkline.min.js"></script>
 {% endblock %}
 
 {% block left %}
 {% load i18n %}
 {% load getattribute %}
+{% load permissions %}
 
     {% if countries %}
     <div id="module-options" class="module expanded">
@@ -23,10 +25,17 @@
             <form id="countries" action="">
                 <select id="country">
                 {% for c in countries %}
-                        <option value="{{c.pk}}">{{ c|getattribute:LANGUAGE_CODE }}</option>
+                    {% if user.is_authenticated %}
+                        {% ifhasperm "country_permission.has_country_affiliation" request.user c %}
+                            <option value="{{c.anon}}">{{ c|getattribute:LANGUAGE_CODE }}</option>
+                        {% endifhasperm %}
+                    {% else %}
+                        {% ifequal c.pk "SN" %}
+                            <option value="{{c.anon}}">{{ c|getattribute:LANGUAGE_CODE }}</option>
+                        {% endifequal %}
+                    {% endif %}
                 {% endfor %}
                 </select>
-                <img id="flag" src="">
             </form>
             <h5>{% trans "Vaccine" %}</h5>
             <form id="vaccines" action="">
@@ -38,17 +47,50 @@
             <h5>{% trans "Select an indicator" %}</h5>
             <form id="plot_options" action="">
                 <input type="checkbox" id="checkbox-S" value="" checked="checked" disabled="disabled"/>
-                <label for="checkbox-S" class='tipoff' title="{% trans "Show actual stock" %}">{% trans "Show actual stock" %}</label><span class="chart-legend" style="color:blue;">&mdash;</span><br />
-                <input type="checkbox" id="checkbox-B" value="B" checked="checked" />
-                <label for="checkbox-B" class='tipoff' title="{% trans "Show 3 month buffer stock (minimum stock level) and 9 month overstock (maximum stock level)." %}">{% trans "Show buffer stock  &amp; overstock indicators" %}</label><span class="chart-legend" style="color:red;">&mdash;</span><br />
+                <label for="checkbox-S" class='tipoff' title="{% trans "Show actual stock" %}">{% trans "Show actual stock" %}</label><br />
+                <input type="checkbox" id="checkbox-T" value="T" checked="checked" />
+                <label for="checkbox-T" class='tipoff' title="{% trans "Show 3 month buffer stock (minimum stock level)." %}">{% trans "Show buffer stock indicator" %}</label><br />
+                <input type="checkbox" id="checkbox-N" value="N" checked="checked" />
+                <label for="checkbox-N" class='tipoff' title="{% trans "Show 9 month overstock (maximum stock level)." %}">{% trans "Show overstock indicator" %}</label><br />
                 <input type="checkbox" id="checkbox-F" value="F" checked="checked" />
-                <label for="checkbox-F" class='tipoff' title="{% trans "Show forecasted stock level for the future based on planned deliveries from  UNICEF country office's annual forecasts."%}">{% trans "Show current forecasted orders (on forecast)" %}</label><span class="chart-legend" style="color:purple;">---</span><br />
+                <label for="checkbox-F" class='tipoff' title="{% trans "Show forecasted stock level for the future based on planned deliveries from  UNICEF country office's annual forecasts."%}">{% trans "Show forecasted stock level based on theoretical usage (and including forecasted orders)" %}</label><br />
                 <input type="checkbox" id="checkbox-P" value="P" checked="checked" />
-                <label for="checkbox-P" class='tipoff' title="{% trans "Show forecasted stock level for the future based on planned deliveries that are on purchase order (payment has been made, though delivery date may vary)."%}">{% trans "Show current forecasted orders (on purchase)" %}</label><span class="chart-legend" style="color:blue;">---</span><br />
+                <label for="checkbox-P" class='tipoff' title="{% trans "Show forecasted stock level for the future based on planned deliveries that are on purchase order (payment has been made, though delivery date may vary)."%}">{% trans "Show forecasted stock level based on theoretical usage (and including placed orders)" %}</label><br />
                 <input type="checkbox" id="checkbox-C" value="C" checked="checked" />
-                <label for="checkbox-C" class='tipoff' title="{% trans "Show projected stock level for past and future based on planned deliveries from UNICEF country office's annual forecasts (theoretical, intended as tool to examine past forecasting)."%}">{% trans "Show original projected stock level (based on country office forecast)" %}</label><span class="chart-legend" style="color:green;">---</span><br />
+                <label for="checkbox-C" class='tipoff' title="{% trans "Show projected stock level for past and future based on planned deliveries from UNICEF country office's annual forecasts (theoretical, intended as tool to examine past forecasting)."%}">{% trans "Show original projected stock level (based on country office forecast)" %}</label><br />
                 <input type="checkbox" id="checkbox-U" value="U" checked="checked" />
-                <label for="checkbox-U" class='tipoff' title="{% trans "Show projected stock level for past and future based on planned deliveries adjusted to include actual deliveries to date (theoretical, intended as tool to examine past forecasting)."%}">{% trans "Show original projected stock level (based on forecast and deliveries)" %}</label><span class="chart-legend" style="color:orange;">---</span><br />
+                <label for="checkbox-U" class='tipoff' title="{% trans "Show projected stock level for past and future based on planned deliveries adjusted to include actual deliveries to date (theoretical, intended as tool to examine past forecasting)."%}">{% trans "Show original projected stock level (based on forecast and deliveries)" %}</label><br />
+            </form>
+
+    	    <div id="download"><a href="#">{% trans "Download data for this chart"%}</a></div>
+
+            <h5>{% trans "Situation as of" %}</h5>
+            <form id="situation" action="">
+                <select id="sit_year">
+                <option value="2011">2011</option>
+                <option value="2010">2010</option>
+                <option value="2009">2009</option>
+                <option value="2008">2008</option>
+                <option value="2007">2007</option>
+                </select>
+                <select id="sit_month">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                </select>
+                <select id="sit_day">
+                <option value="1">1</option>
+                <option value="15">15</option>
+                </select>
             </form>
         </div>
     </div>
@@ -75,7 +117,9 @@
 {% load i18n %}
     <div class="module" id="module-chart">
         <h3>{% trans "Chart" %}</h3>
-        <div id="chart" style="width:600px;height:400px;">
+	<div class="help"><p>{% trans "Click and drag on chart to select a portion and zoom in; double-click on chart to zoom out." %}</p></div>
+        <div id="legend"></div>
+        <div id="chart"></div>
     </div>
     <div class="module expanded" id="module-hist">
         <h3>{% trans "Historical" %}</h3>
@@ -86,20 +130,4 @@
 	</table>
 	</div>
     </div>
-<script type="text/javascript">
-    new Dygraph(document.getElementById("chart"),
-		"/assets/csv/ML_opv_stocks.csv",  // CSV file with headers
-		{ 
-		    rollPeriod: 1,
-		    title: 'ML opv stocks',
-		    ylabel: 'Doses',
-		    xlabel: 'Time',
-		    axisLabelFontSize: 10,
-		    labelsKMB: true,
-		    stacked: true,
-		    connectSeparatedPoints: true,
-		    gridLineColor: '#eee',
-		    stepPlot: true,
-		}); // options
-</script>
 {% endblock %}

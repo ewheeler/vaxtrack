@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
+import os
+import errno
 import csv
 import datetime
 import calendar
@@ -9,18 +11,6 @@ from itertools import chain
 from itertools import combinations
 import operator
 
-# allow this to run on a headless server
-# (otherwise pylab will use TkAgg backend)
-import matplotlib
-matplotlib.use('Agg')
-import pylab
-
-from pylab import figure, axes, pie, title
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-from matplotlib.dates import YearLocator, MonthLocator, DateFormatter, num2date, date2num
-from matplotlib.ticker import FuncFormatter
-import matplotlib.pyplot
-
 from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 from django.utils import translation
@@ -28,6 +18,7 @@ from django.utils import translation
 from vax.vsdb import *
 from vax.vs3 import upload_file
 from .tasks import process_file
+from .tasks import handle_alert
 from .models import *
 
 def powerset(iterable):
@@ -35,11 +26,11 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-def plot_one():
+def plot_one(sit_year=2011, sit_month=4, sit_day=1):
     begin = datetime.datetime.now()
     for country in ['ML']:
         for v in ['opv']:
-            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
             print analysis.plot()
     end = datetime.datetime.now()
     delta = end - begin
@@ -47,11 +38,36 @@ def plot_one():
     print end
     print delta
 
-def plot_all():
+def plot_and_analyze(sit_year=2011, sit_month=12, sit_day=15, country_pks=None, group_slugs=None):
+    assert country_pks is not None
+    assert group_slugs is not None
+    begin = datetime.datetime.now()
+    for country in country_pks:
+        for slug in group_slugs:
+            analysis = Analysis(country_pk=country, group_slug=slug, vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
+            print analysis.save_stats()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
+
+def plot(sit_year=2011, sit_month=12, sit_day=15, country='SN', group_slug='bcg'):
+    begin = datetime.datetime.now()
+    analysis = Analysis(country_pk=country, group_slug=group_slug, vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
+    print analysis.save_stats()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
+
+def plot_all(sit_year=2011, sit_month=4, sit_day=1):
     begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
-        for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
-            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
+        #for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
+        for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
             print analysis.plot()
     end = datetime.datetime.now()
     delta = end - begin
@@ -59,11 +75,48 @@ def plot_all():
     print end
     print delta
 
-def analyze_all():
+def plot_all_historical():
+    begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
-        for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
-            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None)
+        for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
+            for y in [2007,2008,2009,2010,2011]:
+                for m in range(13)[1:]:
+                    for d in [1,15]:
+                        analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=y, sit_month=m, sit_day=d)
+                        print analysis.plot()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
+
+def plot_historical(country_pks, group_slugs, years):
+    begin = datetime.datetime.now()
+    for country in country_pks:
+        for v in group_slugs:
+            for y in years:
+                for m in range(13)[1:]:
+                    for d in [1,15]:
+                        analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=y, sit_month=m, sit_day=d)
+                        print analysis.plot()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
+
+def analyze_all(sit_year=2011, sit_month=4, sit_day=1):
+    begin = datetime.datetime.now()
+    for country in ['ML', 'TD', 'SN']:
+        #for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
+        for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
+            analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
             print analysis.save_stats()
+    end = datetime.datetime.now()
+    delta = end - begin
+    print begin
+    print end
+    print delta
 
 class Analysis(object):
     # helper methods
@@ -83,7 +136,7 @@ class Analysis(object):
         return matches
 
 
-    def __init__(self, country_pk=None, group_slug=None, vaccine_abbr=None, lang=None):
+    def __init__(self, country_pk=None, group_slug=None, vaccine_abbr=None, lang=None, sit_year=None, sit_month=None, sit_day=None):
         self.country_pk = country_pk
         self.vaccine_abbr = vaccine_abbr
         self.group_slug = group_slug
@@ -102,9 +155,7 @@ class Analysis(object):
 
         country = Country.objects.get(iso2_code=self.country_pk)
         group = VaccineGroup.objects.get(slug=self.group_slug)
-        self.cs = CountryStock.objects.get(country=country, group=group)
-        if self.cs is None:
-            return 'couldnt find countrystock'
+        self.cs, new_cs = CountryStock.objects.get_or_create(country=country, group=group)
 
         # loosely keep track of what we've done,
         # so we don't call save_stats before plotting
@@ -114,29 +165,41 @@ class Analysis(object):
 
         # configuration options
         self.save_chart = True
+
         self.dump = True
+        self.dump_column_names = False
+        self.upload_csv_to_s3 = False
+
         self.upload_chart_to_s3 = True
         self.generate_all_charts = True
         self.lookahead = datetime.timedelta(90)
         self.cons_rate_diff_threshold = 0.25
+        self.anon = True
 
         # TODO XXX back to the present!
         #self.today = datetime.datetime.today().date()
-        self.today = datetime.date(2010, 10, 1)
+        if sit_year and sit_month and sit_day:
+            self.today = datetime.date(sit_year, sit_month, sit_day)
+        else:
+            self.today = datetime.date(2011, 4, 1)
 
 
         try:
-            self.stocklevels = get_group_all_stocklevels_asc(self.country_pk, self.group_slug)
+            # fetch all stocklevels up to 'today'
+            self.stocklevels = [s for s in get_group_all_stocklevels_asc(self.country_pk, self.group_slug) if s['date'] < self.today]
 
             self.dates = Analysis.values_list(self.stocklevels, 'date')
             self.levels = Analysis.values_list(self.stocklevels, 'amount')
 
             self.forecasts = get_group_all_forecasts_asc(self.country_pk, self.group_slug)
+            self.fforecasts = get_group_all_fforecasts_asc(self.country_pk, self.group_slug)
 
             self.annual_demand = {}
             # get list of years we are dealing with
             self.f_years = list(set(Analysis.values_list(self.forecasts, 'year')))
             print self.f_years
+            self.ff_years = list(set(Analysis.values_list(self.fforecasts, 'year')))
+            print self.ff_years
             self.s_years = list(set(Analysis.values_list(self.stocklevels, 'year')))
             print self.s_years
             for year in self.f_years:
@@ -162,8 +225,8 @@ class Analysis(object):
             filtered_deliveries = get_group_all_deliveries_for_type_asc(self.country_pk, self.group_slug, delivery_type)
             #print 'deliveries:'
             #print len(filtered_deliveries)
-            if len(filtered_deliveries) == 0:
-                return [], []
+            #if len(filtered_deliveries) == 0:
+            #    return [], []
 
             def _est_daily_consumption_for_year(year):
                 ''' Return daily consumption based on estimated annual demand '''
@@ -171,6 +234,9 @@ class Analysis(object):
                     forecast = self.annual_demand[year]
                     return int(float(forecast)/float(365.0))
                 else:
+                    if (year - 1) in self.annual_demand:
+                        old = self.annual_demand[year-1]
+                        return int(float(old)/float(365.0))
                     return 0
 
             # timedelta representing a change of one day
@@ -186,11 +252,11 @@ class Analysis(object):
             #print days_to_plot
 
             # variables to keep track of running totals while we loop
+            annual_begin_levels = {}
             if begin_level is None:
                 if delivery_type in ["CO", "UN"]:
-                    annual_begin_levels = {}
                     for f in get_group_all_forecasts_asc(self.country_pk, self.group_slug):
-                        if f['initial'] is not None:
+                        if f['initial'] not in [0, '0', '', ' ', None]:
                             annual_begin_levels.update({f['year']:f['initial']})
             if begin_level is not None:
                 est_stock_level = begin_level
@@ -321,223 +387,136 @@ class Analysis(object):
             # perform any required calculations before beginning fig
             # construction, so they won't have to be repeated when
             # constructing multiple figs
+            projected_ff_dates = []
+            projected_ff_levels = []
             if self.calc_forecast_projection and (len(self.stocklevels) > 0):
                 projected_ff_dates, projected_ff_levels = self._calc_stock_levels(\
-                    "FF", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
+                    "FF", self.stocklevels[-1]['date'], self.stocklevels[-1]['amount'])
 
+            projected_fp_dates = []
+            projected_fp_levels = []
             if self.calc_purchased_projection and (len(self.stocklevels) > 0):
                 projected_fp_dates, projected_fp_levels = self._calc_stock_levels(\
-                    "FP", self.stocklevels[0]['date'], self.stocklevels[0]['amount'])
+                    "FP", self.stocklevels[-1]['date'], self.stocklevels[-1]['amount'])
 
+            projected_co_dates = []
+            projected_co_levels = []
             if self.calc_theoretical_forecast and (len(self.stocklevels) > 0):
                 projected_co_dates, projected_co_levels = self._calc_stock_levels(\
-                    "CO", self.stocklevels[0]['date'])
+                    "CO", self.stocklevels[0]['date'], None, self.today)
 
+            projected_un_dates = []
+            projected_un_levels = []
             if self.calc_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
                 projected_un_dates, projected_un_levels = self._calc_stock_levels(\
-                    "UN", self.stocklevels[0]['date'])
+                    "UN", self.stocklevels[0]['date'], None, self.today)
         except Exception, e:
             print 'BANG calculations'
             print e
 
         try:
             if self.dump:
-                filename = "%s_%s_stocks.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(self.dates, self.levels)))
-                filename = "%s_%s_3mobuffers.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(first_and_last_days, self.three_month_buffers)))
-                filename = "%s_%s_9mobuffers.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(first_and_last_days, self.nine_month_buffers)))
-                filename = "%s_%s_ff.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_ff_dates, projected_ff_levels)))
-                filename = "%s_%s_fp.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_fp_dates, projected_fp_levels)))
-                filename = "%s_%s_co.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_co_dates, projected_co_levels)))
-                filename = "%s_%s_un.csv" % (self.country_pk, self.group_slug)
-                with open(filename, 'wb') as f:
-                    csvwriter = csv.writer(f, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
-                    csvwriter.writerows(([date.isoformat(),str(level)] for date,level in zip(projected_un_dates, projected_un_levels)))
+
+                sl = dict(zip(self.dates, self.levels))
+                ff = dict(zip(projected_ff_dates, projected_ff_levels))
+                fp = dict(zip(projected_fp_dates, projected_fp_levels))
+                co = dict(zip(projected_co_dates, projected_co_levels))
+                un = dict(zip(projected_un_dates, projected_un_levels))
+
+                all_years = set(self.f_years + self.ff_years + self.s_years)
+                first_date = datetime.date(min(all_years), 1, 1)
+                last_date = datetime.date(self.today.year, 12, 31)
+                possible_days = last_date - first_date
+                one_day = datetime.timedelta(days=1)
+                day_pointer = first_date
+                time_series = list()
+                # TODO always dump one with column names for export and one without for dygraph
+                if self.dump_column_names:
+                    time_series.append(["date", "actual stock level", "3 month buffer stock level", "9 month overstock level", "future delivery on forecast", "future delivery on purchase", "original country office forecast", "unicef delivery"])
+                for day in range(possible_days.days):
+                    this_day = day_pointer
+                    td = this_day.isoformat()
+                    if sl.has_key(this_day):
+                        sto = sl[this_day]
+                    else:
+                        sto = ""
+                    if self.three_by_year.has_key(this_day.year):
+                        tmo = self.three_by_year[this_day.year]
+                    else:
+                        tmo = ""
+                    if self.nine_by_year.has_key(this_day.year):
+                        nmo = self.nine_by_year[this_day.year]
+                    else:
+                        nmo = ""
+                    if ff.has_key(this_day):
+                        ffl = str(ff[this_day])
+                        if ffl == "0":
+                            ffl = ""
+                    else:
+                        ffl = ""
+                    if fp.has_key(this_day):
+                        fpl = str(fp[this_day])
+                        if fpl == "0":
+                            fpl = ""
+                    else:
+                        fpl = ""
+                    if co.has_key(this_day):
+                        col = str(co[this_day])
+                        if col == "0":
+                            col = ""
+                    else:
+                        col = ""
+                    if un.has_key(this_day):
+                        unl = str(un[this_day])
+                        if unl == "0":
+                            unl = ""
+                    else:
+                        unl = ""
+                    # date, stocklevel, 3mo buffer, 9mo overstock, future on forecast, future on po, orig country forecast, unicef delivery
+                    time_series.append([td, sto, tmo, nmo, ffl, fpl, col, unl])
+
+                    day_pointer = this_day + one_day
+
+                #file_name = "/tmp/%s_%s_all.csv" % (self.country_pk, self.group_slug)
+                country_code = self.country_pk
+                if self.anon:
+                    country_code = "".join([str(letter_position(l)).zfill(2) for l in self.country_pk])
+                file_path = "/home/ubuntu/vax/vaxapp/static/csvs/%s/%s/%s/" % (country_code, self.group_slug, self.today.year)
+                file_name = "%s_%s_%s_%s_%s.csv" % (country_code, self.group_slug, self.today.year, self.today.month, self.today.day)
+                local_file = file_path + file_name
+                try:
+                    os.makedirs(file_path)
+                except OSError, e:
+                    # don't raise if the path already exists,
+                    # only if there is another error (permission, etc)
+                    if e.errno != errno.EEXIST:
+                        raise
+
+                with open(local_file, 'wb') as f:
+                    csvwriter = csv.writer(f, delimiter=',')
+                    csvwriter.writerows(time_series)
+
+                if self.upload_csv_to_s3:
+                    # TODO queue uploading with celery so uploading
+                    # will not delay generation of next csv
+                    try:
+                        country_code = self.country_pk
+                        if self.anon:
+                            country_code = "".join([str(letter_position(l)).zfill(2) for l in self.country_pk])
+
+                        s3_key = "%s_%s_%s_%s_%s.csv" % (country_code, self.group_slug, self.today.year, self.today.month, self.today.day)
+                        s3_path = "%s/%s/%s/" % (country_code, self.group_slug, self.today.year)
+                        upload_file(filename, 'vaxtrack_csv', s3_path + s3_key, True)
+                        print s3_key
+                    except Exception, e:
+                        print 'ERROR UPLOADING'
+                        print e
+
                 return
         except Exception, e:
             print 'BANG dump'
             print e
             import ipdb; ipdb.set_trace()
-
-        for variant in powerset(self.options_str):
-            self.variant_str = "".join(sorted(str(c) for c in variant))
-            self.set_plot_options(self.variant_str)
-            for lang in self.langs:
-                translation.activate(lang)
-                try:
-                    # documentation sez figsize is in inches (!?)
-                    #fig = figure(figsize=(15,12))
-                    fig = figure(figsize=(8.5,5.5))
-
-                    # lookup country name and vaccine abbreviation in given language
-                    _country_name = getattr(self.cs.country, lang)
-                    _group_abbr = getattr(self.cs.group, lang)
-                    # add country name and vaccine as chart title
-                    title = "%s %s" % (_country_name, _group_abbr)
-                    fig.suptitle(title, fontsize=18)
-
-                    # get current locale
-                    loc = locale.setlocale(locale.LC_ALL, '')
-                    if lang == 'fr':
-                        # if we are making a french chart, change locale
-                        locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
-                    # get localized datetime string
-                    loc_datetime = datetime.datetime.now().strftime(locale.nl_langinfo(locale.D_T_FMT))
-
-                    # reset locale to initial locale
-                    locale.setlocale(locale.LC_ALL, loc)
-
-                    # add timestamp to lower left corner
-                    colophon_text = translation.ugettext("Generated by VisualVaccines on")
-                    colophon = colophon_text + " %s (GMT -5)" % (loc_datetime)
-                    fig.text(0,0,colophon, fontsize=8)
-                    ax = fig.add_subplot(111)
-
-                except Exception, e:
-                    print 'ERROR FIGURE PREP'
-                    print e
-
-                try:
-                    if (len(self.dates) != 0) and (len(self.levels) != 0):
-                        # plot stock levels
-                        ax.plot_date(self.dates, self.levels, '-', drawstyle='steps', color='blue')
-
-                    if self.display_buffers:
-                        # plot 3 and 9 month buffer levels as red lines
-                        ax.plot_date(first_and_last_days, self.three_month_buffers, '-', drawstyle='steps',\
-                            color='red')
-                        ax.plot_date(first_and_last_days, self.nine_month_buffers, '-', drawstyle='steps',\
-                            color='red')
-
-                    if self.display_forecast_projection and (len(self.stocklevels) > 0):
-                        ax.plot_date(projected_ff_dates, projected_ff_levels, '--',\
-                            drawstyle='steps', color='purple')
-
-                    if self.display_purchased_projection and (len(self.stocklevels) > 0):
-                        ax.plot_date(projected_fp_dates, projected_fp_levels, '--',\
-                        drawstyle='steps', color='blue')
-
-                    if self.display_theoretical_forecast and (len(self.stocklevels) > 0):
-                        ax.plot_date(projected_co_dates, projected_co_levels, '--',\
-                        drawstyle='steps', color='green')
-
-                    if self.display_adjusted_theoretical_forecast and (len(self.stocklevels) > 0):
-                        ax.plot_date(projected_un_dates, projected_un_levels, '--',\
-                        drawstyle='steps', color='orange')
-                except Exception, e:
-                    print 'ERROR FIGURE PLOTS'
-                    print e
-
-                try:
-
-                    years    = YearLocator()   # every year
-                    months   = MonthLocator(interval=3)
-                    yearsFmt = DateFormatter('%Y')
-
-                    def loc_mon(d, pos):
-                        # get current locale
-                        loc = locale.setlocale(locale.LC_ALL, '')
-                        if lang == 'fr':
-                            # if we are making a french chart, change locale
-                            locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
-                        localized = calendar.month_abbr[num2date(d).month]
-                        # reset locale to initial locale
-                        locale.setlocale(locale.LC_ALL, loc)
-                        return localized
-
-                    def add_sep(num, pos, sep=','):
-                        return locale.format("%d", num, grouping=True)
-
-                    # format the ticks
-                    unitFmt = FuncFormatter(add_sep)
-                    ax.yaxis.set_major_formatter(unitFmt)
-                    ax.yaxis.set_label_text(translation.ugettext('Number of doses'), size='small')
-
-                    monthsFmt = FuncFormatter(loc_mon)
-                    ax.xaxis.set_minor_locator(months)
-                    ax.xaxis.set_minor_formatter(monthsFmt)
-
-                    ax.xaxis.set_major_locator(years)
-                    ax.xaxis.set_major_formatter(yearsFmt)
-                    ax.xaxis.set_label_text(translation.ugettext('Time'), size='small')
-                    ax.autoscale_view()
-
-                    ax.grid(True)
-
-                    fig.autofmt_xdate()
-                    # matplotlib seems to ignore set_pad() calls...
-                    pylab.rcParams['xtick.minor.pad']='10'
-                    pylab.rcParams['xtick.major.pad']='24'
-
-                    #pylab.rcParams['axes.linewidth']='0'
-                    #import ipdb;ipdb.set_trace()
-                    #ax.axhline()
-                    #ax.axvline()
-
-                    #ax.axis["right"].set_visible(False)
-                    #ax.axis["top"].set_visible(False)
-
-                    #six_months = datetime.timedelta(days=180)
-                    #map(lambda t: t[0].set_pad(15), ax.xaxis.iter_ticks())
-                    map(operator.methodcaller('set_fontsize', 'x-small'), ax.get_xticklabels() + ax.get_yticklabels())
-                    map(operator.methodcaller('set_fontsize', 'x-small'), ax.get_xminorticklabels())
-                    map(operator.methodcaller('set_fontsize', 'small'), ax.get_xmajorticklabels())
-
-                    map(operator.methodcaller('set_horizontalalignment', 'center'), ax.get_xmajorticklabels() + ax.get_xminorticklabels())
-                    map(operator.methodcaller('set_verticalalignment', 'top'), ax.get_xmajorticklabels() + ax.get_xminorticklabels())
-
-                    map(operator.methodcaller('set_rotation', 0), ax.get_xminorticklabels() + ax.get_xmajorticklabels())
-
-                    fig.subplots_adjust(left=0.12, right=0.98)
-
-                    # close figure so next call doesn't add to previous call's image
-                    # and so memory gets gc'ed
-                    matplotlib.pyplot.close(fig)
-
-                    self.plotted = True
-
-                    if self.save_chart:
-                        try:
-                            filename = "%s_%s_%s.png" % (self.country_pk, self.group_slug, self.variant_str)
-                            file_path = "/tmp/" + filename
-                            fig.savefig(file_path)
-                        except Exception, e:
-                            print 'ERROR SAVING'
-                            print e
-
-                    if self.upload_chart_to_s3:
-                        # TODO queue uploading with celery so uploading
-                        # will not delay generation of next chart
-                        try:
-                            s3_key = "%s_%s_%s_%s.png" % (lang, self.country_pk, self.group_slug, self.variant_str)
-                            s3_path = "%s/%s/%s/" % (lang, self.country_pk, self.group_slug)
-                            upload_file(file_path, 'vaxtrack_charts', s3_path + s3_key, True)
-                            print s3_key
-                        except Exception, e:
-                            print 'ERROR UPLOADING'
-                            print e
-
-                except Exception, e:
-                    print 'ERROR FIGURE'
-                    print e
-
 
     def analyze(self):
         print '~~~~ANALYZING~~~~'
@@ -578,7 +557,7 @@ class Analysis(object):
             self.days_of_stock_data = {}
             for y in self.s_years:
                 # get all stocklevel datapoints from year
-                stocklevels_in_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, 'SL', y)
+                stocklevels_in_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, 'SL', y, 'unknown')
                 print len(stocklevels_in_year)
                 # find number of days enclosed between first stocklevel entry of year and last
                 if len(stocklevels_in_year) > 0:
@@ -587,6 +566,17 @@ class Analysis(object):
                     self.actual_cons_rate.update({y:int(rate)})
 
             print self.actual_cons_rate
+
+            # "Query 2" Order Lead Time
+            # see if there are forecasted deliveries and/or purchased deliveries
+            # scheduled for the near future
+            print 'Query 2'
+            self.forecasted_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FF", self.today.year)
+            self.on_po_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FP", self.today.year)
+
+            self.upcoming_on_po = [d for d in self.on_po_this_year if ((d['date'] - self.today) <= self.lookahead)]
+            self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.on_po_this_year, 0)
+            self.upcoming_forecasted = [d for d in self.forecasted_this_year if ((d['date'] - self.today) <= self.lookahead)]
 
             if self.today.year not in self.f_years:
                 # if there is no forecast for the reference date's year,
@@ -600,6 +590,7 @@ class Analysis(object):
             else:
                 self.has_stock_data = True
 
+
             # "Query 1" Forecast Accuracy
             # for this year, see how actual consumption rate compares to estimated daily rate
             print 'Query 1'
@@ -612,20 +603,9 @@ class Analysis(object):
                 if rate_difference > self.cons_rate_diff_threshold:
                     print '***FLAG***'
                     print 'major difference between forecast and actual consumption rates'
-                    alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                    handle_alert(countrystock=self.cs,\
                         reference_date=self.today, status='W', risk='F', text='C')
-                    alert.analyzed = datetime.datetime.now()
-                    alert.save()
 
-            # "Query 2" Order Lead Time
-            # see if there are forecasted deliveries and/or purchased deliveries
-            # scheduled for the near future
-            print 'Query 2'
-            self.forecasted_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FF", self.today.year)
-            self.on_po_this_year = get_group_type_for_year_asc(self.country_pk, self.group_slug, "FP", self.today.year)
-
-            self.upcoming_on_po = [d for d in self.on_po_this_year if ((d['date'] - self.today) <= self.lookahead)]
-            self.upcoming_forecasted = [d for d in self.forecasted_this_year if ((d['date'] - self.today) <= self.lookahead)]
 
             # "Query 3" Stock Management
             # see how many months worth of supply are in stock
@@ -645,10 +625,8 @@ class Analysis(object):
                     if (len(self.upcoming_forecasted) > 0) or (len(self.upcoming_on_po) > 0):
                         print '***FLAG***'
                         print 'delay or reduce shipment'
-                        alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                        handle_alert(countrystock=self.cs,\
                             reference_date=self.today, status='U', risk='O', text='D')
-                        alert.analyzed = datetime.datetime.now()
-                        alert.save()
                     else:
                         print '---OK---'
 
@@ -658,7 +636,7 @@ class Analysis(object):
                 self.deliveries_this_year = get_group_type_for_year(self.country_pk, self.group_slug, "UN", self.today.year)
 
                 self.doses_delivered_this_year = reduce(lambda s,d: s + d['amount'], self.deliveries_this_year, 0)
-                self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.upcoming_on_po, 0)
+                #self.doses_on_orders = reduce(lambda s,d: s + d['amount'], self.upcoming_on_po, 0)
 
                 self.demand_for_period = self.lookahead.days * self.est_daily_cons
 
@@ -667,6 +645,10 @@ class Analysis(object):
                 print 'Query 5'
                 self.percent_coverage = float(self.first_level_this_year + self.doses_delivered_this_year)/float(self.annual_demand[self.today.year])
                 print '%s percent coverage' % str(self.percent_coverage)
+
+            else:
+                self.percent_coverage = 0
+                self.demand_for_period = 0
 
             # check if there is insufficient stock (less than three months' worth)
             if self.days_of_stock <= 90:
@@ -681,10 +663,8 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of stockout'
                             print 'order immediately -- not enough on upcoming deliveries'
-                            alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                            handle_alert(countrystock=self.cs,\
                                 reference_date=self.today, status='U', risk='S', text='I')
-                            alert.analyzed = datetime.datetime.now()
-                            alert.save()
                         else:
                             print '---OK---'
 
@@ -692,19 +672,15 @@ class Analysis(object):
                         print '***FLAG***'
                         print 'risk of stockout'
                         print 'order immediately - purchase forecasted delivery'
-                        alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                        handle_alert(countrystock=self.cs,\
                             reference_date=self.today, status='U', risk='S', text='F')
-                        alert.analyzed = datetime.datetime.now()
-                        alert.save()
 
                     else:
                         print '***FLAG***'
                         print 'risk of stockout'
                         print 'order immediately - no supply on PO or forecasted for next 3 months'
-                        alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                        handle_alert(countrystock=self.cs,\
                             reference_date=self.today, status='U', risk='S', text='P')
-                        alert.analyzed = datetime.datetime.now()
-                        alert.save()
 
                 if self.percent_coverage > (0.5 + float(self.today.month)/12.0):
 
@@ -717,10 +693,8 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of overstocking'
                             print 'delay shipment -- more than enough on upcoming deliveries'
-                            alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                            handle_alert(countrystock=self.cs,\
                                 reference_date=self.today, status='U', risk='O', text='E')
-                            alert.analyzed = datetime.datetime.now()
-                            alert.save()
 
                     elif (len(self.upcoming_forecasted) > 0):
                         self.forecasts_next_month = [d for d in self.upcoming_forecasted if d['date'].month == (self.today.month + 1)]
@@ -728,7 +702,7 @@ class Analysis(object):
                             print '***FLAG***'
                             print 'risk of overstocking'
                             print 'delay order - delay purchase of forecasted delivery'
-                            alert, created = Alert.objects.get_or_create(countrystock=self.cs,\
+                            handle_alert(countrystock=self.cs,\
                                 reference_date=self.today, status='U', risk='O', text='O')
                             alert.analyzed = datetime.datetime.now()
                             alert.save()

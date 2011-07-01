@@ -1,10 +1,18 @@
+from django.conf import global_settings
+
+# stuff for email/seacucumber
+EMAIL_BACKEND = 'seacucumber.backend.SESBackend'
+SERVER_EMAIL = "visualvaccines@gmail.com"
+CELERY_DISABLE_RATE_LIMITS = False
+CUCUMBER_RATE_LIMIT = 1
+
 # Django settings for the example project.
-SDB_DOMAIN = 'mangocountrystocks'
+SDB_DOMAIN = 'papayacountrystocks'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 ROOT_URLCONF = 'examples.urls'
-TEMPLATE_DIRS = ('/Users/ewheeler/dev/vax/vaxapp/templates',)
+TEMPLATE_DIRS = ('/home/ubuntu/vax/vaxapp/templates',)
 
 DATABASE_ENGINE = 'mysql'
 DATABASE_NAME = 'vax'
@@ -16,11 +24,10 @@ BROKER_HOST = "localhost"
 BROKER_PORT = 5672
 BROKER_USER = "unicef"
 BROKER_PASSWORD = "m3p3m3p3"
-BROKER_VHOST = "curta"
+BROKER_VHOST = "vaxlg"
 CELERY_RESULT_BACKEND = "amqp"
-CELERY_IMPORTS = ("vaxapp.tasks", )
 
-CSV_UPLOAD_BUCKET = 'vaxtrack_uploads'
+DOCUMENT_UPLOAD_BUCKET = 'vaxtrack_uploads'
 
 AUTH_PROFILE_MODULE = 'vaxapp.UserProfile'
 LOGIN_URL = '/login'
@@ -47,7 +54,7 @@ USE_I18N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '/home/ewheeler/temp/'
+MEDIA_ROOT = '/home/ubuntu/temp/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -85,8 +92,11 @@ MIDDLEWARE_CLASSES = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.core.context_processors.i18n",
-    "django.contrib.auth.context_processors.auth",
+    'django.core.context_processors.auth',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.request',
 )
 
 ROOT_URLCONF = 'vaxapp.urls'
@@ -99,7 +109,10 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'vax.vaxapp',
     'south',
+    'authority',
     'djcelery',
     'rosetta',
+    'gunicorn',
+    'seacucumber',
     #'debug_toolbar',
 )

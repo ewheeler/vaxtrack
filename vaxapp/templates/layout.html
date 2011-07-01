@@ -3,7 +3,6 @@
 {% load i18n %}
 	<head>
 		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7; IE=EmulateIE9"/>
-		<!--[if IE]><script src="/assets/js/excanvas.compiled.js"></script><![endif]-->
 		<title>VisualVaccines:: {% block title %}{% endblock %}</title>
 		{% block stylesheets %}
 		<link type="text/css" rel="stylesheet" href="/assets/css/style.css" />
@@ -13,6 +12,7 @@
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		<script src="/assets/js/collapse.js"></script>
 		<script src="/assets/js/tooltip.js"></script>
+		<script src="/assets/js/module-help.js"></script>
 		<script type="text/javascript" src="{% url django.views.i18n.javascript_catalog %}"></script>
 		{% endblock %}
 	</head>
@@ -40,6 +40,7 @@
 			    {% endif %}
 			    {% if user.is_staff %}
 				<a href="/admin/">{% trans "Site admin" %}</a>
+				<a href="/uploads/">{% trans "Manage uploads" %}</a>
 			    {% endif %}
 			    </p>
 			</div>
@@ -51,6 +52,7 @@
 			<ul id=tabs>
 				<li{% ifequal tab "dashboard" %} class="active"{% endifequal %}><a href="/">{% trans "Dashboard" %}</a></li>
 				<li{% ifequal tab "upload" %} class="active"{% endifequal %}><a href="{% url upload %}">{% trans "Upload data" %}</a></li>
+				<li{% ifequal tab "entry" %} class="active"{% endifequal %}><a href="{% url entry %}">{% trans "Enter data" %}</a></li>
 			</ul>
 		</div>
 		<div id="inner">

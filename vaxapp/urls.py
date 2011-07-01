@@ -5,9 +5,11 @@ import os
 
 from django.conf.urls.defaults import *
 from django.contrib import admin
+import authority
 import views
 
 admin.autodiscover()
+authority.autodiscover()
 
 js_info_dict = {
     'domain': 'djangojs',
@@ -18,6 +20,8 @@ urlpatterns = patterns('',
     # serve assets via django, during development
     url(r'^assets/js/(?P<path>.*)$', "django.views.static.serve",
     {"document_root": os.path.dirname(__file__) + "/static/javascripts"}),
+    url(r'^assets/flashcanvas/(?P<path>.*)$', "django.views.static.serve",
+    {"document_root": os.path.dirname(__file__) + "/static/flashcanvas"}),
     url(r'^assets/css/(?P<path>.*)$', "django.views.static.serve",
     {"document_root": os.path.dirname(__file__) + "/static/stylesheets"}),
     url(r'^assets/images/(?P<path>.*)$', "django.views.static.serve",
@@ -26,13 +30,19 @@ urlpatterns = patterns('',
     {"document_root": os.path.dirname(__file__) + "/static/icons"}),
     url(r'^assets/csv/(?P<path>.*)$', "django.views.static.serve",
     {"document_root": os.path.dirname(__file__) + "/static/csvs"}),
-    url(r'^$', views.index),
-    url(r'^dev$', views.index_dev),
-    url(r'^charts/(?P<lang>\w+)/(?P<country_pk>\w+)/(?P<group_slug>[\w-]+)/(?P<chart_opts>\w+).png$', views.get_chart, name="chart-country"),
-    url(r'^charts/(?P<lang>\w+)/(?P<country_pk>\w+)/(?P<group_slug>[\w-]+)/.png$', views.get_chart, name="chart-country"),
+    url(r'^assets/xls/(?P<path>.*)$', "django.views.static.serve",
+    {"document_root": os.path.dirname(__file__) + "/static/xls"}),
+    url(r'^$', views.index_dev),
+    url(r'^dev/$', views.index_dev),
+    url(r'^classic/$', views.index),
     url(r'^alerts/(?P<country_pk>\w+)/(?P<group_slug>[\w-]+)$', views.alerts, name="alerts"),
     url(r'^stats/(?P<country_pk>\w+)/(?P<group_slug>[\w-]+)$', views.stats, name="stats"),
-    url(r'^upload$', views.upload, name='upload'),
+    url(r'^csv/(?P<country_pk>\w+)/(?P<group_slug>[\w-]+)/(?P<sit_year>\d+)/(?P<sit_month>.*)/(?P<sit_day>\d+)/$', views.get_data),
+    url(r'^upload/$', views.upload, name='upload'),
+    url(r'^uploads/$', views.uploads, name='uploads'),
+    url(r'^upload/revert/$', views.revert_upload, name='revert-upload'),
+    url(r'^upload/(?P<up_id>[\w-]+)/$', views.upload, name='upload'),
+    url(r'^entry/$', views.entry, name='entry'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^login/$', 'django.contrib.auth.views.login', {'template_name':'login.html'}, name="login"),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'template_name':'loggedout.html'}, name="logout"),
@@ -40,4 +50,6 @@ urlpatterns = patterns('',
     url(r'^i18n/', include('django.conf.urls.i18n')),
     url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
     url(r'^translations/', include('rosetta.urls'), name='rosetta'),
+    url(r'^authority/', include('authority.urls')),
+
 )

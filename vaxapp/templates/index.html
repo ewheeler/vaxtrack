@@ -22,7 +22,7 @@
             <form id="countries" action="">
                 <select id="country">
                 {% for c in countries %}
-                        <option value="{{c.pk}}">{{ c|getattribute:LANGUAGE_CODE }}</option>
+                        <option value="{{c.anon}}">{{ c|getattribute:LANGUAGE_CODE }}</option>
                 {% endfor %}
                 </select>
                 <img id="flag" src="">

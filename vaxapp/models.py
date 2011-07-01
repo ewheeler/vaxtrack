@@ -8,13 +8,16 @@ import hashlib
 from operator import attrgetter
 from operator import itemgetter
 import itertools
+import string
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
+from django.core.exceptions import ObjectDoesNotExist
 
 from dameraulevenshtein import dameraulevenshtein as dm
 from vax.vsdb import *
@@ -25,9 +28,18 @@ def _split_term(term):
             term = term.replace(char, " ")
         return list(set(term.lower().split()))
 
+def letter_position(letter):
+    ''' Given a letter, returns the letter's position in the alphabet.'''
+    pos = string.uppercase.find(letter.upper()) + 1
+    if pos:
+        return pos
+
 class AltCountry(models.Model):
     country = models.ForeignKey("Country")
     alternate = models.CharField(max_length=160)
+
+    def __unicode__(self):
+        return "%s: %s" % (self.country, self.alternate)
 
 
 class Country(models.Model):
@@ -38,6 +50,7 @@ class Country(models.Model):
     iso2_code = models.CharField(max_length=2, primary_key=True)
     iso3_code = models.CharField(max_length=3, blank=True, null=True)
     numerical_code = models.PositiveIntegerField(blank=True, null=True)
+    # TODO add UNICEF SD code
 
     def __unicode__(self):
         return self.printable_name
@@ -47,12 +60,19 @@ class Country(models.Model):
         verbose_name_plural = _("countries")
 
     @property
+    def anon(self):
+        ''' Pseudo-anonymized country code, with letters as position in alphabet. '''
+        return "".join([str(letter_position(l)).zfill(2) for l in self.iso2_code])
+
+    @property
     def en(self):
-        return self.name
+        #return self.name
+        return "Country " + self.anon
 
     @property
     def fr(self):
-        return self.name_fr
+        #return self.name_fr
+        return "Pays " + self.anon
 
     @classmethod
     def lookup(klass, term):
@@ -140,6 +160,16 @@ class Country(models.Model):
         return [(c.iso3_code,c.name) for c in klass.objects.all()]
 
     @classmethod
+    def as_tuples_en(klass):
+        ''' Returns a list of 2-tuples for choices field. '''
+        return [(c.anon,c.en) for c in klass.objects.all()]
+
+    @classmethod
+    def as_tuples_fr(klass):
+        ''' Returns a list of 2-tuples for choices field. '''
+        return [(c.anon,c.fr) for c in klass.objects.all()]
+
+    @classmethod
     def as_tuples_for_admin(klass):
         ''' Returns a list of 2-tuples for choices field. '''
         return [(c.iso3_code, c.iso3_code + " (" + c.name + ")") for c in klass.objects.all()]
@@ -160,13 +190,23 @@ class VaccineGroup(models.Model):
     def __unicode__(self):
         return self.slug
 
+    @classmethod
+    def as_tuples(klass):
+        return [(g.slug, g.abbr_en + " (" + g.abbr_fr + ")") for g in klass.objects.all()]
+
     @property
     def en(self):
-        return self.abbr_en
+        if self.abbr_en not in ["", " ", None]:
+            return self.abbr_en
+        else:
+            return unicode(self)
 
     @property
     def fr(self):
-        return self.abbr_fr
+        if self.abbr_fr not in ["", " ", None]:
+            return self.abbr_fr
+        else:
+            return self.en
 
     @classmethod
     def generate_slugs(klass):
@@ -186,6 +226,9 @@ class AltVaccine(models.Model):
     vaccine = models.ForeignKey("Vaccine")
     country = models.ForeignKey("Country")
     alternate = models.CharField(max_length=160)
+
+    def __unicode__(self):
+        return "%s (%s): %s" % (self.vaccine, self.country, self.alternate)
 
 
 class Vaccine(models.Model):
@@ -216,13 +259,17 @@ class Vaccine(models.Model):
 
     @property
     def en(self):
-        if self.abbr_en is not None:
+        if self.abbr_en not in ["", " ", None]:
             return self.abbr_en
+        else:
+            return unicode(self)
 
     @property
     def fr(self):
-        if self.abbr_fr is not None:
+        if self.abbr_fr not in ["", " ", None]:
             return self.abbr_fr
+        else:
+            return self.en
 
     @classmethod
     def lookup_slug(klass, term):
@@ -346,7 +393,7 @@ class Vaccine(models.Model):
         fields.append(self.abbr_fr_alt)
         fields = [f for f in fields if f is not None]
         return list(itertools.chain(*map(lambda f: _split_term(f), fields)))
-        
+
 
     @classmethod
     def country_aware_closest_to(klass, term, country_pk):
@@ -406,7 +453,7 @@ class CountryStock(models.Model):
     products = models.ManyToManyField(Vaccine)
     group = models.ForeignKey(VaccineGroup)
     country = models.ForeignKey(Country)
-    md5_hash = models.CharField(max_length=200, null=True, blank=True)
+    md5_hash = models.CharField(max_length=200, null=True, blank=True, editable=False)
 
     def __unicode__(self):
         return "%s: %s" % (self.country.printable_name, self.vaccine)
@@ -427,7 +474,8 @@ class CountryStock(models.Model):
     @property
     def has_stock_data(self):
         if self.latest_stats is not None:
-            return self.latest_stats.has_stock_data
+            if self.latest_stats.has_stock_data is not None:
+                return self.latest_stats.has_stock_data
         else:
             sl_count = sdb_stocklevel_count(self.country.iso2_code, self.group.slug)
             if sl_count > 0:
@@ -470,7 +518,7 @@ class Dicty(models.Model):
 
     @property
     def as_dict(self):
-        return dict(((kv.key, kv.val) for kv in self.keyval_set.all()))
+        return dict(((kv.key, kv.val) for kv in self.keyval_set.all() if kv.val is not None))
 
 class KeyVal(models.Model):
     dicty = models.ForeignKey(Dicty)
@@ -569,8 +617,16 @@ class Alert(models.Model):
             self.countrystock.group, self.get_text_display())
 
 class UserProfile(models.Model):
-    user = models.ForeignKey(User)
+    LANG_CHOICES = (
+        ('en', 'English'),#'en_US.UTF-8'
+        ('fr', 'French'),
+    )
+    # https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
+    user = models.OneToOneField(User)
     country = models.ForeignKey(Country, blank=True, null=True)
+    lang = models.CharField(max_length=10, choices=LANG_CHOICES, default='en')
+    # TODO finer grained email control?
+    alert_emails = models.BooleanField(default=True)
 
 DOCUMENT_STATES = (
     ('U', _('Uploaded')),
@@ -578,7 +634,19 @@ DOCUMENT_STATES = (
     ('Q', _('Queued')),
     ('P', _('Processing')),
     ('F', _('Finished')),
+    ('R', _('Reverted')),
     ('E', _('Processing Error')))
+
+DOCUMENT_FORMAT_CHOICES = (
+    ('UNSDATV', _('UNICEF SD All Table Vaccines')),
+    ('UNSDCOF', _('UNICEF SD Country Office Foreasts')),
+    ('UNSDACOF', _('UNICEF SD YE Allocations + Country Office Forecasts')),
+    ('UNSDCFD', _('UNICEF SD Country Forecasting Data')),
+    ('WHOCS', _('WHO Country Stock')),
+    ('UNCOS', _('UNICEF CO Stock')),
+    ('TMPLT', _('Stock level template')),
+    ('TK', _('Unknown')),
+)
 
 
 DEFAULT_PATH = os.path.join(settings.MEDIA_ROOT, "uploads")
@@ -589,34 +657,110 @@ class Document(models.Model):
     """
     A simple model which stores data about an uploaded document.
     """
-    user = models.ForeignKey(User, verbose_name=_('user'))
+    user = models.ForeignKey(User, verbose_name=_('Uploaded by'), related_name="uploaded_document")
+    affiliation = models.ForeignKey(Group, verbose_name=_('group'), null=True, blank=True)
     name = models.CharField(_("Title"), max_length=100)
-    uuid = models.CharField(_('Unique Identifier'), max_length=36)
-    local_document = models.FileField(_("Local Document"), null=True, blank=True, upload_to=UPLOAD_PATH)
-    remote_document = models.URLField(_("Remote Document"), null=True, blank=True)
-    status = models.CharField(_("Remote Processing Status"), default='U', max_length=1, choices=DOCUMENT_STATES)
-    exception = models.TextField(_("Processing Exception"), null=True, blank=True)
+    uuid = models.CharField(_('Unique Identifier'), max_length=36, editable=False)
+    local_document = models.FileField(_("Local Document"), null=True, blank=True, upload_to=UPLOAD_PATH, editable=False)
+    remote_document = models.URLField(_("Remote Document"), null=True, blank=True, editable=False)
+    status = models.CharField(_("Remote Processing Status"), default='U', max_length=1, choices=DOCUMENT_STATES, editable=False)
+    document_format = models.CharField(_("Document format"), default='TK', max_length=12, choices=DOCUMENT_FORMAT_CHOICES)
+    exception = models.TextField(_("Processing Exception"), null=True, blank=True, editable=False)
 
-    date_uploaded = models.DateTimeField(_("Date Uploaded"))
-    date_stored = models.DateTimeField(_("Date Stored Remotely"), null=True, blank=True)
-    date_queued = models.DateTimeField(_("Date Queued"), null=True, blank=True)
-    date_process_start = models.DateTimeField(_("Date Process Started"), null=True, blank=True)
-    date_process_end = models.DateTimeField(_("Date Process Completed"), null=True, blank=True)
-    date_exception = models.DateTimeField(_("Date of Exception"), null=True, blank=True)
+    date_uploaded = models.DateTimeField(_("Date Uploaded"), editable=False)
+    date_stored = models.DateTimeField(_("Date Stored Remotely"), null=True, blank=True, editable=False)
+    date_queued = models.DateTimeField(_("Date Queued"), null=True, blank=True, editable=False)
+    date_process_start = models.DateTimeField(_("Date Process Started"), null=True, blank=True, editable=False)
+    date_process_end = models.DateTimeField(_("Date Process Completed"), null=True, blank=True, editable=False)
+    date_exception = models.DateTimeField(_("Date of Exception"), null=True, blank=True, editable=False)
+    date_revert_start = models.DateTimeField(_("Date Revert Started"), null=True, blank=True, editable=False)
+    date_revert_end = models.DateTimeField(_("Date Revert Completed"), null=True, blank=True, editable=False)
+    reverted_by = models.ForeignKey(User, verbose_name=_('Reverted by'), null=True, blank=True, related_name="reverted_document", editable=False)
 
-    date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow)
+    date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow, editable=False)
+    imported_countries = models.ManyToManyField(Country, null=True, blank=True, editable=False)
+    imported_groups = models.ManyToManyField(VaccineGroup, null=True, blank=True, editable=False)
+    imported_years = models.CommaSeparatedIntegerField(max_length=200, null=True, blank=True, editable=False)
+    date_data_begin = models.DateField(_("Date data begin"), null=True, blank=True, editable=False)
+    date_data_end = models.DateField(_("Date data end"), null=True, blank=True, editable=False)
 
     class Meta:
         verbose_name = _('document')
         verbose_name_plural = _('documents')
 
     def __unicode__(self):
-        return unicode(_("%s's uploaded document." % self.user))
+        return unicode(_("%s document uploaded %s by %s") % (self.get_document_format_display(), self.date_uploaded, self.user))
 
     def save(self, **kwargs):
         if self.id is None:
             self.uuid = str(uuid.uuid4())
         super(Document, self).save(**kwargs)
+
+    @property
+    def get_imported_countries(self):
+        countries = self.imported_countries.all()
+        if countries:
+            return ', '.join((str(c) for c in countries))
+
+    @property
+    def get_imported_groups(self):
+        groups = self.imported_groups.all()
+        if groups:
+            return ', '.join((str(g) for g in groups))
+
+    @property
+    def get_imported_years(self):
+        if self.imported_years:
+            return self.imported_years
+
+    def save_import_report(self, import_report_tuple):
+        country_pks = import_report_tuple[0]
+        if country_pks:
+            for cpk in country_pks:
+                try:
+                    country = Country.objects.get(pk=cpk)
+                    self.imported_countries.add(country)
+                    self.save()
+                except ObjectDoesNotExist:
+                    continue
+        group_slugs = import_report_tuple[1]
+        if group_slugs:
+            for gslug in group_slugs:
+                try:
+                    group = VaccineGroup.objects.get(slug=gslug)
+                    self.imported_groups.add(group)
+                    self.save()
+                except ObjectDoesNotExist:
+                    continue
+        try:
+            years = import_report_tuple[2]
+            if years:
+                print years
+                self.imported_years = ",".join((str(y) for y in years))
+                self.save()
+                print self.imported_years
+            errors = import_report_tuple[3]
+            if errors:
+                print errors
+                self.exception = ",\n ".join(errors)
+                self.save()
+                print self.exception
+            data_begin = import_report_tuple[4]
+            if data_begin:
+                print data_begin
+                self.date_data_begin = data_begin
+                self.save()
+                print self.date_data_begin
+            data_end = import_report_tuple[5]
+            if data_end:
+                print data_end
+                self.date_data_end = data_end
+                self.save()
+                print self.date_data_end
+        except Exception, e:
+            print 'BANG'
+            print e
+            print 'failed to save import_report_tuple'
 
     @staticmethod
     def process_response(data):
@@ -644,3 +788,23 @@ class Document(models.Model):
             doc.save()
             return True
         return False
+
+class DataEntry(models.Model):
+    user = models.ForeignKey(User, verbose_name=_('user'))
+    status = models.CharField(_("Remote Processing Status"), default='U', max_length=1, choices=DOCUMENT_STATES)
+    exception = models.TextField(_("Processing Exception"), null=True, blank=True)
+
+    date_stored = models.DateTimeField(_("Date Stored Remotely"), null=True, blank=True)
+    date_queued = models.DateTimeField(_("Date Queued"), null=True, blank=True)
+    date_process_start = models.DateTimeField(_("Date Process Started"), null=True, blank=True)
+    date_process_end = models.DateTimeField(_("Date Process Completed"), null=True, blank=True)
+    date_exception = models.DateTimeField(_("Date of Exception"), null=True, blank=True)
+
+    date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow)
+
+    class Meta:
+        verbose_name = _('entry')
+        verbose_name_plural = _('entries')
+
+    def __unicode__(self):
+        return unicode(_("%s's entered data." % self.user))

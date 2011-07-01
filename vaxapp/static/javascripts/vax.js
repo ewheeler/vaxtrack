@@ -9,9 +9,9 @@ $(document).ready(function(){
 
     if (document.location.hash == ""){
         /* default chart options, vax, and country */
-        options = new Array("B", "F", "P", "C", "U");
+        options = new Array("B", "F", "P");
         group = "bcg";
-	country = "ML";
+	country = "1312";
 	chart_name = "";
     } else {
 	update_from_hash();
@@ -65,6 +65,8 @@ $(document).ready(function(){
 
     strings["analyzed_txt"] = gettext("analysis date");
     strings["analyzed_tip"] = gettext("Date statistical analysis was performed.");
+
+    strings["no_data_txt"] = gettext("no data");
 
     /* strings for hist jsi18n */
     strings["historical_note_txt"] = gettext("Note: first and last year totals may not reflect full 12 months");
@@ -179,11 +181,11 @@ $(document).ready(function(){
     function get_chart(){
 	chart_opts = options.sort().join("");
 
-	var path = lang + "/" + country + "/" + group + "/"
-	var filename = lang + "_" + country + "_" + group + "_" + chart_opts + ".png"
-	var chart_url = "https://s3.amazonaws.com/vaxtrack_charts/" + path + filename
+	var path = lang + "/" + country + "/" + group + "/";
+	var filename = lang + "_" + country + "_" + group + "_" + chart_opts + ".png";
+	var chart_url = "https://s3.amazonaws.com/vaxtrack_charts/" + path + filename;
         $("#chart").attr('src', chart_url);
-        $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
+        //$("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
     };
 
     /* 	fetch alerts for current country/vax and build table rows if needed */
@@ -220,7 +222,11 @@ $(document).ready(function(){
 			var stat_rows = ['est_daily_cons', 'days_of_stock', 'percent_coverage', 'doses_delivered_this_year', 'doses_on_orders', 'reference_date', 'analyzed'];
 			for (row_index in stat_rows){
 				var row_name = stat_rows[row_index];
-				$("#stats > tbody:last").append("<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + ":</td><td class='data'>" + stats[s][row_name] + "</td></tr>");
+				var row_data = stats[s][row_name];
+				if (row_data == null){
+					row_data = strings["no_data_txt"];
+				};
+				$("#stats > tbody:last").append("<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + ":</td><td class='data'>" + row_data + "</td></tr>");
 			};
 
 			/* build first row of hist table */
@@ -239,8 +245,12 @@ $(document).ready(function(){
 				row = "<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + "</td>";
 				row = row + "<td class='spark' id='" + row_name + "'</td>";
 				for (y in stats[s].years){
-					row = row + "<td class='int data'>" + stats[s][row_name][y] + "</td>";
-					data.push(stats[s][row_name][y]);
+					if (y in stats[s][row_name]){
+					    row = row + "<td class='int data'>" + stats[s][row_name][y] + "</td>";
+					    data.push(stats[s][row_name][y]);
+					} else {
+					    row = row + "<td class='int data'></td>";
+					};
 				};
 				$("#hist > tbody:last").append(row + "</tr>");
 				if (row_name != 'actual_cons_rate' & row_name != 'days_of_stock_data'){

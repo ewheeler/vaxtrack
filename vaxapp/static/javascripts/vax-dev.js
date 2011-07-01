@@ -1,5 +1,24 @@
 $(document).ready(function(){
+    // graph
+    var g;
+
     var saved_history = window.history;
+
+    function set_chart_size(){
+    	// set chart width to width of col-2
+    	var col_width = $(".col-2").width();
+    	$("#chart").width(col_width);
+	// make golden rectangle based on col-2 width
+	var golden_height = (col_width/1.6180339887498948482).toFixed(2);
+	$("#chart").height(golden_height);
+    }
+    set_chart_size();
+
+    // reset chart size when window is resized
+    window.onresize = function() {
+      set_chart_size();
+      g.resize();
+    }
 
     var options;
     var group;
@@ -7,12 +26,28 @@ $(document).ready(function(){
     var chart_name;
     var lang;
 
+    var data_url;
+    var data;
+    var sit_year = 2011;
+    var sit_month = 4;
+    var sit_day = 1;
+
+    /* array of all possible chart options, used to check for plot visibility */
+    var all_options = new Array("T", "N", "F", "P", "C", "U");
+    /* map of plot options to position in csv file -- and dygraph visibility settings */
+    var vis_map = {"T":1,"N":2, "F":3, "P":4, "C":5, "U":6};
+    /* array of visibility settings used while initializing dygraphs,
+        by default, show stock level, buffer stock, and overstock plots */
+    var vis_bools = new Array(true, true, true, true, true, false, false);
+
     if (document.location.hash == ""){
         /* default chart options, vax, and country */
-        options = new Array("B", "F", "P", "C", "U");
+        options = new Array("T", "N", "F", "P");
         group = "bcg";
-	country = "ML";
+	country = "1914";
 	chart_name = "";
+	//data_url = "/csv/1312/opv/2011/3/31/";
+	data_url = "/assets/csvs/1914/opv/2011/1914_bcg_2011_4_1.csv";
     } else {
 	update_from_hash();
     };
@@ -24,8 +59,11 @@ $(document).ready(function(){
 	country = hash_parts[2].replace(/[\#\-\!]/g,"");
 	group = hash_parts[3];
 	options = new Array();
-	for (i=0; i< hash_parts[4].length; i++){
+	/* clean slate of chart options with only stock levels visible */
+	vis_bools = new Array(true, false, false, false, false, false, false);
+	for ( var i=0; i< hash_parts[4].length; i++){
 	    options.push(hash_parts[4].charAt(i));
+	    vis_bools[vis_map[hash_parts[4].charAt(i)]] = true;
 	}
 	$("#plot_options :input").val(options);
         $("#checkbox-S").attr("checked", "checked");
@@ -33,6 +71,9 @@ $(document).ready(function(){
 	$("#vaccines :input").filter("[value=" + group + "]").attr("checked", "checked");
 	$("#country").val(country);
 	$("#auth select").val(lang);
+	$("#sit_year").val(sit_year);
+	$("#sit_month").val(sit_month);
+	$("#sit_day").val(sit_day);
     };
 
     /* 	whenever url hash is changed, update global variables
@@ -43,6 +84,20 @@ $(document).ready(function(){
 
     /*	dictionary for jsi18n strings */
     var strings = {};
+
+    /* strings for chart labels */
+    strings["date_lbl"] = gettext("Date");
+    strings["actual_stock_lbl"] = gettext("Actual stock");
+    strings["buffer_lbl"] = gettext("Buffer stock");
+    strings["overstock_lbl"] = gettext("Overstock");
+    strings["on_forecast_lbl"] = gettext("Forecasted stock level based on theoretical usage (and including forecasted orders)");
+    strings["on_purchase_lbl"] = gettext("Forecasted stock level based on theoretical usage (and including purchased orders)");
+    strings["co_forecast_lbl"] = gettext("CO forecast");
+    strings["deliveries_lbl"] = gettext("CO forecast w/ deliveries");
+
+    strings["doses_lbl"] = gettext("Doses");
+    strings["country_lbl"] = gettext("Country");
+    strings["time_lbl"] = gettext("Time");
 
     /* 	strings for stats jsi18n */
     strings["est_daily_cons_txt"] = gettext("estimated daily consumption");
@@ -61,10 +116,12 @@ $(document).ready(function(){
     strings["doses_on_orders_tip"] = gettext("Total number of doses to be delivered on any purchased orders.");
 
     strings["reference_date_txt"] = gettext("situation as of");
-    strings["reference_date_tip"] = gettext("Reference date that is the basis for chart, alerts, and statistical analysis.");
+    strings["reference_date_tip"] = gettext("Reference date that is the basis for alerts and statistical analysis.");
 
     strings["analyzed_txt"] = gettext("analysis date");
     strings["analyzed_tip"] = gettext("Date statistical analysis was performed.");
+
+    strings["no_data_txt"] = gettext("no data");
 
     /* strings for hist jsi18n */
     strings["historical_note_txt"] = gettext("Note: first and last year totals may not reflect full 12 months");
@@ -136,7 +193,7 @@ $(document).ready(function(){
 	});
         $("#checkbox-S").attr("checked", "checked");
 	update_url();
-        get_chart();
+	set_vis();
     });
 
     /* 	whenever a vaccine radio button is clicked,
@@ -165,6 +222,19 @@ $(document).ready(function(){
 	get_stats();
     });
 
+    $("#sit_year").change(function(){
+	sit_year= $(this).val();
+	get_chart();
+    });
+    $("#sit_month").change(function(){
+	sit_month = $(this).val();
+	get_chart();
+    });
+    $("#sit_day").change(function(){
+	sit_day= $(this).val();
+	get_chart();
+    });
+
 
     /*	alter url hash to reflect current values of global variables */
     function update_url(){
@@ -177,15 +247,82 @@ $(document).ready(function(){
     /* 	fetch url for appropriate chart (based on current globals)
 	and country flag */
     function get_chart(){
-	chart_opts = options.sort().join("");
-/*
-	var path = lang + "/" + country + "/" + group + "/"
-	var filename = lang + "_" + country + "_" + group + "_" + chart_opts + ".png"
-	var chart_url = "https://s3.amazonaws.com/vaxtrack_charts/" + path + filename
-        $("#chart").attr('src', chart_url);
-        $("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
-*/
+	$("#chart").html('');
+	//data_url = "/csv/" + country + "/" + group + "/" + sit_year + "/" + sit_month + "/" + sit_day;
+	//data_url = "/assets/csv/" + country + "_" + group + "_all.csv";
+	data_path = "/assets/csv/" + country + "/" + group + "/" + sit_year + "/";
+	data_file = country + "_" + group + "_" +  sit_year + "_" + sit_month + "_" + sit_day + ".csv";
+	//data_url = "/assets/csv/" + country + "_" + group + "_all.csv";
+	data_url = data_path + data_file
 
+	g = new Dygraph(document.getElementById("chart"),
+		    data_url,
+		    {
+			rollPeriod: 1,
+			title: strings["country_lbl"] + " " + country + " " + group.toUpperCase(),
+			axisLabelWidth:100,
+			ylabel: strings["doses_lbl"],
+			digitsAfterDecimal:0,
+			maxNumberWidth:20,
+			yAxisLabelFormatter: function(x) {
+				return x.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")
+			},
+			xlabel: strings["time_lbl"],
+			axisLabelFontSize: 9,
+			labelsKMB: false,
+			stacked: true,
+			connectSeparatedPoints: true,
+			gridLineColor: '#eee',
+			visibility: vis_bools,
+			labels: [ strings["date_lbl"], strings["actual_stock_lbl"], strings["buffer_lbl"], strings["overstock_lbl"], strings["on_forecast_lbl"], strings["on_purchase_lbl"], strings["co_forecast_lbl"], strings["deliveries_lbl"]],
+			labelsSeparateLines: true,
+			legend: "always",
+			colors: ["#0000FF", "#FF0000", "#FA8072", "#800080", "#00FFFF", "#008000", "#FFA500"],
+			labelsDiv: document.getElementById("legend"),
+			labelsShowZeroValues: false,
+			stepPlot: true,
+			"Actual stock": {
+			    stepPlot: true,
+			    strokeWidth: 2
+			},
+			"Buffer stock": {
+			    stepPlot: false,
+			    strokeWidth: 1
+			},
+			"Overstock": {
+			    stepPlot: false,
+			    strokeWidth: 1
+			},
+			"Forecasted stock level based on theoretical usage (and including forecasted orders)": {
+			    stepPlot: false,
+			    strokeWidth: 2
+			},
+			"Forecasted stock level based on theoretical usage (and including purchased orders)": {
+			    stepPlot: false,
+			    strokeWidth: 2
+			},
+			"CO forecast": {
+			    stepPlot: false,
+			    strokeWidth: 2
+			},
+			"CO forecast w/ deliveries": {
+			    stepPlot: false,
+			    strokeWidth: 2
+			}
+		    }); // options
+        //`$("#flag").attr('src', "/assets/icons/bandiere/" + country.toLowerCase() + ".gif");
+	$("#download a").attr('href', data_url);
+    };
+
+    function set_vis(){
+	for (n in all_options){
+	    var opt = all_options[n]
+	    if ($.inArray(opt, options) != -1){
+		g.setVisibility(parseInt(vis_map[opt]),true);
+	    } else {
+		g.setVisibility(parseInt(vis_map[opt]),false);
+	    };
+	};
     };
 
     /* 	fetch alerts for current country/vax and build table rows if needed */
@@ -222,7 +359,11 @@ $(document).ready(function(){
 			var stat_rows = ['est_daily_cons', 'days_of_stock', 'percent_coverage', 'doses_delivered_this_year', 'doses_on_orders', 'reference_date', 'analyzed'];
 			for (row_index in stat_rows){
 				var row_name = stat_rows[row_index];
-				$("#stats > tbody:last").append("<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + ":</td><td class='data'>" + stats[s][row_name] + "</td></tr>");
+				var row_data = stats[s][row_name];
+				if (row_data == null){
+					row_data = strings["no_data_txt"];
+				};
+				$("#stats > tbody:last").append("<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + ":</td><td class='data'>" + row_data + "</td></tr>");
 			};
 
 			/* build first row of hist table */
@@ -241,8 +382,16 @@ $(document).ready(function(){
 				row = "<tr class='tipoff' title='" + strings[row_name + "_tip"] + "'><td class='txt'>" + strings[row_name + "_txt"] + "</td>";
 				row = row + "<td class='spark' id='" + row_name + "'</td>";
 				for (y in stats[s].years){
-					row = row + "<td class='int data'>" + stats[s][row_name][y] + "</td>";
-					data.push(stats[s][row_name][y]);
+					var cell_data = stats[s][row_name][y];
+					var push_data = true;
+					if (cell_data == null){
+						cell_data = "";
+						push_data = false;
+					};
+					row = row + "<td class='int data'>" + cell_data + "</td>";
+					if (push_data){
+						data.push(cell_data);
+					};
 				};
 				$("#hist > tbody:last").append(row + "</tr>");
 				if (row_name != 'actual_cons_rate' & row_name != 'days_of_stock_data'){

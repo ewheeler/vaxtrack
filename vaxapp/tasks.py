@@ -1,139 +1,180 @@
 #!/usr/bin/env python
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 import os
-import json
-from datetime import datetime
-from datetime import timedelta
-from uuid import uuid4
+import datetime
 
 from django.conf import settings
+from django.core.mail import send_mail
+from django.core.mail import send_mass_mail
+from django.core.exceptions import ObjectDoesNotExist
 
 import boto
-
-from celery.decorators import periodic_task
 from celery.decorators import task
-from celery.task import PeriodicTask
 
 from vaxapp.models import Document
+from vaxapp.models import Alert
+from vaxapp.analysis import *
+import import_xls
+
+"""
+$ rabbitmqctl add_user myuser mypassword
+
+$ rabbitmqctl add_vhost myvhost
+
+$ rabbitmqctl set_permissions -p myvhost myuser ".*" ".*" ".*"
+"""
 
 #sudo ./manage.py celeryd -v 2 -B -s celery -E -l INFO
 
-REQUEST_QUEUE = getattr(settings, "CHART_REQUEST_QUEUE", "chart_requests")
-RESPONSE_QUEUE = getattr(settings, "CHART_RESPONSE_QUEUE", "chart_responses")
 ACL = getattr(settings, "CHART_AWS_ACL", "public-read")
-AMI_ID = getattr(settings, "CHART_AMI_ID", "ami-1641b47f")
-KEYPAIR = getattr(settings, "CHART_KEYPAIR_NAME", None)
-MAX_INSTANCES = getattr(settings, 'CHART_MAX_NODES', 20)
-SECURITY_GROUPS = getattr(settings, 'CHART_SECURITY_GROUPS', None)
-
-
-def queue_json_message(doc, doc_key):
-    key_name = doc_key.name.replace(os.path.basename(doc_key.name), "message-%s.json" % str(uuid4()))
-    key = doc_key.bucket.new_key(key_name)
-    message_data = json.dumps({'bucket': doc_key.bucket.name, 'key': doc_key.name, 'uuid': doc.uuid})
-    key.set_contents_from_string(message_data)
-    msg_body = {'bucket': key.bucket.name, 'key': key.name}
-    queue = boto.connect_sqs().create_queue(REQUEST_QUEUE)
-    msg = queue.new_message(body=json.dumps(msg_body))
-    queue.write(msg)
 
 
 def upload_file_to_s3(doc):
     file_path = doc.local_document.path
-    b = boto.connect_s3().get_bucket(settings.CSV_UPLOAD_BUCKET)
+    b = boto.connect_s3().get_bucket(settings.DOCUMENT_UPLOAD_BUCKET)
     name = '%s/%s' % (doc.uuid, os.path.basename(file_path))
     k = b.new_key(name)
     k.set_contents_from_filename(file_path)
     k.set_acl(ACL)
     return k
 
+@task
+def process_revert_upload(doc, reverter):
+    sdb_revert_upload(doc.uuid)
+    doc.date_revert_start = datetime.datetime.utcnow()
+    doc.reverted_by = reverter
+    doc.status = 'P'
+    doc.save()
+    country_pks = (c.iso2_code for c in doc.imported_countries.all())
+    print country_pks
+    group_slugs = (g.slug for g in doc.imported_groups.all())
+    print group_slugs
+    years = doc.imported_years.split(',')
+    print years
+    last_date = doc.date_data_end
+    print last_date
+    print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=country_pks, group_slugs=group_slugs)
+    print plot_historical(country_pks, group_slugs, years)
+    doc.date_revert_end = datetime.datetime.utcnow()
+    doc.status = 'R'
+    doc.save()
+    return True
+
+def notify_upload_complete(doc):
+    uploader_email = doc.user.email
+    if all([doc.user.first_name, doc.user.last_name]):
+        uploader_name = "%s %s" % (doc.user.first_name, doc.user.last_name)
+    else:
+        uploader_name = doc.user.username
+    sender = "visualvaccines@gmail.com"
+    subject = "[VisualVaccines] upload status: %s" % (doc.get_status_display())
+    body =\
+"""
+Hello %s,
+
+The processing and analysis of your recently uploaded document is complete.
+
+Review any errors at http://visualvaccines.com/upload/%s/
+
+Please visit http://visualvaccines.com to review any relevant charts,
+which now include data from your uploaded document.
+
+Thanks,
+VisualVaccines
+""" % (doc.uuid, uploader_name)
+
+    mail_tuples = []
+    mail_tuples.append((subject, body, sender, [uploader_email]))
+    mail_tuples.append((subject, body, sender, ['evanmwheeler@gmail.com']))
+    send_mass_mail(tuple(mail_tuples), fail_silently=False)
 
 @task
 def process_file(doc):
-    """Transfer uploaded file to S3 and queue up message to process PDF."""
+    """Transfer uploaded file to S3 and queue up message to process"""
     key = upload_file_to_s3(doc)
     doc.remote_document = "http://%s.s3.amazonaws.com/%s" % (key.bucket.name, key.name)
-    doc.date_stored = datetime.utcnow()
+    doc.date_stored = datetime.datetime.utcnow()
     doc.status = 'S'
     doc.save()
 
-    queue_json_message(doc, key)
     doc.status = 'Q'
-    doc.date_queued = datetime.utcnow()
+    doc.date_queued = datetime.datetime.utcnow()
     doc.save()
 
+    doc.date_process_start = datetime.datetime.utcnow()
+    doc.status = 'P'
+    doc.save()
+    if doc.document_format in ['UNSDATV', 'UNSDCOF', 'UNSDACOF', 'UNSDCFD']:
+        print 'IMPORT UNICEF'
+        import_report = import_xls.import_unicef(doc.local_document.path, interactive=False, dry_run=False, upload=doc.uuid)
+    elif doc.document_format in ['WHOCS']:
+        print 'IMPORT WHO'
+        import_report = import_xls.import_who(doc.local_document.path, interactive=False, dry_run=False, upload=doc.uuid)
+    elif doc.document_format in ['UNCOS', 'TMPLT']:
+        print 'IMPORT TEMPLATE'
+        import_report = import_xls.import_template(doc.local_document.path, interactive=False, dry_run=False, upload=doc.uuid)
+    else:
+        print 'IMPORT UNKNOWN'
+        #TODO do something for TKs
+        import_report = (None, None, None, None, None)
+        pass
+    print import_report
+    doc.date_process_end = datetime.datetime.utcnow()
+    doc.save()
+    doc.save_import_report(import_report)
+    print 'import complete'
+    last_date = doc.date_data_end
+    print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=import_report[0], group_slugs=import_report[1])
+    print plot_historical(import_report[0], import_report[1], import_report[2])
+    doc.status = 'F'
+    doc.save()
+    if import_report[3]:
+        doc.status = 'E'
+        doc.save()
+    notify_upload_complete(doc)
     return True
 
+@task
+def handle_alert(countrystock, reference_date, status, risk, text, dry_run=False):
+    print 'handling alert...'
+    alert, created = Alert.objects.get_or_create(countrystock=countrystock,\
+        reference_date=reference_date, status=status, risk=risk, text=text)
+    alert.analyzed = datetime.datetime.now()
+    alert.save()
+    print 'alert created!'
+    if 1:
+        # only send emails if this is a new alert
+        recipients = []
+        # TODO XXX TEMPORARY
+        '''
+        # get all staff
+        staff = User.objects.filter(is_staff=True)
+        # find other users who list this country in their profile
+        for u in User.objects.exclude(staff):
+            try:
+                profile = u.get_profile()
+                if profile.country:
+                    if profile.country == alert.countrystock.country:
+                        recipients.append(u.email)
+            except ObjectDoesNotExist:
+                continue
+        # combine staff and other users
+        #recipients = recipients + [s.email for s in staff]
+        '''
+        recipients = ['evanmwheeler@gmail.com', 'anthonybellon.contact@gmail.com']
+        subject = "[VisualVaccines] %s: %s %s" % (alert.countrystock, alert.get_status_display(), alert.get_risk_display())
+        body = alert.get_text_display()
+        sender = "visualvaccines@gmail.com"
+        if all([subject, body, recipients]):
+            mail_tuples = []
+            for r in recipients:
+                mail_tuples.append((subject, body, sender, [r]))
+            print mail_tuples
+            if not dry_run:
+                send_mass_mail(tuple(mail_tuples), fail_silently=False)
+            else:
+                for m in mail_tuples:
+                    print 'pretend send: ', m
+        else:
+            print 'failed to construct alert emails'
 
-class CheckResponseQueueTask(PeriodicTask):
-    """
-    Checks response queue for messages returned from running processes in the
-    cloud.  The messages are read and corresponding `pdf.models.Document`
-    records are updated.
-    """
-    run_every = timedelta(seconds=30)
-
-    def _dequeue_json_message(self):
-        sqs = boto.connect_sqs()
-        queue = sqs.create_queue(RESPONSE_QUEUE)
-        msg = queue.read()
-        if msg is not None:
-            data = json.loads(msg.get_body())
-            bucket = data.get('bucket', None)
-            key = data.get("key", None)
-            queue.delete_message(msg)
-            if bucket is not None and key is not None:
-                return data
-
-    def run(self, **kwargs):
-        logger = self.get_logger(**kwargs)
-        logger.info("Running periodic task!")
-        data = self._dequeue_json_message()
-        if data is not None:
-            Document.process_response(data)
-            return True
-        return False
-
-
-class CheckQueueLevelsTask(PeriodicTask):
-    """
-    Checks the number of messages in the queue and compares it with the number
-    of instances running, only booting nodes if the number of queued messages
-    exceed the number of nodes running.
-    """
-    run_every = timedelta(seconds=60)
-
-    def run(self, **kwargs):
-        ec2 = boto.connect_ec2()
-        sqs = boto.connect_sqs()
-
-        queue = sqs.create_queue(REQUEST_QUEUE)
-        num = queue.count()
-        launched = 0
-        icount = 0
-
-        reservations = ec2.get_all_instances()
-        for reservation in reservations:
-            for instance in reservation.instances:
-                if instance.state == "running" and instance.image_id == AMI_ID:
-                    icount += 1
-        to_boot = min(num - icount, MAX_INSTANCES)
-
-        if to_boot > 0:
-            '''
-            startup = BOOTSTRAP_SCRIPT % {
-                'KEY': settings.CHART_AWS_KEY,
-                'SECRET': settings.CHART_AWS_SECRET,
-                'RESPONSE_QUEUE': RESPONSE_QUEUE,
-                'REQUEST_QUEUE': REQUEST_QUEUE}
-            r = ec2.run_instances(
-                image_id=AMI_ID,
-                min_count=to_boot,
-                max_count=to_boot,
-                key_name=KEYPAIR,
-                security_groups=SECURITY_GROUPS)
-                #user_data=startup)
-            launched = len(r.instances)
-                '''
-            launched = 0
-        return launched

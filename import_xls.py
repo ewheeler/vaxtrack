@@ -19,7 +19,7 @@ from decimal import Decimal as D
 
 from vaxapp.models import *
 
-SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'mangocountrystocks')
+SDB_DOMAIN_TO_USE = getattr(settings, "SDB_DOMAIN", 'papayacountrystocks')
 
 # a few helper functions
 def day_of_year_to_date(year, day_of_year):
@@ -74,6 +74,26 @@ def reconcile_country_interactively(term):
             print e
             import ipdb;ipdb.set_trace()
 
+def reconcile_country_silently(term):
+    try:
+        country = Country.objects.get(printable_name=term)
+        return country
+    except ObjectDoesNotExist:
+        try:
+            country = Country.lookup(term)
+            if country is not None:
+                return country
+            else:
+                print "Could not reconcile '%s'" % (term)
+                # cast set as list to preserve order
+                matches = list(Country.closest_to(term))
+                #TODO guess? or skip?
+                #return matches[0]
+                return None
+        except Exception, e:
+            print 'BANG'
+            print e
+
 def reconcile_vaccine_interactively(term, country_pk):
     try:
         vaccine = Vaccine.objects.get(name__istartswith=term)
@@ -90,8 +110,8 @@ def reconcile_vaccine_interactively(term, country_pk):
             if choice not in [None, "", " "]:
                 choice_num = int(choice)
                 vax = matches[choice_num]
-                #alt = AltVaccine(vaccine=vax, alternate=term)
-                #alt.save()
+                alt = AltVaccine(vaccine=vax, alternate=term)
+                alt.save()
                 return vax
             else:
                 return None
@@ -134,7 +154,7 @@ def reconcile_vaccine_interactively(term, country_pk):
                     country = Country.objects.get(iso2_code=country_pk)
                     alt = AltVaccine(vaccine=vax, country=country, alternate=term)
                     alt.save()
-                    return vax 
+                    return vax
                 else:
                     return None
         except Exception, e:
@@ -142,7 +162,38 @@ def reconcile_vaccine_interactively(term, country_pk):
             print e
             import ipdb; ipdb.set_trace()
 
-def import_who(file=None):
+def reconcile_vaccine_silently(term, country_pk):
+    try:
+        vaccine = Vaccine.objects.get(name__istartswith=term)
+        return vaccine
+    except MultipleObjectsReturned:
+        try:
+            #TODO guess? or skip?
+            #matches = Vaccine.objects.filter(name__istartswith=term)
+            #return matches[0]
+            return None
+        except Exception, e:
+            print 'BANG'
+            print e
+    except ObjectDoesNotExist:
+        try:
+            vaccine = Vaccine.country_aware_lookup(term, country_pk)
+            if vaccine is not None:
+                return vaccine
+            else:
+                matches, matches_in_stock = Vaccine.country_aware_closest_to(term, country_pk)
+                if matches_in_stock is not None:
+                    all_matches = list(set(matches.union(matches_in_stock)))
+                else:
+                    all_matches = list(matches)
+                #TODO guess? or skip?
+                #return all_matches[0]
+                return None
+        except Exception, e:
+            print 'BANG lookup'
+            print e
+
+def import_who(file=None, interactive=True, dry_run=False, upload=None):
     '''
     opv-50
     measles
@@ -151,6 +202,17 @@ def import_who(file=None):
     yf-1
     bcg-10
     '''
+    if dry_run:
+        print 'dry run...'
+    else:
+        print 'NOT dry run...'
+
+    imported_countries = []
+    imported_groups = []
+    imported_years = []
+    import_errors = []
+    imported_dates = []
+
     book = xlrd.open_workbook(file)
     sheets = book.sheet_names()
     country_names = Country.objects.values_list('printable_name', flat=True)
@@ -182,7 +244,14 @@ def import_who(file=None):
                         country = None
                         term = values[0]
                         if term not in skips:
-                            country = reconcile_country_interactively(term)
+                            if interactive:
+                                country = reconcile_country_interactively(term)
+                                if country.iso2_code not in imported_countries:
+                                    imported_countries.append(country.iso2_code)
+                            else:
+                                country = reconcile_country_silently(term)
+                                if country.iso2_code not in imported_countries:
+                                    imported_countries.append(country.iso2_code)
                         if country is None:
                             if term not in skips:
                                 print "cannot reconcile '%s'" % (term)
@@ -195,16 +264,23 @@ def import_who(file=None):
                         break
 
                     year = int(values[1])
+                    if year not in imported_years:
+                        imported_years.append(year)
 
                     # day of year 1-365 (sometimes 366)
                     day_of_year = int(values[2][-3:])
 
                     day = day_of_year_to_date(year, day_of_year)
+                    if day not in imported_dates:
+                        imported_dates.append(day)
 
                     vax = values[2][:-4]
                     try:
                         if vax not in vax_skips:
-                            vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
+                            if interactive:
+                                vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
+                            else:
+                                vaccine = reconcile_vaccine_silently(vax, country.iso2_code)
                         if vaccine is None:
                             #print "cannot find vax: '%s'" % (vax)
                             if vax not in vax_skips:
@@ -221,43 +297,398 @@ def import_who(file=None):
                             continue
                         vax_slug = vaccine.slug
                         vax_group = vaccine.group.slug
+                        if vax_group not in imported_groups:
+                            imported_groups.append(vax_group)
                         if vax_slug not in products:
                             products.append(vax_slug)
                     except Exception, e:
                         print e
-                        print "cannot find vax: '%s'" % (vax)
+                        error = "cannot identify: '%s'" % (vax)
+                        import_errors.append(error)
                         continue
 
-                    amount = int(values[3])
+                    try:
+                        amount = int(values[3])
+                    except ValueError, e:
+                        error = "'%s' is not a valid amount" % (values[3])
+                        import_errors.append(error)
                     if amount == last_amount:
                         continue
                     else:
                         last_amount = amount
 
+                    if amount < 0:
+                        error = "negative stock values are not allowed. '%d' has been replaced with 0" % (amount)
+                        import_errors.append(error)
+                        amount = 0
+
                     stocks.append(values)
                     try:
-                        item_name = hashlib.md5()
-                        item_name.update(str(country.iso2_code))
-                        item_name.update(str(vax_slug))
-                        item_name.update(str(vax_group))
-                        item_name.update("SL")
-                        item_name.update(str(day))
-                        item_name.update(str(amount))
+                        if not dry_run:
+                            item_name = hashlib.md5()
+                            item_name.update(str(country.iso2_code))
+                            item_name.update(str(vax_slug))
+                            item_name.update(str(vax_group))
+                            item_name.update("SL")
+                            item_name.update(str(day))
+                            item_name.update(str(amount))
 
-                        item = domain.new_item(item_name.hexdigest())
-                        item.add_value("country", str(country.iso2_code))
-                        item.add_value("product", str(vax_slug))
-                        item.add_value("group", str(vax_group))
-                        item.add_value("type", "SL")
-                        item.add_value("date", str(day))
-                        item.add_value("year", str(year))
-                        item.add_value("amount", str(amount))
-                        item.save()
-                        print item
+                            item = domain.new_item(item_name.hexdigest())
+                            item.add_value("country", str(country.iso2_code))
+                            item.add_value("product", str(vax_slug))
+                            item.add_value("group", str(vax_group))
+                            item.add_value("type", "SL")
+                            item.add_value("date", str(day))
+                            item.add_value("year", str(year))
+                            item.add_value("amount", str(amount))
+                            item.add_value("activity", "unknown")
+                            item.add_value("upload", upload)
+                            item.save()
+                            print item
+                        else:
+                            item = dict()
+                            item['country'] = str(country.iso2_code)
+                            item['product'] = str(vax_slug)
+                            item['group'] = str(vax_group)
+                            item['type'] = "SL"
+                            item['date'] = str(day)
+                            item['year'] = str(year)
+                            item['amount'] = str(amount)
+                            item['activity'] = str(activity)
+                            print item
                     except Exception, e:
                         print 'error creating stock level'
                         print e
+                        import_errors.append(e)
 
+                    if not dry_run:
+                        cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
+                        cs_item = domain.new_item(cs_item_name)
+                        cs_item.add_value("country", str(country.iso2_code))
+                        cs_item.add_value("product", str(vax_slug))
+                        cs_item.add_value("type", "CS")
+                        cs_item.save()
+                        cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
+                        cs.products.add(vaccine)
+                        cs.md5_hash = cs_item_name
+                        cs.save()
+                else:
+                    titles.append(values)
+            #print len(titles)
+            #print len(stocks)
+            print set(products)
+            print set(unmatched_products)
+            print set(matched_groups)
+    first_date = min(imported_dates)
+    last_date = max(imported_dates)
+    return (set(imported_countries), set(imported_groups), list(set(imported_years)), import_errors, first_date, last_date)
+
+
+def import_all_unicef():
+    # 2008
+    print import_unicef("UNICEF SD - 2008 Country Forecasting Data.xls")
+    print import_unicef("UNICEF SD - 2008 YE Allocations + Country Office Forecasts 2008.xls")
+    # 2009
+    print import_unicef("UNICEF SD - 2009 Country Forecasting Data.xls")
+    print import_unicef("UNICEF SD - 2009 YE Allocations + Country Office Forecasts 2009.xls")
+    # 2010
+    print import_unicef("UNICEF SD - 2010 Country Forecasting Data.xls")
+    print import_unicef("UNICEF SD -  Country Office Forecasts 2010.xls")
+    print import_unicef("2010_12 UNICEF SD - All Table Vaccines.xls")
+    # 2011
+    print import_unicef("UNICEF SD - 2011 Country Forecasting Data - CLEANED COUNTRY NAMES.xls")
+    print import_unicef("UNICEF SD - 2011 Country Office Forecasts - CLEANED COUNTRY NAMES.xls")
+    print import_unicef("2011_03 UNICEF SD - All Table Vaccines - CLEANED.xls")
+
+def import_unicef(file="", interactive=True, dry_run=False, upload=None):
+    print file
+    if dry_run:
+        print 'dry run...'
+    else:
+        print 'NOT dry run...'
+
+    imported_countries = []
+    imported_groups = []
+    imported_years = []
+    import_errors = []
+    imported_dates = []
+
+    book = xlrd.open_workbook(file)
+
+    if book.datemode not in (0,1):
+        return "oops. unknown datemode!"
+
+    def xldate_to_datetime(xldate):
+        return datetime.datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
+
+    sheets = book.sheet_names()
+    # grab any sheets starting with 'forecasting'
+    forecasting_sheets = [s for s in sheets if s.startswith("forecasting")]
+    sheet = None
+
+    # find the target sheet...
+    # which is usually allocations for country forecasts
+    # and allocations files, but sometimes Sheet1
+    if 'allocations' in sheets:
+        sheet = book.sheet_by_name('allocations')
+    elif 'Allocations' in sheets:
+        sheet = book.sheet_by_name('Allocations')
+    elif 'Sheet1' in sheets:
+        sheet = book.sheet_by_name('Sheet1')
+    else:
+        if len(forecasting_sheets) > 0:
+            # the desired sheet in country forecasting files 
+            # includes the year, so it varies
+            sheet = book.sheet_by_name(forecasting_sheets[0])
+            # we need to know the year later on, so parse out and save
+            year = int(forecasting_sheets[0].split()[1])
+        else:
+            return "oops. could not find valid sheet"
+
+    column_names = sheet.row_values(0)
+
+    # XXX temp
+    products = []
+    unmatched_products = []
+    matched_groups = []
+
+    # countries to skip
+    skips = ['', ' ']
+    # products to skip
+    vax_skips = ['', ' ']
+    for r in range(int(sheet.nrows))[1:]:
+        rd = dict(zip(column_names, sheet.row_values(r)))
+        try:
+            country = None
+            if rd['Country'] not in skips:
+                if interactive:
+                    country = reconcile_country_interactively(rd['Country'])
+                    if country.iso2_code not in imported_countries:
+                        imported_countries.append(country.iso2_code)
+                else:
+                    country = reconcile_country_silently(rd['Country'])
+                    if country.iso2_code not in imported_countries:
+                        imported_countries.append(country.iso2_code)
+            if country is None:
+                if rd['Country'] not in skips:
+                    print "cannot reconcile '%s'" % (rd['Country'])
+                    print "moving on..."
+                    skips.append(rd['Country'])
+                continue
+        except Exception, e:
+            print 'BANG'
+            print e
+            import_errors.append(e)
+            continue
+
+        vax = rd['Product']
+
+        try:
+            if vax not in vax_skips:
+                if interactive:
+                    vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
+                else:
+                    vaccine = reconcile_vaccine_silently(vax, country.iso2_code)
+            if vaccine is None:
+                #print "cannot find vax: '%s'" % (vax)
+                if vax not in vax_skips:
+                    print "cannot reconcile '%s'" % (vax)
+                    print "moving on..."
+                    vax_skips.append(vax)
+                if vax not in unmatched_products:
+                    unmatched_products.append(vax)
+                continue
+            if isinstance(vaccine, str):
+                #print vaccine
+                if vax not in matched_groups:
+                    matched_groups.append(vax)
+                continue
+            vax_slug = vaccine.slug
+            vax_group = vaccine.group.slug
+            if vax_group not in imported_groups:
+                imported_groups.append(vax_group)
+            if vax_slug not in products:
+                products.append(vax_slug)
+        except Exception, e:
+            print e
+            print "cannot find vax: '%s'" % (vax)
+            import_errors.append(e)
+            continue
+
+        vax_slug = vaccine.slug
+        vax_group = vaccine.group.slug
+        if vax_slug not in products:
+            products.append(vax_slug)
+
+        # see if this is a Routine or Supplementary activity
+        if 'Type of Activity' in rd:
+            activity = rd['Type of Activity']
+        elif 'Activity' in rd:
+            activity = rd['Activity']
+        else:
+            activity = 'Unknown'
+
+        allocation_type = None
+
+        try:
+            forecast_doses = int(rd['Doses- Forecast '])
+        except ValueError:
+            forecast_doses = None
+        except KeyError:
+            forecast_doses = None
+
+        try:
+            po_doses = int(rd['Doses- On PO'])
+        except ValueError:
+            po_doses = None
+        except KeyError:
+            po_doses = None
+
+        try:
+            co_forecast = int(rd['Doses- CO Forecast '])
+        except ValueError:
+            co_forecast = None
+        except KeyError:
+            co_forecast = None
+            try:
+                co_forecast = int(rd['Doses - CO Forecast'])
+            except ValueError:
+                co_forecast = None
+            except KeyError:
+                co_forecast = None
+
+        try:
+            co_forecasting = int(rd['Total no. of doses'])
+            current_stock = rd['Current Stock Qty']
+            if current_stock not in ['', ' ', None]:
+                init_quant = int(current_stock)
+            else:
+                init_quant = 0
+        except ValueError:
+            co_forecasting = None
+        except KeyError:
+            co_forecasting = None
+
+        approx_date = None
+        if 'YYYY' in rd:
+            if rd['YYYY'] not in [None, '', ' ']:
+                year = int(rd['YYYY'])
+        if 'YYYY-MM' in rd:
+            year_month = rd['YYYY-MM']
+            if year_month not in [None, '', ' ']:
+                yr, month = year_month.split('-')
+                approx_date = date(int(yr), int(month), 15)
+        if 'YYYY-WW' in rd:
+            year_week = rd['YYYY-WW']
+            if year_week not in [None, '', ' ']:
+                yr, week = year_week.split('-')
+                approx_date = first_monday_of_week(yr, week)
+
+        if approx_date not in imported_dates:
+            imported_dates.append(approx_date)
+
+        if year is None:
+            print 'no year!'
+        if year is not None:
+            if year not in imported_years:
+                imported_years.append(year)
+            sdb = boto.connect_sdb()
+            domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
+
+            try:
+                if forecast_doses > 0:
+                    amount = forecast_doses
+                    if approx_date <= date.today():
+                        # original CO forecast (CO)
+                        # from allocations table
+                        allocation_type = 'CO'
+                    else:
+                        # future delivery on forecast (FF)
+                        # from allocations table
+                        allocation_type = 'FF'
+                elif po_doses > 0:
+                    amount = po_doses
+                    if approx_date <= date.today():
+                        # unicef deliveries (UN)
+                        # from allocations table
+                        allocation_type = 'UN'
+                    else:
+                        # future delivery on PO (FP)
+                        # from allocations table
+                        allocation_type = 'FP'
+
+                elif co_forecast is not None:
+                    # original CO forecast (CO)
+                    # from country forecasts file
+                    amount = co_forecast
+                    allocation_type = 'CO'
+
+                elif co_forecasting is not None:
+                    # country forecasts (annual demand and initial stock)
+                    # from country forecasting file
+                    amount = co_forecasting
+                    allocation_type = 'CF'
+
+                else:
+                    if allocation_type is None:
+                        continue
+            except Exception, e:
+                print 'BANG determine type'
+                print e
+                import_errors.append(e)
+                if interactive:
+                    import pdb;pdb.set_trace()
+
+            # TODO save row number
+            try:
+                if not dry_run:
+                    item_name = hashlib.md5()
+                    item_name.update(str(country.iso2_code))
+                    item_name.update(str(vax_slug))
+                    item_name.update(str(vax_group))
+                    item_name.update(allocation_type)
+                    if allocation_type != 'CF':
+                        item_name.update(str(approx_date))
+                    item_name.update(str(amount))
+                    item_name.update(str(activity))
+
+                    item = domain.new_item(item_name.hexdigest())
+                    item.add_value("country", str(country.iso2_code))
+                    item.add_value("product", str(vax_slug))
+                    item.add_value("group", str(vax_group))
+                    item.add_value("type", allocation_type)
+                    if allocation_type != 'CF':
+                        item.add_value("date", str(approx_date))
+                    item.add_value("year", str(year))
+                    item.add_value("amount", str(amount))
+                    item.add_value("activity", str(activity))
+                    if allocation_type == 'CF':
+                        item.add_value("initial", str(init_quant))
+                    item.add_value("upload", upload)
+                    item.save()
+                    print item
+                else:
+                    item = dict()
+                    item['country'] = str(country.iso2_code)
+                    item['product'] = str(vax_slug)
+                    item['group'] = str(vax_group)
+                    item['type'] = allocation_type
+                    if allocation_type != 'CF':
+                        item['date'] = str(approx_date)
+                    item['year'] = str(year)
+                    item['amount'] = str(amount)
+                    item['activity'] = str(activity)
+                    if allocation_type == 'CF':
+                        item['initial'] = str(init_quant)
+                    print item
+            except Exception, e:
+                print 'error creating stock level'
+                print e
+                import_errors.append(e)
+                if interactive:
+                    import ipdb;ipdb.set_trace()
+            try:
+                if not dry_run:
                     cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
                     cs_item = domain.new_item(cs_item_name)
                     cs_item.add_value("country", str(country.iso2_code))
@@ -268,17 +699,31 @@ def import_who(file=None):
                     cs.products.add(vaccine)
                     cs.md5_hash = cs_item_name
                     cs.save()
-                else:
-                    titles.append(values)
-            #print len(titles)
-            #print len(stocks)
-            print set(products)
-            print set(unmatched_products)
-            print set(matched_groups)
+            except Exception, e:
+                print 'error creating countrystock item'
+                print e
+                import_errors.append(e)
+                if interactive:
+                    import ipdb;ipdb.set_trace()
+    print set(products)
+    print set(unmatched_products)
+    print set(matched_groups)
+    first_date = min(imported_dates)
+    last_date = max(imported_dates)
+    return (set(imported_countries), set(imported_groups), list(set(imported_years)), import_errors, first_date, last_date)
 
+def import_template(file=None, interactive=True, dry_run=False, upload=None):
+    if dry_run:
+        print 'dry run...'
+    else:
+        print 'NOT dry run...'
 
-def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Office Forecasts 2008.xls"):
-    target_sheet = 'allocations'
+    imported_countries = []
+    imported_groups = []
+    imported_years = []
+    import_errors = []
+    imported_dates = []
+
     book = xlrd.open_workbook(file)
 
     if book.datemode not in (0,1):
@@ -287,483 +732,174 @@ def import_allocation_table(file="UNICEF SD - 2008 YE Allocations + Country Offi
     def xldate_to_datetime(xldate):
         return datetime.datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
 
-    def xldate_to_date(xldate):
-        if isinstance(xldate, int):
-            return xldate_to_datetime(xldate).date()
-        else:
-            return None
-
     sheets = book.sheet_names()
     sheet = None
-    if target_sheet in sheets:
-        sheet = book.sheet_by_name(target_sheet)
+    for s in sheets:
+        sheet = book.sheet_by_name(s)
 
-    if sheet is None:
-        sheet = book.sheet_by_name('Sheet1')
-
-    if sheet is None:
-        return "oops. expecting sheet named '%s'" % (target_sheet)
-
-    column_names = sheet.row_values(0)
-
-    # XXX temp
-    products = []
-    unmatched_products = []
-    matched_groups = []
-
-    skips = ['', ' ']
-    vax_skips = ['', ' ']
-    for r in range(int(sheet.nrows))[1:]:
-        rd = dict(zip(column_names, sheet.row_values(r)))
-        try:
-            country = None
-            if rd['Country'] not in skips:
-                country = reconcile_country_interactively(rd['Country'])
-            if country is None:
-                if rd['Country'] not in skips:
-                    print "cannot reconcile '%s'" % (rd['Country'])
-                    print "moving on..."
-                    skips.append(rd['Country'])
-                continue
-        except Exception, e:
-            print 'BANG'
-            print e
-            import ipdb;ipdb.set_trace()
-            #continue
-
-        chad = Country.objects.get(iso2_code='TD')
-        senegal = Country.objects.get(iso2_code='SN')
-        mali = Country.objects.get(iso2_code='ML')
-
-        if country not in [senegal, chad, mali]:
-            continue
-
-        vax = rd['Product']
-
-        try:
-            if vax not in vax_skips:
-                vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
-            if vaccine is None:
-                #print "cannot find vax: '%s'" % (vax)
-                if vax not in vax_skips:
-                    print "cannot reconcile '%s'" % (vax)
-                    print "moving on..."
-                    vax_skips.append(vax)
-                if vax not in unmatched_products:
-                    unmatched_products.append(vax)
-                continue
-            if isinstance(vaccine, str):
-                #print vaccine
-                if vax not in matched_groups:
-                    matched_groups.append(vax)
-                continue
-            vax_slug = vaccine.slug
-            vax_group = vaccine.group.slug
-            if vax_slug not in products:
-                products.append(vax_slug)
-        except Exception, e:
-            print e
-            print "cannot find vax: '%s'" % (vax)
-            continue
-
-        vax_slug = vaccine.slug
-        vax_group = vaccine.group.slug
-        if vax_slug not in products:
-            products.append(vax_slug)
-
-        allocation_type = None
-
-        try:
-            forecast_doses = int(rd['Doses- Forecast '])
-        except ValueError:
-            forecast_doses = None
-
-        try:
-            po_doses = int(rd['Doses- On PO'])
-        except ValueError:
-            po_doses = None
-
-        try:
-            co_forecast = int(rd['Doses- CO Forecast '])
-        except ValueError:
-            co_forecast = None
-        except KeyError:
-            co_forecast = None
-
-        year = int(rd['YYYY'])
-        year_month = rd['YYYY-MM']
-        year_week = rd['YYYY-WW']
-        input_date = xldate_to_date(rd['Input Date'])
-        approx_date = None
-
-        file_type = rd['File Type']
-        if file_type == 'Weekly':
-            yr, week = year_week.split('-')
-            approx_date = first_monday_of_week(yr, week)
-
-        if file_type == 'Monthly':
-            yr, month = year_month.split('-')
-            approx_date = date(int(yr), int(month), 15)
-
-        if approx_date is not None:
+        if sheet is not None:
             sdb = boto.connect_sdb()
             domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
 
-            if forecast_doses > 0:
-                amount = forecast_doses
-                if approx_date <= date.today():
-                    # original CO forecast (CO)
-                    #allocation_type = 'CO'
-                    pass
-                else:
-                    # future delivery on forecast (FF)
-                    allocation_type = 'FF'
+            # XXX temp
+            products = []
+            unmatched_products = []
+            matched_groups = []
 
-            if po_doses > 0:
-                amount = po_doses
-                if approx_date <= date.today():
-                    # unicef deliveries (UN)
-                    allocation_type = 'UN'
-                else:
-                    # future delivery on PO (FP)
-                    allocation_type = 'FP'
+            column_names = sheet.row_values(0)
+            skips = ["", " "]
+            vax_skips = ["", " "]
+            for r in range(int(sheet.nrows))[2:]:
+                row = sheet.row_values(r)
+                try:
+                    country = None
+                    term = row[0]
+                    if term not in skips:
+                        if interactive:
+                            country = reconcile_country_interactively(term)
+                            if country.iso2_code not in imported_countries:
+                                imported_countries.append(country.iso2_code)
+                        else:
+                            country = reconcile_country_silently(term)
+                            if country.iso2_code not in imported_countries:
+                                imported_countries.append(country.iso2_code)
+                    if country is None:
+                        if term not in skips:
+                            print "cannot reconcile '%s'" % (term)
+                            print "moving on..."
+                            skips.append(term)
+                            break
 
-            if co_forecast is not None:
-                amount = co_forecast
-                allocation_type = 'CO'
+                except Exception, e:
+                    print 'BANG'
+                    if interactive:
+                        import pdb;pdb.set_trace()
+                    import_errors.append(e)
+                    break
 
-            if allocation_type is None:
-                #print 'unknown allocation_type!'
-                #print rd
-                continue
+                year = int(row[1])
+                if year not in imported_years:
+                    imported_years.append(year)
 
-            # TODO save row number
-            try:
-                item_name = hashlib.md5()
-                item_name.update(str(country.iso2_code))
-                item_name.update(str(vax_slug))
-                item_name.update(str(vax_group))
-                item_name.update(allocation_type)
-                item_name.update(str(approx_date))
-                item_name.update(str(amount))
+                vax = row[3]
+                try:
+                    if vax not in vax_skips:
+                        if interactive:
+                            vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
+                        else:
+                            vaccine = reconcile_vaccine_silently(vax, country.iso2_code)
+                    if vaccine is None:
+                        #print "cannot find vax: '%s'" % (vax)
+                        if vax not in vax_skips:
+                            print "cannot reconcile '%s'" % (vax)
+                            print "moving on..."
+                            vax_skips.append(vax)
+                        if vax not in unmatched_products:
+                            unmatched_products.append(vax)
+                        continue
+                    if isinstance(vaccine, str):
+                        #print vaccine
+                        if vax not in matched_groups:
+                            matched_groups.append(vax)
+                        continue
+                    vax_slug = vaccine.slug
+                    vax_group = vaccine.group.slug
+                    if vax_group not in imported_groups:
+                        imported_groups.append(vax_group)
+                    if vax_slug not in products:
+                        products.append(vax_slug)
+                except Exception, e:
+                    print e
+                    print "cannot find vax: '%s'" % (vax)
+                    import_errors.append(e)
+                    continue
 
-                item = domain.new_item(item_name.hexdigest())
-                item.add_value("country", str(country.iso2_code))
-                item.add_value("product", str(vax_slug))
-                item.add_value("group", str(vax_group))
-                item.add_value("type", allocation_type)
-                item.add_value("date", str(approx_date))
-                item.add_value("year", str(year))
-                item.add_value("amount", str(amount))
-                item.save()
-                print item
-            except Exception, e:
-                print 'error creating stock level'
-                print e
-                import ipdb;ipdb.set_trace()
-            try:
-                cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
-                cs_item = domain.new_item(cs_item_name)
-                cs_item.add_value("country", str(country.iso2_code))
-                cs_item.add_value("product", str(vax_slug))
-                cs_item.add_value("type", "CS")
-                cs_item.save()
-                cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
-                cs.products.add(vaccine)
-                cs.md5_hash = cs_item_name
-                cs.save()
-            except Exception, e:
-                print 'error creating countrystock item'
-                print e
-                import ipdb;ipdb.set_trace()
-    print set(products)
-    print set(unmatched_products)
-    print set(matched_groups)
+                try:
+                    amount = int(row[4])
+                except ValueError, e:
+                    error = "'%s' is not a valid amount" % (row[4])
+                    import_errors.append(error)
+                    continue
 
+                if amount < 0:
+                    error = "negative stock values are not allowed. '%d' has been replaced with 0" % (amount)
+                    import_errors.append(error)
+                    amount = 0
 
-def import_country_forecasts(file="UNICEF SD -  Country Office Forecasts 2010.xls"):
-    book = xlrd.open_workbook(file)
+                try:
+                    obs_date = xldate_to_datetime(row[5]).date()
+                    if obs_date not in imported_dates:
+                        imported_dates.append(obs_date)
+                except Exception, e:
+                    error = "error importing '%s' as date" % (row[5])
+                    import_errors.append(error)
+                    continue
 
-    if book.datemode not in (0,1):
-        return "oops. unknown datemode!"
+                # TODO save row number
+                try:
+                    if not dry_run:
+                        print 'not dry run, saving to sdb..'
+                        item_name = hashlib.md5()
+                        item_name.update(str(country.iso2_code))
+                        item_name.update(str(vax_slug))
+                        item_name.update(str(vax_group))
+                        item_name.update(str(obs_date))
+                        item_name.update(str(amount))
+                        item_name.update(upload)
 
-    def xldate_to_datetime(xldate):
-        return datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
+                        item = domain.new_item(item_name.hexdigest())
+                        item.add_value("country", str(country.iso2_code))
+                        item.add_value("product", str(vax_slug))
+                        item.add_value("group", str(vax_group))
+                        item.add_value("type", 'SL')
+                        item.add_value("date", str(obs_date))
+                        item.add_value("year", str(year))
+                        item.add_value("amount", str(amount))
+                        item.add_value("activity", "unknown")
+                        item.add_value("upload", upload)
+                        item.save()
+                        print item
+                    else:
+                        print 'dry run, printing dict...'
+                        item = dict()
+                        item['country'] = str(country.iso2_code)
+                        item['product'] = str(vax_slug)
+                        item['group'] = str(vax_group)
+                        item['type'] = 'SL'
+                        item['date'] = str(obs_date)
+                        item['year'] = str(year)
+                        item['amount'] = str(amount)
+                        item['activity'] = "unknown"
+                        item['upload'] = upload
+                        print item
+                except Exception, e:
+                    print 'error creating stock level'
+                    print e
+                    import_errors.append(e)
+                    if interactive:
+                        import ipdb;ipdb.set_trace()
+                try:
+                    if not dry_run:
+                        cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
+                        cs_item = domain.new_item(cs_item_name)
+                        cs_item.add_value("country", str(country.iso2_code))
+                        cs_item.add_value("product", str(vax_slug))
+                        cs_item.add_value("type", "CS")
+                        cs_item.save()
+                        cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
+                        cs.products.add(vaccine)
+                        cs.md5_hash = cs_item_name
+                        cs.save()
+                except Exception, e:
+                    print 'error creating countrystock item'
+                    print e
+                    import_errors.append(e)
+                    if interactive:
+                        import ipdb;ipdb.set_trace()
+        print set(products)
+        print set(unmatched_products)
+        print set(matched_groups)
 
-    def xldate_to_date(xldate):
-        return xldate_to_datetime(xldate).date()
-
-    sheets = book.sheet_names()
-    sheet = None
-    if 'allocations' in sheets:
-        sheet = book.sheet_by_name('allocations')
-
-    if sheet is None:
-        return "oops. expecting sheet named 'allocations'"
-
-    column_names = sheet.row_values(0)
-
-    # XXX temp
-    products = []
-    unmatched_products = []
-    matched_groups = []
-
-    skips = ["", " "]
-    vax_skips = ["", " "]
-    for r in range(int(sheet.nrows))[1:]:
-        rd = dict(zip(column_names, sheet.row_values(r)))
-        try:
-            country = None
-            if rd['Country'] not in skips:
-                country = reconcile_country_interactively(rd['Country'])
-            if country is None:
-                if rd['Country'] not in skips:
-                    print "cannot reconcile '%s'" % (rd['Country'])
-                    print "moving on..."
-                    skips.append(rd['Country'])
-                continue
-        except Exception, e:
-            continue
-
-        chad = Country.objects.get(iso2_code='TD')
-        senegal = Country.objects.get(iso2_code='SN')
-        mali = Country.objects.get(iso2_code='ML')
-
-        if country not in [senegal, chad, mali]:
-            continue
-
-        vax = rd['Product']
-
-        try:
-            if vax not in vax_skips:
-                vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
-            if vaccine is None:
-                #print "cannot find vax: '%s'" % (vax)
-                if vax not in vax_skips:
-                    print "cannot reconcile '%s'" % (vax)
-                    print "moving on..."
-                    vax_skips.append(vax)
-                if vax not in unmatched_products:
-                    unmatched_products.append(vax)
-                continue
-            if isinstance(vaccine, str):
-                #print vaccine
-                if vax not in matched_groups:
-                    matched_groups.append(vax)
-                continue
-            vax_slug = vaccine.slug
-            vax_group = vaccine.group.slug
-            if vax_slug not in products:
-                products.append(vax_slug)
-        except Exception, e:
-            print e
-            print "cannot find vax: '%s'" % (vax)
-            continue
-
-        vax_slug = vaccine.slug
-        vax_group = vaccine.group.slug
-        allocation_type = 'CO'
-
-        amount = int(rd['Doses - CO Forecast'])
-
-        year = int(rd['YYYY'])
-        year_month = rd['YYYY-MM']
-        year_week = rd['YYYY-WW']
-        approx_date = None
-
-        yr, month = year_month.split('-')
-        approx_date = date(int(yr), int(month), 15)
-
-        if approx_date is not None:
-            sdb = boto.connect_sdb()
-            domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
-
-            try:
-                item_name = hashlib.md5()
-                item_name.update(str(country.iso2_code))
-                item_name.update(str(vax_slug))
-                item_name.update(str(vax_group))
-                item_name.update(allocation_type)
-                item_name.update(str(approx_date))
-                item_name.update(str(amount))
-
-                item = domain.new_item(item_name.hexdigest())
-                item.add_value("country", str(country.iso2_code))
-                item.add_value("product", str(vax_slug))
-                item.add_value("group", str(vax_group))
-                item.add_value("type", allocation_type)
-                item.add_value("date", str(approx_date))
-                item.add_value("year", str(year))
-                item.add_value("amount", str(amount))
-                item.save()
-                print item
-            except Exception, e:
-                print 'error creating stock level'
-                print e
-
-            try:
-                cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
-                cs_item = domain.new_item(cs_item_name)
-                cs_item.add_value("country", str(country.iso2_code))
-                cs_item.add_value("product", str(vax_slug))
-                cs_item.add_value("type", "CS")
-                cs_item.save()
-                cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
-                cs.products.add(vaccine)
-                cs.md5_hash = cs_item_name
-                cs.save()
-            except Exception, e:
-                print 'error creating countrystock item'
-                print e
-    print set(products)
-    print set(unmatched_products)
-    print set(matched_groups)
-
-def import_country_forecasting_data(file="UNICEF SD - 2010 Country Forecasting Data.xls", yr="2010"):
-    sheetname = "forecasting %s" % (yr)
-    book = xlrd.open_workbook(file)
-
-    if book.datemode not in (0,1):
-        return "oops. unknown datemode!"
-
-    def xldate_to_datetime(xldate):
-        return datetime(*xlrd.xldate_as_tuple(xldate, book.datemode))
-
-    def xldate_to_date(xldate):
-        if isinstance(xldate, int):
-            return xldate_to_datetime(xldate).date()
-        else:
-            return None
-
-    sheets = book.sheet_names()
-    sheet = None
-    if sheetname in sheets:
-        sheet = book.sheet_by_name(sheetname)
-
-    if sheet is None:
-        return "oops. expecting sheet named '%s'" % (sheetname)
-
-    column_names = sheet.row_values(0)
-
-    # XXX temp
-    products = []
-    unmatched_products = []
-    matched_groups = []
-
-    skips = ["", " "]
-    vax_skips = ["", " "]
-    for r in range(int(sheet.nrows))[1:]:
-        rd = dict(zip(column_names, sheet.row_values(r)))
-        try:
-            country = None
-            if rd['Country'] not in skips:
-                country = reconcile_country_interactively(rd['Country'])
-            if country is None:
-                if rd['Country'] not in skips:
-                    print "cannot reconcile '%s'" % (rd['Country'])
-                    print "moving on..."
-                    skips.append(rd['Country'])
-                continue
-        except Exception, e:
-            continue
-
-        chad = Country.objects.get(iso2_code='TD')
-        senegal = Country.objects.get(iso2_code='SN')
-        mali = Country.objects.get(iso2_code='ML')
-
-        if country not in [senegal, chad, mali]:
-            continue
-
-        vax = rd['Product']
-
-        try:
-            if vax not in vax_skips:
-                vaccine = reconcile_vaccine_interactively(vax, country.iso2_code)
-            if vaccine is None:
-                #print "cannot find vax: '%s'" % (vax)
-                if vax not in vax_skips:
-                    print "cannot reconcile '%s'" % (vax)
-                    print "moving on..."
-                    vax_skips.append(vax)
-                if vax not in unmatched_products:
-                    unmatched_products.append(vax)
-                continue
-            if isinstance(vaccine, str):
-                #print vaccine
-                if vax not in matched_groups:
-                    matched_groups.append(vax)
-                continue
-            vax_slug = vaccine.slug
-            vax_group = vaccine.group.slug
-            if vax_slug not in products:
-                products.append(vax_slug)
-        except Exception, e:
-            print e
-            print "cannot find vax: '%s'" % (vax)
-            continue
-
-        vax_slug = vaccine.slug
-        vax_group = vaccine.group.slug
-        if vax_slug not in products:
-            products.append(vax_slug)
-
-        allocation_type = 'CF'
-
-        try:
-            amount = int(rd['Total no. of doses'])
-        except ValueError:
-            continue
-
-        current_stock = rd['Current Stock Qty']
-        if current_stock not in ['', ' ', None]:
-            init_quant = int(current_stock)
-        else:
-            init_quant = 0
-
-        year = int(yr)
-
-        if amount is not None:
-            sdb = boto.connect_sdb()
-            domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
-
-            try:
-                item_name = hashlib.md5()
-                item_name.update(str(country.iso2_code))
-                item_name.update(str(vax_slug))
-                item_name.update(str(vax_group))
-                item_name.update(allocation_type)
-                item_name.update(str(amount))
-
-                item = domain.new_item(item_name.hexdigest())
-                item.add_value("country", str(country.iso2_code))
-                item.add_value("product", str(vax_slug))
-                item.add_value("group", str(vax_group))
-                item.add_value("type", allocation_type)
-                item.add_value("year", str(year))
-                item.add_value("amount", str(amount))
-                item.add_value("initial", str(init_quant))
-                item.save()
-                print item
-            except Exception, e:
-                print 'error creating stock level'
-                print e
-
-            try:
-                cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
-                cs_item = domain.new_item(cs_item_name)
-                cs_item.add_value("country", str(country.iso2_code))
-                cs_item.add_value("group", str(vax_group))
-                cs_item.add_value("type", "CS")
-                cs_item.save()
-                cs, csc = CountryStock.objects.get_or_create(group=vaccine.group, country=country)
-                cs.products.add(vaccine)
-                cs.md5_hash = cs_item_name
-                cs.save()
-            except Exception, e:
-                print 'error creating countrystock item'
-                print e
-                import ipdb;ipdb.set_trace()
-
-    print set(products)
-    print set(unmatched_products)
-    print set(matched_groups)
+    first_date = min(imported_dates)
+    last_date = max(imported_dates)
+    return (set(imported_countries), set(imported_groups), list(set(imported_years)), import_errors, first_date, last_date)

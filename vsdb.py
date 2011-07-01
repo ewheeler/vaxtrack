@@ -19,6 +19,7 @@ class Vaxtrack(Model):
     product = StringProperty()
     group = StringProperty()
     type = StringProperty()
+    activity = StringProperty()
     date = DateProperty()
     # added year to ease lookups because comparisons are lexicographic
     # http://docs.amazonwebservices.com/AmazonSimpleDB/2009-04-15/DeveloperGuide/index.html?UsingSelectOperators.html 
@@ -35,6 +36,7 @@ field_types = {
     'product' : StringProperty(),
     'group' : StringProperty(),
     'type' : StringProperty(),
+    'activity' : StringProperty(),
     'date' : DateProperty(),
     'year' : IntegerProperty(),
     'amount' : IntegerProperty(),
@@ -62,7 +64,7 @@ def _decode_item(item):
             if field in ['year', 'amount']:
                 decoded += 2147483648
             dict.update({field:decoded})
-    return dict 
+    return dict
 
 def decode_results(results):
     ''' Decodes all results from a boto SelectResultSet.
@@ -97,54 +99,13 @@ def sort_results_asc(list, attr):
 def sort_results_desc(list, attr):
     return sorted(list, key=itemgetter(attr), reverse=True)
 
-cached_year_results = {}
-def sdb_type_for_year(country, year, product, type):
-
-    vaccine = Vaccine.objects.get(slug=product)
-    group = vaccine.group.slug
-
-    # TODO cache results better!
-    search = hashlib.md5()
-    search.update(str(country))
-    search.update(str(year))
-    search.update(str(group))
-    search.update(str(type))
-    hashed = search.hexdigest()
-
-    if hashed in cached_year_results:
-        result = cached_year_results[hashed]
-    else:
-        sdb = boto.connect_sdb()
-        cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
-        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `year`='%s' AND `group`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, year, group, type)
-        result = cs.select(query)
-        cached_year_results.update({hashed:result})
-
-    return result
-
-cached_results = {}
-def sdb_get_all_type(country, product, type):
-
-    vaccine = Vaccine.objects.get(slug=product)
-    group = vaccine.group.slug
-
-    # TODO cache results better!
-    search = hashlib.md5()
-    search.update(str(country))
-    search.update(str(group))
-    search.update(str(type))
-    hashed = search.hexdigest()
-
-    if hashed in cached_results:
-        result = cached_results[hashed]
-    else:
-        sdb = boto.connect_sdb()
-        cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
-        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `group`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, group, type)
-        result = cs.select(query)
-        cached_results.update({hashed:result})
-
-    return result
+def sdb_revert_upload(uuid):
+    sdb = boto.connect_sdb()
+    cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+    query = "SELECT * FROM `%s` WHERE `upload`='%s'" % (SDB_DOMAIN_TO_USE, uuid)
+    result = cs.select(query)
+    for res in result:
+        res.delete()
 
 def sdb_get_all_cs():
     sdb = boto.connect_sdb()
@@ -153,10 +114,26 @@ def sdb_get_all_cs():
     result = cs.select(query)
     return result
 
+def sdb_clear_all_cs():
+    sdb = boto.connect_sdb()
+    cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+    query = "SELECT * FROM `%s` WHERE `type`='CS'" % (SDB_DOMAIN_TO_USE)
+    result = cs.select(query)
+    for res in result:
+        res.delete()
+
 def sdb_clear_all_except_sl():
     sdb = boto.connect_sdb()
     cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
     query = "SELECT * FROM `%s` WHERE `type`!='SL'" % (SDB_DOMAIN_TO_USE)
+    result = cs.select(query)
+    for res in result:
+        res.delete()
+
+def sdb_clear_all_sl():
+    sdb = boto.connect_sdb()
+    cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
+    query = "SELECT * FROM `%s` WHERE `type`='SL'" % (SDB_DOMAIN_TO_USE)
     result = cs.select(query)
     for res in result:
         res.delete()
@@ -169,10 +146,13 @@ def sdb_clear_cf():
     for res in result:
         res.delete()
 
-def sdb_clear_allocations():
+def sdb_clear_allocations(year=None):
     sdb = boto.connect_sdb()
     cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
-    query = "SELECT * FROM `%s` WHERE `type`!='SL' AND `type`!='CF' AND `type`!='CS'" % (SDB_DOMAIN_TO_USE)
+    if year is None:
+        query = "SELECT * FROM `%s` WHERE `type`!='SL' AND `type`!='CF' AND `type`!='CS'" % (SDB_DOMAIN_TO_USE)
+    else:
+        query = "SELECT * FROM `%s` WHERE `year`='%s' AND `type`!='SL' AND `type`!='CF' AND `type`!='CS'" % (SDB_DOMAIN_TO_USE, year)
     result = cs.select(query)
     for res in result:
         res.delete()
@@ -185,7 +165,7 @@ def sdb_stocklevel_count(country, group):
     return result.next()['Count']
 
 group_cached_year_results = {}
-def group_type_for_year(country, year, group_slug, type):
+def group_type_for_year(country, year, group_slug, type, activity):
 
     # TODO cache results better!
     search = hashlib.md5()
@@ -193,35 +173,37 @@ def group_type_for_year(country, year, group_slug, type):
     search.update(str(year))
     search.update(str(group_slug))
     search.update(str(type))
+    search.update(str(activity))
     hashed = search.hexdigest()
 
-    if hashed in cached_year_results:
-        result = cached_year_results[hashed]
+    if hashed in group_cached_year_results:
+        result = group_cached_year_results[hashed]
     else:
         sdb = boto.connect_sdb()
         cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
-        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `year`='%s' AND `group`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, year, group_slug, type)
+        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `year`='%s' AND `group`='%s' AND `type`='%s' AND `activity`='%s'" % (SDB_DOMAIN_TO_USE, country, year, group_slug, type, activity)
         result = cs.select(query)
         group_cached_year_results.update({hashed:result})
 
     return result
 
 group_cached_results = {}
-def group_all_type(country, group_slug, type):
+def group_all_type(country, group_slug, type, activity):
 
     # TODO cache results better!
     search = hashlib.md5()
     search.update(str(country))
     search.update(str(group_slug))
     search.update(str(type))
+    search.update(str(activity))
     hashed = search.hexdigest()
 
-    if hashed in cached_results:
-        result = cached_results[hashed]
+    if hashed in group_cached_results:
+        result = group_cached_results[hashed]
     else:
         sdb = boto.connect_sdb()
         cs = sdb.get_domain(SDB_DOMAIN_TO_USE)
-        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `group`='%s' AND `type`='%s'" % (SDB_DOMAIN_TO_USE, country, group_slug, type)
+        query = "SELECT * FROM `%s` WHERE `country`='%s' AND `group`='%s' AND `type`='%s' AND `activity`='%s'" % (SDB_DOMAIN_TO_USE, country, group_slug, type, activity)
         result = cs.select(query)
         group_cached_results.update({hashed:result})
 
@@ -240,47 +222,28 @@ def multikeysort(items, columns):
             return 0
     return sorted(items, cmp=comparer)
 
-# PRODUCT API
-def all_stocklevels_desc(country, product):
-    return sort_results_desc(decode_results(sdb_get_all_type(country, product, 'SL')), 'date')
-
-def all_stocklevels_asc(country, product):
-    return sort_results_asc(decode_results(sdb_get_all_type(country, product, 'SL')), 'date')
-
-def all_forecasts_asc(country, product):
-    return sort_results_asc(decode_results(sdb_get_all_type(country, product, 'CF')), 'year')
-
-def all_deliveries_for_type_asc(country, product, type):
-    return sort_results_asc(decode_results(sdb_get_all_type(country, product, type)), 'date')
-
-def forecast_for_year(country, product, year):
-    return decode_results(sdb_type_for_year(country, year, product, 'CF'))
-
-def type_for_year_asc(country, product, type, year):
-    return sorted(decode_results(sdb_type_for_year(country, year, product, type)), key=itemgetter('date'))
-
-def type_for_year(country, product, type, year):
-    return decode_results(sdb_type_for_year(country, year, product, type))
-
 # GROUP API
-def get_group_all_stocklevels_desc(country, group):
-    return sort_results_desc(decode_results(group_all_type(country, group, 'SL')), 'date')
+def get_group_all_stocklevels_desc(country, group, activity='unknown'):
+    return sort_results_desc(decode_results(group_all_type(country, group, 'SL', activity)), 'date')
 
-def get_group_all_stocklevels_asc(country, group):
-    return sort_results_asc(decode_results(group_all_type(country, group, 'SL')), 'date')
+def get_group_all_stocklevels_asc(country, group, activity='unknown'):
+    return sort_results_asc(decode_results(group_all_type(country, group, 'SL', activity)), 'date')
 
-def get_group_all_forecasts_asc(country, group):
-    return sort_results_asc(decode_results(group_all_type(country, group, 'CF')), 'year')
+def get_group_all_forecasts_asc(country, group, activity='Routine'):
+    return sort_results_asc(decode_results(group_all_type(country, group, 'CF', activity)), 'year')
 
-def get_group_all_deliveries_for_type_asc(country, group, type):
-    return sort_results_asc(decode_results(group_all_type(country, group, type)), 'date')
+def get_group_all_fforecasts_asc(country, group, activity='Routine'):
+    return sort_results_asc(decode_results(group_all_type(country, group, 'FF', activity)), 'year')
 
-def get_group_forecast_for_year(country, group, year):
+def get_group_all_deliveries_for_type_asc(country, group, type, activity='Routine'):
+    return sort_results_asc(decode_results(group_all_type(country, group, type, activity)), 'date')
+
+def get_group_forecast_for_year(country, group, year, activity='Routine'):
     return decode_results(group_type_for_year(country, year, group, 'CF'))
 
-def get_group_type_for_year_asc(country, group, type, year):
-    return sorted(decode_results(group_type_for_year(country, year, group, type)), key=itemgetter('date'))
+def get_group_type_for_year_asc(country, group, type, year, activity='Routine'):
+    return sorted(decode_results(group_type_for_year(country, year, group, type, activity)), key=itemgetter('date'))
 
-def get_group_type_for_year(country, group, type, year):
-    return decode_results(group_type_for_year(country, year, group, type))
+def get_group_type_for_year(country, group, type, year, activity='Routine'):
+    return decode_results(group_type_for_year(country, year, group, type, activity))
 

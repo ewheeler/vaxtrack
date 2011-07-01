@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block title %}
+    {% load i18n %}
+    {% trans "Uploaded document" %}
+{% endblock %}
+
+{% block content %}
+{% load i18n %}
+
+<div class="module">
+    <h3>{% trans "Uploaded document" %} {{ doc.uuid }}</h3>
+        <div id="doc-detail">
+            <p>{% trans "You may refresh this page for updates about your uploaded document. You will receive an email once VisualVaccines' analysis is complete and new charts are ready to view."%}</p>
+            <table>
+		<thead>
+                    <tr>
+                        <th>{% trans "Uploaded by" %}</th>
+                        <th>{% trans "Document format" %}</th>
+                        <th>{% trans "Title" %}</th>
+                        <th>{% trans "Date Uploaded" %}</th>
+                        <th>{% trans "Date Process Started" %}</th>
+                        <th>{% trans "Date Process Completed" %}</th>
+                        <th>{% trans "Countries included" %}</th>
+                        <th>{% trans "Product groups included" %}</th>
+                        <th>{% trans "Years included" %}</th>
+                        <th>{% trans "Processing errors" %}</th>
+                    </tr>
+		</thead>
+                <tbody>
+                    <tr>
+                        <td>{{ doc.user }}</td>
+                        <td>{{ doc.get_document_format_display }}</td>
+                        <td>{{ doc.name }}</td>
+                        <td>{{ doc.date_uploaded }}</td>
+                        <td>{{ doc.date_process_start }}</td>
+                        <td>{{ doc.date_process_end }}</td>
+                        <td>{{ doc.get_imported_countries }}</td>
+                        <td>{{ doc.get_imported_groups }}</td>
+                        <td>{{ doc.get_imported_years }}</td>
+                        <td>{{ doc.exception }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+</div>
+{% endblock %}

@@ -1,22 +1,31 @@
 **TODO**
 fix cs synchronization
-correct vaccines (-/+)
-deal with country-like non-country entities
-fix radio buttons, show only groups relevant to country
-fix stats, alerts, hist tables
+dump csvs for export and dygraph, serve exports from s3
+update altcountry fixtures
+upload progress indicator
+hookup data entry form so it does something
+email notification when processing of uploads is complete (i.e., when new charts are available)
+email notifications for alerts
+only allow registration by @unicef.org and @who.int email addresses
+let users reset forgotten password
+remove alternate index views, rename vax-dev.js to vax.js, rename fpro.html to index.html
+test flashcanvas pro with IE8 with chrome frame
+serve static content with nginx (not django)
+new AMI?
+check what is shown/hidden in admin interface, change 'Django Administration' to 'VisualVaccines Administration'
 
 **PUNT**
-import SD forecasts
-progress bar for uploads (http://www.laurentluce.com/?p=93)
+correct vaccines (-/+)
+deal with country-like non-country entities
 add WHO logo
-refactor vsdb interfaces
-download button to download all charts for vaccine/country or country
 print button that opens image in new window
-date range selection for charts
-only allow registration by @unicef.org and @who.int email addresses
-email notification when processing of uploads is complete (i.e., when new charts are available)
 
 **DONE**
+import SD forecasts
+date range selection for charts
+refactor vsdb interfaces
+fix radio buttons, show only groups relevant to country
+fix stats, alerts, hist tables
 get rid of old fixtures
 rework web ui to use newly improved Alert objs
 show CountryStockStats statistics on web

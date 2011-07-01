@@ -1,0 +1,73 @@
+Online monitoring and alert system integrating
+vaccine stock data (national coldstore data),
+delivery forecasts, and cold chain capacity
+tools to avoid stock outs and vaccine spoilage/wastage.
+
+DEPENDENCIES:
+    Django 1.3 (http://djangoproject.com)
+    South (http://south.aeracode.org)
+    boto
+    celery
+    django-celery
+    django-rosetta
+    #TODO double check these and then add to debian-based installation (and make a pip-requires file)
+    django-seacucumber
+    django-registration
+
+DATA IMPORT/EXPORT SCRIPT DEPENDENCIES:
+    sudo pip install xlrd xlwt
+
+DEBIAN-BASED INSTALLATION:
+    sudo apt-get install python-pip python-dev mysql-server git-core python-mysqldb python-matplotlib rabbitmq-server gettext
+    sudo pip install setuptools boto=2.0b4 django south celery django-celery django-rosetta
+
+    optionally:
+    sudo apt-get install vim
+    sudo pip install ipython ipdb
+
+DEBIAN-BASED DEPLOYMENT:
+    sudo apt-get insall nginx
+    sudo pip install gunicorn
+
+    Edit /etc/nginx/sites-enabled/default :
+	server {
+
+		listen   80; ## listen for ipv4
+		#listen   [::]:80 default ipv6only=on; ## listen for ipv6
+
+		server_name  myserver.com;
+
+		access_log  /var/log/nginx/localhost.access.log;
+
+		location / {
+		    proxy_pass   http://127.0.0.1:8000;
+		}
+
+
+OS X INSTALLATION:
+    i recommend homebrew for rabbitmq
+    and http://stronginference.com/scipy-superpack/ for matplotlib and its dependencies
+
+FIXTURES:
+    ./manage.py loaddata vaxapp/fixtures/countries_fr.json
+    ./manage.py loaddata vaxapp/fixtures/vaccines.json
+    ./manage.py loaddata vaxapp/fixtures/vaccine_groups.json
+    ./manage.py loaddata vaxapp/fixtures/altcountry.json
+
+I18N AFTER INSTALLATION:
+    cd vaxapp/
+    django-admin.py compilemessages
+
+I18N AFTER MODIFYING STRINGS:
+    cd vaxapp/
+    django-admin.py makemessages -l en
+    django-admin.py makemessages -l fr
+    django-admin.py makemessages -d djangojs -l en
+    django-admin.py makemessages -d djangojs -l fr
+    django-admin.py compilemessages
+
+ADD FRENCH LOCALE ON UBUNTU
+    add `fr_FR.UTF-8 UTF-8` (or similar from /usr/share/i18n/SUPPORTED)
+    to /var/lib/locales/supported.d/local
+    and then run
+    dpkg-reconfigure locales
