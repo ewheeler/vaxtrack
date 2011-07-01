@@ -38,6 +38,9 @@ class AltCountry(models.Model):
     country = models.ForeignKey("Country")
     alternate = models.CharField(max_length=160)
 
+    def __unicode__(self):
+        return "%s: %s" % (self.country, self.alternate)
+
 
 class Country(models.Model):
     name = models.CharField(max_length=160, blank=True, null=True)
@@ -47,6 +50,7 @@ class Country(models.Model):
     iso2_code = models.CharField(max_length=2, primary_key=True)
     iso3_code = models.CharField(max_length=3, blank=True, null=True)
     numerical_code = models.PositiveIntegerField(blank=True, null=True)
+    # TODO add UNICEF SD code
 
     def __unicode__(self):
         return self.printable_name
@@ -223,6 +227,9 @@ class AltVaccine(models.Model):
     country = models.ForeignKey("Country")
     alternate = models.CharField(max_length=160)
 
+    def __unicode__(self):
+        return "%s (%s): %s" % (self.vaccine, self.country, self.alternate)
+
 
 class Vaccine(models.Model):
     name = models.CharField(max_length=160, blank=True, null=True)
@@ -386,7 +393,7 @@ class Vaccine(models.Model):
         fields.append(self.abbr_fr_alt)
         fields = [f for f in fields if f is not None]
         return list(itertools.chain(*map(lambda f: _split_term(f), fields)))
-        
+
 
     @classmethod
     def country_aware_closest_to(klass, term, country_pk):
@@ -446,7 +453,7 @@ class CountryStock(models.Model):
     products = models.ManyToManyField(Vaccine)
     group = models.ForeignKey(VaccineGroup)
     country = models.ForeignKey(Country)
-    md5_hash = models.CharField(max_length=200, null=True, blank=True)
+    md5_hash = models.CharField(max_length=200, null=True, blank=True, editable=False)
 
     def __unicode__(self):
         return "%s: %s" % (self.country.printable_name, self.vaccine)
@@ -650,32 +657,32 @@ class Document(models.Model):
     """
     A simple model which stores data about an uploaded document.
     """
-    user = models.ForeignKey(User, verbose_name=_('user'), related_name="uploaded_document")
+    user = models.ForeignKey(User, verbose_name=_('Uploaded by'), related_name="uploaded_document")
     affiliation = models.ForeignKey(Group, verbose_name=_('group'), null=True, blank=True)
     name = models.CharField(_("Title"), max_length=100)
-    uuid = models.CharField(_('Unique Identifier'), max_length=36)
-    local_document = models.FileField(_("Local Document"), null=True, blank=True, upload_to=UPLOAD_PATH)
-    remote_document = models.URLField(_("Remote Document"), null=True, blank=True)
-    status = models.CharField(_("Remote Processing Status"), default='U', max_length=1, choices=DOCUMENT_STATES)
+    uuid = models.CharField(_('Unique Identifier'), max_length=36, editable=False)
+    local_document = models.FileField(_("Local Document"), null=True, blank=True, upload_to=UPLOAD_PATH, editable=False)
+    remote_document = models.URLField(_("Remote Document"), null=True, blank=True, editable=False)
+    status = models.CharField(_("Remote Processing Status"), default='U', max_length=1, choices=DOCUMENT_STATES, editable=False)
     document_format = models.CharField(_("Document format"), default='TK', max_length=12, choices=DOCUMENT_FORMAT_CHOICES)
-    exception = models.TextField(_("Processing Exception"), null=True, blank=True)
+    exception = models.TextField(_("Processing Exception"), null=True, blank=True, editable=False)
 
-    date_uploaded = models.DateTimeField(_("Date Uploaded"))
-    date_stored = models.DateTimeField(_("Date Stored Remotely"), null=True, blank=True)
-    date_queued = models.DateTimeField(_("Date Queued"), null=True, blank=True)
-    date_process_start = models.DateTimeField(_("Date Process Started"), null=True, blank=True)
-    date_process_end = models.DateTimeField(_("Date Process Completed"), null=True, blank=True)
-    date_exception = models.DateTimeField(_("Date of Exception"), null=True, blank=True)
-    date_revert_start = models.DateTimeField(_("Date Revert Started"), null=True, blank=True)
-    date_revert_end = models.DateTimeField(_("Date Revert Completed"), null=True, blank=True)
-    reverted_by = models.ForeignKey(User, verbose_name=_('user'), null=True, blank=True, related_name="reverted_document")
+    date_uploaded = models.DateTimeField(_("Date Uploaded"), editable=False)
+    date_stored = models.DateTimeField(_("Date Stored Remotely"), null=True, blank=True, editable=False)
+    date_queued = models.DateTimeField(_("Date Queued"), null=True, blank=True, editable=False)
+    date_process_start = models.DateTimeField(_("Date Process Started"), null=True, blank=True, editable=False)
+    date_process_end = models.DateTimeField(_("Date Process Completed"), null=True, blank=True, editable=False)
+    date_exception = models.DateTimeField(_("Date of Exception"), null=True, blank=True, editable=False)
+    date_revert_start = models.DateTimeField(_("Date Revert Started"), null=True, blank=True, editable=False)
+    date_revert_end = models.DateTimeField(_("Date Revert Completed"), null=True, blank=True, editable=False)
+    reverted_by = models.ForeignKey(User, verbose_name=_('Reverted by'), null=True, blank=True, related_name="reverted_document", editable=False)
 
-    date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow)
-    imported_countries = models.ManyToManyField(Country, null=True, blank=True)
-    imported_groups = models.ManyToManyField(VaccineGroup, null=True, blank=True)
-    imported_years = models.CommaSeparatedIntegerField(max_length=200, null=True, blank=True)
-    date_data_begin = models.DateField(_("Date data begin"), null=True, blank=True)
-    date_data_end = models.DateField(_("Date data end"), null=True, blank=True)
+    date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow, editable=False)
+    imported_countries = models.ManyToManyField(Country, null=True, blank=True, editable=False)
+    imported_groups = models.ManyToManyField(VaccineGroup, null=True, blank=True, editable=False)
+    imported_years = models.CommaSeparatedIntegerField(max_length=200, null=True, blank=True, editable=False)
+    date_data_begin = models.DateField(_("Date data begin"), null=True, blank=True, editable=False)
+    date_data_end = models.DateField(_("Date data end"), null=True, blank=True, editable=False)
 
     class Meta:
         verbose_name = _('document')
