@@ -1,15 +1,16 @@
-{% extends "layout-split-2.html" %}
+{% extends "layout.html" %}
 {% block title %}
     {% load i18n %}
     {% trans "Uploaded document" %}
 {% endblock %}
 
-{% block right %}
+{% block content %}
 {% load i18n %}
 
 <div class="module">
     <h3>{% trans "Uploaded document" %} {{ doc.uuid }}</h3>
         <div id="doc-detail">
+            <p>{% trans "You may refresh this page for updates about your uploaded document. You will receive an email once VisualVaccines' analysis is complete and new charts are ready to view."%}</p>
             <table>
                 <tbody>
                     <tr>

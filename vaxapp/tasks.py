@@ -108,13 +108,14 @@ def process_file(doc):
         import_report = import_xls.import_template(doc.local_document.path, interactive=False, dry_run=False, upload=doc.uuid)
         print import_report
         doc.date_process_end = datetime.datetime.utcnow()
-        doc.status = 'F'
         doc.save()
         doc.save_import_report(import_report)
         print 'import complete'
         last_date = import_report[5]
         print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=import_report[0], group_slugs=import_report[1])
         print plot_historical(import_report[0], import_report[1], import_report[2])
+        doc.status = 'F'
+        doc.save()
         notify_upload_complete(doc)
         return True
     else:

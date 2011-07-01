@@ -12,7 +12,7 @@
         <div id="vaxform">
 	<a href="/assets/xls/visualvaccines_stock_levels_upload_format.xls">{% trans "Example excel format for UNICEF CO and other stock level template uploads" %}</a><br/>
 	<a href="/assets/xls/visualvaccines_country_names_and_codes.xls">{% trans "UNICEF SD Country names and codes for use in stock level template uploads" %}</a>
-	<form id="form_upload" action="/upload" method="post" enctype="multipart/form-data">
+	<form id="form_upload" action="{% url upload %}" method="post" enctype="multipart/form-data">
 		{{ document_form.as_p }}
 		{% csrf_token %}
 		<input type="hidden" id="id" name="id" value=""/>

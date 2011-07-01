@@ -39,7 +39,7 @@ def index(req, country_pk=None):
     else:
         countrystocks = False
     countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
-        
+
     countries = list(set([c.country for c in countrystocks]))
     groups = list(set([g.group for g in countrystocks]))
     return render_to_response("index.html",\
@@ -195,9 +195,7 @@ def upload(req, up_id=None):
             doc.date_uploaded = datetime.datetime.utcnow()
             doc.save()
             process_file.delay(doc)
-            return HttpResponseRedirect('/')
-            #return HttpResponse(simplejson.dumps({"name":doc.local_document.path,\
-            #            "url":doc.local_document.path}))
+            return HttpResponseRedirect('/upload/' + doc.uuid)
     else:
         if up_id:
             doc = get_object_or_404(Document, uuid=up_id)
