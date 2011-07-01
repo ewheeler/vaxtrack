@@ -31,7 +31,7 @@
 			<tr>
 				<td>{{ doc.user }}</td>
 				<td>{{ doc.get_document_format_display }}</td>
-				<td>{{ doc.name }}</td>
+                                <td><a href="/upload/{{ doc.uuid }}/">{{ doc.name }}</a></td>
 				<td>{{ doc.date_uploaded }}</td>
 				<td>{{ doc.date_process_start }}</td>
 				<td>{{ doc.date_process_end }}</td>
@@ -40,11 +40,11 @@
 				<td>{{ doc.get_imported_years }}</td>
 				<td>{{ doc.date_exception }}</td>
 				<td>
-					{% if doc.date_revert_begin %}
+					{% if doc.date_revert_start %}
 						{% if doc.date_revert_end %}
 							{% trans "Revert process completed at" %} {{ doc.date_revert_end }} {% trans "initiated by" %} {{ doc.reverted_by }}
 						{% else %}
-							{% trans "Revert process underway or failed. Started at" %} {{ doc.date_revert_begin }} {% trans "initiated by" %} {{ doc.reverted_by }}
+							{% trans "Revert process underway or failed. Started at" %} {{ doc.date_revert_start }} {% trans "initiated by" %} {{ doc.reverted_by }}
 						{% endif %}
 					{% else %}
 					<form id="revert-{{doc.uuid}}" action="{% url revert-upload %}" method="post">

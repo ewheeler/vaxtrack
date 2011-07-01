@@ -66,19 +66,22 @@ def notify_upload_complete(doc):
         uploader_name = "%s %s" % (doc.user.first_name, doc.user.last_name)
     else:
         uploader_name = doc.user.username
-    sender = 'visualvaccines@gmail.com'
-    subject = "[VisualVaccines] upload analysis complete"
+    sender = "visualvaccines@gmail.com"
+    subject = "[VisualVaccines] upload status: %s" % (doc.get_status_display())
     body =\
 """
 Hello %s,
 
-The analysis of your recently uploaded document is complete.
+The processing and analysis of your recently uploaded document is complete.
+
+Review any errors at http://visualvaccines.com/upload/%s/
+
 Please visit http://visualvaccines.com to review any relevant charts,
 which now include data from your uploaded document.
 
 Thanks,
 VisualVaccines
-""" % (uploader_name)
+""" % (doc.uuid, uploader_name)
 
     mail_tuples = []
     mail_tuples.append((subject, body, sender, [uploader_email]))
@@ -98,52 +101,37 @@ def process_file(doc):
     doc.date_queued = datetime.datetime.utcnow()
     doc.save()
 
+    doc.date_process_start = datetime.datetime.utcnow()
+    doc.status = 'P'
+    doc.save()
     if doc.document_format in ['UNSDATV', 'UNSDCOF', 'UNSDACOF', 'UNSDCFD']:
-        # TODO XXX dry run for now!
         print 'IMPORT UNICEF'
-        doc.date_process_start = datetime.datetime.utcnow()
-        doc.status = 'P'
-        doc.save()
-        if import_xls.import_unicef(doc.local_document.path, interactive=False, dry_run=True, upload=doc.uuid):
-            doc.date_process_end = datetime.datetime.utcnow()
-            doc.status = 'F'
-            doc.save()
-            notify_upload_complete(doc)
-            return True
+        import_report = import_xls.import_unicef(doc.local_document.path, interactive=False, dry_run=False, upload=doc.uuid)
     elif doc.document_format in ['WHOCS']:
-        # TODO XXX dry run for now!
         print 'IMPORT WHO'
-        doc.date_process_start = datetime.datetime.utcnow()
-        doc.status = 'P'
-        doc.save()
-        if import_xls.import_who(doc.local_document.path, interactive=False, dry_run=True, upload=doc.uuid):
-            doc.date_process_end = datetime.datetime.utcnow()
-            doc.status = 'F'
-            doc.save()
-            notify_upload_complete(doc)
-            return True
+        import_report = import_xls.import_who(doc.local_document.path, interactive=False, dry_run=False, upload=doc.uuid)
     elif doc.document_format in ['UNCOS', 'TMPLT']:
         print 'IMPORT TEMPLATE'
-        doc.date_process_start = datetime.datetime.utcnow()
-        doc.status = 'P'
-        doc.save()
         import_report = import_xls.import_template(doc.local_document.path, interactive=False, dry_run=False, upload=doc.uuid)
-        print import_report
-        doc.date_process_end = datetime.datetime.utcnow()
-        doc.save()
-        doc.save_import_report(import_report)
-        print 'import complete'
-        last_date = doc.date_data_end
-        print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=import_report[0], group_slugs=import_report[1])
-        print plot_historical(import_report[0], import_report[1], import_report[2])
-        doc.status = 'F'
-        doc.save()
-        notify_upload_complete(doc)
-        return True
     else:
         print 'IMPORT UNKNOWN'
         #TODO do something for TKs
+        import_report = (None, None, None, None, None)
         pass
+    print import_report
+    doc.date_process_end = datetime.datetime.utcnow()
+    doc.save()
+    doc.save_import_report(import_report)
+    print 'import complete'
+    last_date = doc.date_data_end
+    print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=import_report[0], group_slugs=import_report[1])
+    print plot_historical(import_report[0], import_report[1], import_report[2])
+    doc.status = 'F'
+    doc.save()
+    if import_report[3]:
+        doc.status = 'E'
+        doc.save()
+    notify_upload_complete(doc)
     return True
 
 @task
@@ -175,7 +163,7 @@ def handle_alert(countrystock, reference_date, status, risk, text, dry_run=False
         recipients = ['evanmwheeler@gmail.com', 'anthonybellon.contact@gmail.com']
         subject = "[VisualVaccines] %s: %s %s" % (alert.countrystock, alert.get_status_display(), alert.get_risk_display())
         body = alert.get_text_display()
-        sender = 'visualvaccines@gmail.com'
+        sender = "visualvaccines@gmail.com"
         if all([subject, body, recipients]):
             mail_tuples = []
             for r in recipients:

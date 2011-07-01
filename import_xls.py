@@ -202,6 +202,17 @@ def import_who(file=None, interactive=True, dry_run=False, upload=None):
     yf-1
     bcg-10
     '''
+    if dry_run:
+        print 'dry run...'
+    else:
+        print 'NOT dry run...'
+
+    imported_countries = []
+    imported_groups = []
+    imported_years = []
+    import_errors = []
+    imported_dates = []
+
     book = xlrd.open_workbook(file)
     sheets = book.sheet_names()
     country_names = Country.objects.values_list('printable_name', flat=True)
@@ -235,8 +246,12 @@ def import_who(file=None, interactive=True, dry_run=False, upload=None):
                         if term not in skips:
                             if interactive:
                                 country = reconcile_country_interactively(term)
+                                if country.iso2_code not in imported_countries:
+                                    imported_countries.append(country.iso2_code)
                             else:
                                 country = reconcile_country_silently(term)
+                                if country.iso2_code not in imported_countries:
+                                    imported_countries.append(country.iso2_code)
                         if country is None:
                             if term not in skips:
                                 print "cannot reconcile '%s'" % (term)
@@ -249,11 +264,15 @@ def import_who(file=None, interactive=True, dry_run=False, upload=None):
                         break
 
                     year = int(values[1])
+                    if year not in imported_years:
+                        imported_years.append(year)
 
                     # day of year 1-365 (sometimes 366)
                     day_of_year = int(values[2][-3:])
 
                     day = day_of_year_to_date(year, day_of_year)
+                    if day not in imported_dates:
+                        imported_dates.append(day)
 
                     vax = values[2][:-4]
                     try:
@@ -278,18 +297,30 @@ def import_who(file=None, interactive=True, dry_run=False, upload=None):
                             continue
                         vax_slug = vaccine.slug
                         vax_group = vaccine.group.slug
+                        if vax_group not in imported_groups:
+                            imported_groups.append(vax_group)
                         if vax_slug not in products:
                             products.append(vax_slug)
                     except Exception, e:
                         print e
-                        print "cannot find vax: '%s'" % (vax)
+                        error = "cannot identify: '%s'" % (vax)
+                        import_errors.append(error)
                         continue
 
-                    amount = int(values[3])
+                    try:
+                        amount = int(values[3])
+                    except ValueError, e:
+                        error = "'%s' is not a valid amount" % (values[3])
+                        import_errors.append(error)
                     if amount == last_amount:
                         continue
                     else:
                         last_amount = amount
+
+                    if amount < 0:
+                        error = "negative stock values are not allowed. '%d' has been replaced with 0" % (amount)
+                        import_errors.append(error)
+                        amount = 0
 
                     stocks.append(values)
                     try:
@@ -328,6 +359,7 @@ def import_who(file=None, interactive=True, dry_run=False, upload=None):
                     except Exception, e:
                         print 'error creating stock level'
                         print e
+                        import_errors.append(e)
 
                     if not dry_run:
                         cs_item_name = hashlib.md5(str(country.iso2_code)+str(vax_slug)).hexdigest()
@@ -347,7 +379,9 @@ def import_who(file=None, interactive=True, dry_run=False, upload=None):
             print set(products)
             print set(unmatched_products)
             print set(matched_groups)
-    return True
+    first_date = min(imported_dates)
+    last_date = max(imported_dates)
+    return (set(imported_countries), set(imported_groups), list(set(imported_years)), import_errors, first_date, last_date)
 
 
 def import_all_unicef():
@@ -368,6 +402,17 @@ def import_all_unicef():
 
 def import_unicef(file="", interactive=True, dry_run=False, upload=None):
     print file
+    if dry_run:
+        print 'dry run...'
+    else:
+        print 'NOT dry run...'
+
+    imported_countries = []
+    imported_groups = []
+    imported_years = []
+    import_errors = []
+    imported_dates = []
+
     book = xlrd.open_workbook(file)
 
     if book.datemode not in (0,1):
@@ -418,8 +463,12 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
             if rd['Country'] not in skips:
                 if interactive:
                     country = reconcile_country_interactively(rd['Country'])
+                    if country.iso2_code not in imported_countries:
+                        imported_countries.append(country.iso2_code)
                 else:
                     country = reconcile_country_silently(rd['Country'])
+                    if country.iso2_code not in imported_countries:
+                        imported_countries.append(country.iso2_code)
             if country is None:
                 if rd['Country'] not in skips:
                     print "cannot reconcile '%s'" % (rd['Country'])
@@ -429,13 +478,7 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
         except Exception, e:
             print 'BANG'
             print e
-            #continue
-
-        chad = Country.objects.get(iso2_code='TD')
-        senegal = Country.objects.get(iso2_code='SN')
-        mali = Country.objects.get(iso2_code='ML')
-
-        if country not in [senegal, chad, mali]:
+            import_errors.append(e)
             continue
 
         vax = rd['Product']
@@ -462,11 +505,14 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
                 continue
             vax_slug = vaccine.slug
             vax_group = vaccine.group.slug
+            if vax_group not in imported_groups:
+                imported_groups.append(vax_group)
             if vax_slug not in products:
                 products.append(vax_slug)
         except Exception, e:
             print e
             print "cannot find vax: '%s'" % (vax)
+            import_errors.append(e)
             continue
 
         vax_slug = vaccine.slug
@@ -538,9 +584,14 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
                 yr, week = year_week.split('-')
                 approx_date = first_monday_of_week(yr, week)
 
+        if approx_date not in imported_dates:
+            imported_dates.append(approx_date)
+
         if year is None:
             print 'no year!'
         if year is not None:
+            if year not in imported_years:
+                imported_years.append(year)
             sdb = boto.connect_sdb()
             domain = sdb.create_domain(SDB_DOMAIN_TO_USE)
 
@@ -584,7 +635,9 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
             except Exception, e:
                 print 'BANG determine type'
                 print e
-                import pdb;pdb.set_trace()
+                import_errors.append(e)
+                if interactive:
+                    import pdb;pdb.set_trace()
 
             # TODO save row number
             try:
@@ -631,6 +684,7 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
             except Exception, e:
                 print 'error creating stock level'
                 print e
+                import_errors.append(e)
                 if interactive:
                     import ipdb;ipdb.set_trace()
             try:
@@ -648,12 +702,15 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
             except Exception, e:
                 print 'error creating countrystock item'
                 print e
+                import_errors.append(e)
                 if interactive:
                     import ipdb;ipdb.set_trace()
     print set(products)
     print set(unmatched_products)
     print set(matched_groups)
-    return True
+    first_date = min(imported_dates)
+    last_date = max(imported_dates)
+    return (set(imported_countries), set(imported_groups), list(set(imported_years)), import_errors, first_date, last_date)
 
 def import_template(file=None, interactive=True, dry_run=False, upload=None):
     if dry_run:
@@ -700,6 +757,8 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
                     if term not in skips:
                         if interactive:
                             country = reconcile_country_interactively(term)
+                            if country.iso2_code not in imported_countries:
+                                imported_countries.append(country.iso2_code)
                         else:
                             country = reconcile_country_silently(term)
                             if country.iso2_code not in imported_countries:
