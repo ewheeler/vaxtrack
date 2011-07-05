@@ -661,7 +661,7 @@ class Document(models.Model):
     affiliation = models.ForeignKey(Group, verbose_name=_('group'), null=True, blank=True)
     name = models.CharField(_("Title"), max_length=100)
     uuid = models.CharField(_('Unique Identifier'), max_length=36, editable=False)
-    local_document = models.FileField(_("Local Document"), null=True, blank=True, upload_to=UPLOAD_PATH, editable=False)
+    local_document = models.FileField(_("Local Document"), upload_to=UPLOAD_PATH, editable=False)
     remote_document = models.URLField(_("Remote Document"), null=True, blank=True, editable=False)
     status = models.CharField(_("Remote Processing Status"), default='U', max_length=1, choices=DOCUMENT_STATES, editable=False)
     document_format = models.CharField(_("Document format"), default='TK', max_length=12, choices=DOCUMENT_FORMAT_CHOICES)
