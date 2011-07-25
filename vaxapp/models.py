@@ -696,6 +696,21 @@ class Document(models.Model):
             self.uuid = str(uuid.uuid4())
         super(Document, self).save(**kwargs)
 
+    @classmethod
+    def get_current_sit_as_of(klass, countrystock):
+        cdocs = countrystock.country.document_set.all().values_list('id', flat=True)
+        gdocs = countrystock.group.document_set.all().values_list('id', flat=True)
+        csdocs = set(cdocs & gdocs)
+        docs = klass.objects.filter(date_revert_end=None, id__in=csdocs).order_by('-date_data_end')
+        if docs:
+            return docs[0].date_data_end
+
+    @property
+    def is_revertable(self):
+        if self.status in ['F', 'E']:
+            return True
+        return False
+
     @property
     def get_imported_countries(self):
         countries = self.imported_countries.all()

@@ -58,6 +58,30 @@ def get_data(req, country_pk, group_slug, sit_year, sit_month, sit_day):
         print data_url
         return HttpResponseRedirect(data_url)
 
+def sit_as_of(req, country_pk, group_slug):
+    if req.is_ajax():
+        try:
+            country_code = country_pk
+            if str(country_pk).isdigit():
+                country_code = string.uppercase[int(country_pk[:2]) -1] + string.uppercase[int(country_pk[2:]) -1]
+            countrystock = CountryStock.objects.filter(country=country_code, group__slug=group_slug)
+            if countrystock:
+                sit_as_of = Document.get_current_sit_as_of(countrystock[0])
+                if sit_as_of:
+                    sit_day = sit_as_of.day
+                    if sit_day < 10:
+                        sit_day = 1;
+                    else:
+                        sit_day = 15
+                    sit_as_of_dict = [{'year': sit_as_of.year, 'month': sit_as_of.month, 'day': sit_day}]
+                    return HttpResponse(simplejson.dumps(sit_as_of_dict), 'application/javascript')
+            today = datetime.datetime.now()
+            return HttpResponse(simplejson.dumps([{'year':today.year, 'month': today.month, 'day': today.day}]), 'application/javascript')
+        except Exception, e:
+            print 'BANG SIT AS OF'
+            print e
+            return HttpResponse([], 'application/javascript')
+
 def alerts(req, country_pk, group_slug):
     if req.is_ajax():
         try:
@@ -68,7 +92,7 @@ def alerts(req, country_pk, group_slug):
             alerts = Alert.objects.filter(countrystock=countrystock)
             if len(alerts) == 0:
                 return HttpResponse([], 'application/javascript')
-            alerts_text = [{'text':alert.get_text_display(), 'status':alert.status} for alert in alerts]
+            alerts_text = [{'text':alert.get_text_display(), 'status':alert.status, 'reference_date':alert.reference_date.isoformat(), 'analyzed':alert.analyzed.date().isoformat()} for alert in alerts]
             return HttpResponse(simplejson.dumps(alerts_text), 'application/javascript')
         except Exception, e:
             print 'BANG ALERTS'
@@ -193,6 +217,7 @@ def upload(req, up_id=None):
             doc = form.save(commit=False)
             doc.user = req.user
             doc.date_uploaded = datetime.datetime.utcnow()
+            doc.local_document = req.FILES['local_document']
             doc.save()
             process_file.delay(doc)
             return HttpResponseRedirect('/upload/' + doc.uuid)

@@ -28,6 +28,7 @@ $(document).ready(function(){
 
     var data_url;
     var data;
+
     var sit_year = 2011;
     var sit_month = 4;
     var sit_day = 1;
@@ -45,9 +46,10 @@ $(document).ready(function(){
         options = new Array("T", "N", "F", "P");
         group = "bcg";
 	country = "1914";
+        get_sit_as_of();
 	chart_name = "";
 	//data_url = "/csv/1312/opv/2011/3/31/";
-	data_url = "/assets/csvs/1914/opv/2011/1914_bcg_2011_4_1.csv";
+	data_url = "/assets/csvs/1914/opv/2011/1914_bcg_" + sit_year +  "_" + sit_month + "_" + sit_day + ".csv";
     } else {
 	update_from_hash();
     };
@@ -58,6 +60,7 @@ $(document).ready(function(){
 	lang = hash_parts[1];
 	country = hash_parts[2].replace(/[\#\-\!]/g,"");
 	group = hash_parts[3];
+        get_sit_as_of();
 	options = new Array();
 	/* clean slate of chart options with only stock levels visible */
 	vis_bools = new Array(true, false, false, false, false, false, false);
@@ -150,6 +153,9 @@ $(document).ready(function(){
     $("#checkbox-S").attr("checked", "checked");
     $("#vaccines :input:radio").filter("[value=" + group + "]").attr("checked", "checked");
     $("#country").val(country);
+    $("#sit_year").val(sit_year);
+    $("#sit_month").val(sit_month);
+    $("#sit_day").val(sit_day);
 
     /*	set lang global variable to selected lang
     (which is decided by django i18n based on
@@ -205,6 +211,7 @@ $(document).ready(function(){
 	    group = $(this).val();
 	});
 	update_url();
+        get_sit_as_of();
         get_chart();
 	get_alerts();
 	get_stats();
@@ -217,6 +224,7 @@ $(document).ready(function(){
         country = "";
 	country = $(this).val();
 	update_url();
+        get_sit_as_of();
         get_chart();
 	get_alerts();
 	get_stats();
@@ -337,7 +345,9 @@ $(document).ready(function(){
 			$("#module-info").show();
 		};
 		for (a in alerts){
-			$("#alerts").append("<li class='" + alerts[a].status + "'>" + alerts[a].text + "</li>");
+                        /* TODO i18n */
+                        var alert_title = "Based on analysis performed on " + alerts[a].analyzed + " for situation as of " + alerts[a].reference_date
+			$("#alerts").append("<li title='" + alert_title + "' class='tipoff " + alerts[a].status + "'>" + alerts[a].text + "</li>");
 		};
 	});
     };
@@ -406,5 +416,13 @@ $(document).ready(function(){
 		/* add tooltips at end of $.get callback */
 		$(".tipoff").tooltip({opacity: 0.9});
 	});
+    };
+    function get_sit_as_of(){
+	$.get("/sit-as-of/" + country + "/" + group, function (data){
+		var sit_date = jQuery.parseJSON(data)[0];
+                sit_year = sit_date['year'];
+                sit_month = sit_date['month'];
+                sit_day = sit_date['day'];
+        });
     };
 });

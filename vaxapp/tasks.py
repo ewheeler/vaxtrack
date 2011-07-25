@@ -30,6 +30,7 @@ ACL = getattr(settings, "CHART_AWS_ACL", "public-read")
 
 
 def upload_file_to_s3(doc):
+    print 'upload_file_to_s3 ...'
     file_path = doc.local_document.path
     b = boto.connect_s3().get_bucket(settings.DOCUMENT_UPLOAD_BUCKET)
     name = '%s/%s' % (doc.uuid, os.path.basename(file_path))
@@ -49,12 +50,14 @@ def process_revert_upload(doc, reverter):
     print country_pks
     group_slugs = (g.slug for g in doc.imported_groups.all())
     print group_slugs
-    years = doc.imported_years.split(',')
-    print years
-    last_date = doc.date_data_end
-    print last_date
-    print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=country_pks, group_slugs=group_slugs)
-    print plot_historical(country_pks, group_slugs, years)
+    if doc.date_data_end is not None:
+        last_date = doc.date_data_end
+        print last_date
+        print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=country_pks, group_slugs=group_slugs)
+        if doc.imported_years is not None:
+            print years
+            years = doc.imported_years.split(',')
+            print plot_historical(country_pks, group_slugs, years)
     doc.date_revert_end = datetime.datetime.utcnow()
     doc.status = 'R'
     doc.save()
@@ -81,7 +84,7 @@ which now include data from your uploaded document.
 
 Thanks,
 VisualVaccines
-""" % (doc.uuid, uploader_name)
+""" % (uploader_name, doc.uuid)
 
     mail_tuples = []
     mail_tuples.append((subject, body, sender, [uploader_email]))

@@ -47,11 +47,15 @@
 							{% trans "Revert process underway or failed. Started at" %} {{ doc.date_revert_start }} {% trans "initiated by" %} {{ doc.reverted_by }}
 						{% endif %}
 					{% else %}
-					<form id="revert-{{doc.uuid}}" action="{% url revert-upload %}" method="post">
-						{% csrf_token %}
-						<input type="hidden" id="uuid" name="uuid" value="{{doc.uuid}}"/>
-						<input type="submit" id="submit-revert-{{doc.uuid}}" value="{% trans 'Revert' %}"/>
-				    	</form>
+                                            {% if doc.is_revertable %}
+                                            <form id="revert-{{doc.uuid}}" action="{% url revert-upload %}" method="post">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" id="uuid" name="uuid" value="{{doc.uuid}}"/>
+                                                    <input type="submit" id="submit-revert-{{doc.uuid}}" value="{% trans 'Revert' %}"/>
+                                            </form>
+                                            {% else %}
+                                                {% trans "Unavailable" %}
+                                            {% endif %}
 					{% endif %}
 				</td>
 			</tr>
