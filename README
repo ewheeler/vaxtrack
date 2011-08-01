@@ -98,10 +98,9 @@ Wayfinding in the codebase (and notes about important files):
     some translations, such as country names and product group names, are handled
     by property methods on respective model.
 - currently, the web interface shows a single 'anonymized' country. to un-anonymize,
-   replace calls to self.anon in models.py with the commented-out self.name lines.
-   Also, in views.py, replace limited countrystock queries in index method.
-   TODO mark this code with XXX ANON for easy grepping and get rid of anon branch,
-   which is only confusing.
+    visit the gargoyle section of the admin site (/nexus) and disable the anonymous switch.
+    note there are two versions of vax-dev.js: vax-dev.js and vax-dev-anon.js
+    this is unfortunately the simplest way to allow switching between real and anonymous
 
 For more information:
     please contact me! this guide is certainly not comprehensive

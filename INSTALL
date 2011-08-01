@@ -13,6 +13,8 @@ DEPENDENCIES:
     #TODO double check these and then add to debian-based installation (and make a pip-requires file)
     django-seacucumber
     django-registration
+    nexus
+    gargoyle
 
 DATA IMPORT/EXPORT SCRIPT DEPENDENCIES:
     sudo pip install xlrd xlwt
