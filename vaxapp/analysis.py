@@ -62,9 +62,10 @@ def plot(sit_year=2011, sit_month=12, sit_day=15, country='SN', group_slug='bcg'
     print end
     print delta
 
-def plot_all(sit_year=2011, sit_month=4, sit_day=1):
+def plot_all(sit_year=2011, sit_month=7, sit_day=1):
     begin = datetime.datetime.now()
-    for country in ['ML', 'TD', 'SN']:
+    #for country in Country.objects.all().values_list('iso2_code', flat=True):
+    for country in ['ML', 'SN', 'TD']:
         #for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
         for v in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']:
             analysis = Analysis(country_pk=country, group_slug=str(v), vaccine_abbr=None, sit_year=sit_year, sit_month=sit_month, sit_day=sit_day)
@@ -105,7 +106,7 @@ def plot_historical(country_pks, group_slugs, years):
     print end
     print delta
 
-def analyze_all(sit_year=2011, sit_month=4, sit_day=1):
+def analyze_all(sit_year=2011, sit_month=7, sit_day=1):
     begin = datetime.datetime.now()
     for country in ['ML', 'TD', 'SN']:
         #for v in [cs.group.slug for cs in CountryStock.objects.filter(country__iso2_code=country)]:
@@ -135,6 +136,42 @@ class Analysis(object):
                     matches.append(dict)
         return matches
 
+    def get_and_set_vars(self):
+        try:
+            # fetch all stocklevels up to 'today'
+            self.stocklevels = [s for s in get_group_all_stocklevels_asc(self.country_pk, self.group_slug) if s['date'] < self.today]
+
+            self.dates = Analysis.values_list(self.stocklevels, 'date')
+            self.levels = Analysis.values_list(self.stocklevels, 'amount')
+
+            self.forecasts = get_group_all_forecasts_asc(self.country_pk, self.group_slug)
+            self.fforecasts = get_group_all_fforecasts_asc(self.country_pk, self.group_slug)
+
+            self.annual_demand = {}
+            # get list of years we are dealing with
+            self.f_years = list(set(Analysis.values_list(self.forecasts, 'year')))
+            print self.f_years
+            self.ff_years = list(set(Analysis.values_list(self.fforecasts, 'year')))
+            print self.ff_years
+            self.s_years = list(set(Analysis.values_list(self.stocklevels, 'year')))
+            print self.s_years
+            for year in self.f_years:
+                annual = []
+                # get list of forecasts for each year
+                fy = Analysis.filter(self.forecasts, 'year', year)
+                for f in fy:
+                    # add forecasts for this year to list
+                    annual.append(f['amount'])
+                self.annual_demand.update({year:sum(annual)})
+            print self.annual_demand
+            return True
+
+        except Exception,e:
+            print 'ERROR GET AND SET VARS'
+            print e
+            if self.interactive:
+                import ipdb; ipdb.set_trace()
+            return False
 
     def __init__(self, country_pk=None, group_slug=None, vaccine_abbr=None, lang=None, sit_year=None, sit_month=None, sit_day=None):
         self.country_pk = country_pk
@@ -175,47 +212,22 @@ class Analysis(object):
         self.lookahead = datetime.timedelta(90)
         self.cons_rate_diff_threshold = 0.25
         self.anon = True
+        self.interactive = False
 
-        # TODO XXX back to the present!
-        #self.today = datetime.datetime.today().date()
+        self.today = datetime.datetime.today().date()
         if sit_year and sit_month and sit_day:
             self.today = datetime.date(sit_year, sit_month, sit_day)
-        else:
-            self.today = datetime.date(2011, 4, 1)
 
-
-        try:
-            # fetch all stocklevels up to 'today'
-            self.stocklevels = [s for s in get_group_all_stocklevels_asc(self.country_pk, self.group_slug) if s['date'] < self.today]
-
-            self.dates = Analysis.values_list(self.stocklevels, 'date')
-            self.levels = Analysis.values_list(self.stocklevels, 'amount')
-
-            self.forecasts = get_group_all_forecasts_asc(self.country_pk, self.group_slug)
-            self.fforecasts = get_group_all_fforecasts_asc(self.country_pk, self.group_slug)
-
-            self.annual_demand = {}
-            # get list of years we are dealing with
-            self.f_years = list(set(Analysis.values_list(self.forecasts, 'year')))
-            print self.f_years
-            self.ff_years = list(set(Analysis.values_list(self.fforecasts, 'year')))
-            print self.ff_years
-            self.s_years = list(set(Analysis.values_list(self.stocklevels, 'year')))
-            print self.s_years
-            for year in self.f_years:
-                annual = []
-                # get list of forecasts for each year
-                fy = Analysis.filter(self.forecasts, 'year', year)
-                for f in fy:
-                    # add forecasts for this year to list
-                    annual.append(f['amount'])
-                self.annual_demand.update({year:sum(annual)})
-            print self.annual_demand
-
-        except Exception,e:
-            print 'ERROR INIT'
-            print e
-            import ipdb; ipdb.set_trace()
+        self.stocklevels = []
+        self.dates = []
+        self.levels = []
+        self.forecasts = []
+        self.fforecasts = []
+        self.annual_demand = {}
+        self.f_years = []
+        self.ff_years = []
+        self.s_years = []
+        self.has_data = self.get_and_set_vars()
 
 
     # calculate projections
@@ -273,7 +285,7 @@ class Analysis(object):
                 est_stock_date = this_date
                 for delivery_type in ["CO", "UN"]:
                     if this_date.year != year_counter:
-                        year_counter = this_date.year 
+                        year_counter = this_date.year
                         if this_date.year in annual_begin_levels:
                             if annual_begin_levels[this_date.year] is not None:
                                 est_stock_level = annual_begin_levels[this_date.year]
@@ -299,7 +311,8 @@ class Analysis(object):
         except Exception,e:
             print 'ERROR PROJECTION'
             print e
-            import ipdb; ipdb.set_trace()
+            if self.interactive:
+                import ipdb; ipdb.set_trace()
 
     def set_plot_options(self, options_str):
         try:
@@ -312,9 +325,12 @@ class Analysis(object):
         except Exception,e:
             print 'ERROR SET PLOT OPTIONS'
             print e
-            import ipdb; ipdb.set_trace()
+            if self.interactive:
+                import ipdb; ipdb.set_trace()
 
     def plot(self, **kwargs):
+        if not self.get_and_set_vars():
+            return False
         # string of options (as single characters) in alphabetical order
         # used later for filename
         self.options_str = ''.join(sorted(kwargs.keys()))
@@ -380,7 +396,8 @@ class Analysis(object):
             except Exception,e:
                 print 'ERROR BUFFERS'
                 print e
-                import ipdb; ipdb.set_trace()
+                if self.interactive:
+                    import ipdb; ipdb.set_trace()
 
         try:
 
@@ -479,11 +496,14 @@ class Analysis(object):
 
                 #file_name = "/tmp/%s_%s_all.csv" % (self.country_pk, self.group_slug)
                 country_code = self.country_pk
-                if self.anon:
-                    country_code = "".join([str(letter_position(l)).zfill(2) for l in self.country_pk])
                 file_path = "/home/ubuntu/vax/vaxapp/static/csvs/%s/%s/%s/" % (country_code, self.group_slug, self.today.year)
                 file_name = "%s_%s_%s_%s_%s.csv" % (country_code, self.group_slug, self.today.year, self.today.month, self.today.day)
                 local_file = file_path + file_name
+
+                anon_country_code = "".join([str(letter_position(l)).zfill(2) for l in self.country_pk])
+                anon_file_path = "/home/ubuntu/vax/vaxapp/static/csvs/%s/%s/%s/" % (anon_country_code, self.group_slug, self.today.year)
+                anon_file_name = "%s_%s_%s_%s_%s.csv" % (anon_country_code, self.group_slug, self.today.year, self.today.month, self.today.day)
+                anon_local_file = anon_file_path + anon_file_name
                 try:
                     os.makedirs(file_path)
                 except OSError, e:
@@ -493,6 +513,18 @@ class Analysis(object):
                         raise
 
                 with open(local_file, 'wb') as f:
+                    csvwriter = csv.writer(f, delimiter=',')
+                    csvwriter.writerows(time_series)
+
+                try:
+                    os.makedirs(anon_file_path)
+                except OSError, e:
+                    # don't raise if the path already exists,
+                    # only if there is another error (permission, etc)
+                    if e.errno != errno.EEXIST:
+                        raise
+
+                with open(anon_local_file, 'wb') as f:
                     csvwriter = csv.writer(f, delimiter=',')
                     csvwriter.writerows(time_series)
 
@@ -516,9 +548,12 @@ class Analysis(object):
         except Exception, e:
             print 'BANG dump'
             print e
-            import ipdb; ipdb.set_trace()
+            if self.interactive:
+                import ipdb; ipdb.set_trace()
 
     def analyze(self):
+        if not self.get_and_set_vars():
+            return False
         print '~~~~ANALYZING~~~~'
         print self.country_pk
         print self.vaccine_abbr
@@ -714,7 +749,8 @@ class Analysis(object):
         except Exception, e:
             print 'ERROR ANALYZING'
             print e
-            import ipdb; ipdb.set_trace()
+            if self.interactive:
+                import ipdb; ipdb.set_trace()
 
     def save_stats(self):
         # ensure that analyze() and plot()
@@ -764,4 +800,5 @@ class Analysis(object):
         except Exception, e:
             print 'ERROR SAVING STATS'
             print e
-            import ipdb; ipdb.set_trace()
+            if self.interactive:
+                import ipdb; ipdb.set_trace()

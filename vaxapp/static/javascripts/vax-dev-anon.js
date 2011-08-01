@@ -30,7 +30,7 @@ $(document).ready(function(){
     var data;
 
     var sit_year = 2011;
-    var sit_month = 7;
+    var sit_month = 4;
     var sit_day = 1;
 
     /* array of all possible chart options, used to check for plot visibility */
@@ -45,10 +45,12 @@ $(document).ready(function(){
         /* default chart options, vax, and country */
         options = new Array("T", "N", "F", "P");
         group = "bcg";
-	country = "SN";
+	/* TODO how to turn on/off anonymous */
+	country = "1914";
         get_sit_as_of();
 	chart_name = "";
-	data_url = "/assets/csvs/SN/opv/2011/SN_bcg_" + sit_year +  "_" + sit_month + "_" + sit_day + ".csv";
+	/* TODO how to turn on/off anonymous */
+	data_url = "/assets/csvs/1914/opv/2011/1914_bcg_" + sit_year +  "_" + sit_month + "_" + sit_day + ".csv";
     } else {
 	update_from_hash();
     };
@@ -266,7 +268,7 @@ $(document).ready(function(){
 		    data_url,
 		    {
 			rollPeriod: 1,
-			title: country + " " + group.toUpperCase(),
+			title: strings["country_lbl"] + " " + country + " " + group.toUpperCase(),
 			axisLabelWidth:100,
 			ylabel: strings["doses_lbl"],
 			digitsAfterDecimal:0,

@@ -19,6 +19,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.core.exceptions import ObjectDoesNotExist
 
+from gargoyle import gargoyle
+
 from dameraulevenshtein import dameraulevenshtein as dm
 from vax.vsdb import *
 
@@ -62,17 +64,22 @@ class Country(models.Model):
     @property
     def anon(self):
         ''' Pseudo-anonymized country code, with letters as position in alphabet. '''
-        return "".join([str(letter_position(l)).zfill(2) for l in self.iso2_code])
+        if gargoyle.is_active('anon'):
+            return "".join([str(letter_position(l)).zfill(2) for l in self.iso2_code])
+        else:
+            return self.iso2_code
 
     @property
     def en(self):
-        #return self.name
-        return "Country " + self.anon
+        if gargoyle.is_active('anon'):
+            return "Country " + self.anon
+        return self.name
 
     @property
     def fr(self):
-        #return self.name_fr
-        return "Pays " + self.anon
+        if gargoyle.is_active('anon'):
+            return "Pays " + self.anon
+        return self.name_fr
 
     @classmethod
     def lookup(klass, term):
@@ -162,12 +169,16 @@ class Country(models.Model):
     @classmethod
     def as_tuples_en(klass):
         ''' Returns a list of 2-tuples for choices field. '''
-        return [(c.anon,c.en) for c in klass.objects.all()]
+        if gargoyle.is_active('anon'):
+            return [(c.anon,c.en) for c in klass.objects.all()]
+        return [(c.iso2_code,c.en) for c in klass.objects.all()]
 
     @classmethod
     def as_tuples_fr(klass):
         ''' Returns a list of 2-tuples for choices field. '''
-        return [(c.anon,c.fr) for c in klass.objects.all()]
+        if gargoyle.is_active('anon'):
+            return [(c.anon,c.fr) for c in klass.objects.all()]
+        return [(c.iso2_code,c.fr) for c in klass.objects.all()]
 
     @classmethod
     def as_tuples_for_admin(klass):
@@ -689,7 +700,7 @@ class Document(models.Model):
         verbose_name_plural = _('documents')
 
     def __unicode__(self):
-        return unicode(_("%s document uploaded %s by %s") % (self.get_document_format_display(), self.date_uploaded, self.user))
+        return unicode(_("%(docname)s document uploaded %(date_uploaded)s by %(user)s") % {"docname":self.get_document_format_display(), "date_uploaded":self.date_uploaded, "user":self.user})
 
     def save(self, **kwargs):
         if self.id is None:

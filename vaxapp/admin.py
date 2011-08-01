@@ -17,6 +17,7 @@ class CountryStockAdmin(admin.ModelAdmin):
 
 admin.site.register(Vaccine)
 admin.site.register(VaccineGroup)
+admin.site.register(AltVaccine)
 admin.site.register(Country)
 admin.site.register(AltCountry)
 admin.site.register(CountryStock, CountryStockAdmin)

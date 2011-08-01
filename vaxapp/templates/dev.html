@@ -4,10 +4,15 @@
 {% load i18n %}
 	{% trans "Dashboard" %}
 {% endblock %}
+{% load gargoyle_tags %}
 {% block javascripts %}
 {{ block.super }}
 <!--[if lt IE 9]><script src="/assets/flashcanvas/pro/flashcanvas.js"></script><![endif]-->
-<script src="/assets/js/vax-dev.js"></script>
+{% ifswitch anon %}
+    <script src="/assets/js/vax-dev-anon.js"></script>
+{% else %}
+    <script src="/assets/js/vax-dev.js"></script>
+{% endifswitch %}
 <script src="/assets/js/dygraph-combined.js"></script>
 <script src="/assets/js/jquery.sparkline.min.js"></script>
 {% endblock %}

@@ -127,8 +127,9 @@ def process_file(doc):
     doc.save_import_report(import_report)
     print 'import complete'
     last_date = doc.date_data_end
-    print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=import_report[0], group_slugs=import_report[1])
-    print plot_historical(import_report[0], import_report[1], import_report[2])
+    if last_date:
+        print plot_and_analyze(sit_year=last_date.year, sit_month=last_date.month, sit_day=last_date.day, country_pks=import_report[0], group_slugs=import_report[1])
+        print plot_historical(import_report[0], import_report[1], import_report[2])
     doc.status = 'F'
     doc.save()
     if import_report[3]:

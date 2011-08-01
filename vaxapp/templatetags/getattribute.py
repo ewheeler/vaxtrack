@@ -2,6 +2,7 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 from django import template
+from django.utils.encoding import force_unicode
 register = template.Library()
 
 def getattribute(value, arg):
@@ -11,9 +12,9 @@ def getattribute(value, arg):
     if hasattr(value, str(arg)):
         return getattr(value, arg)
     elif hasattr(value, 'has_key') and value.has_key(arg):
-        return value[arg]
+        return force_unicode(value[arg])
     else:
-        return ""
-        
+        return u""
+
 
 register.filter('getattribute', getattribute)

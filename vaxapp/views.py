@@ -21,10 +21,12 @@ def index_dev(req, country_pk=None):
         countrystocks = CountryStock.objects.filter(country=country_pk)
     else:
         countrystocks = False
-    #countrystocks = [c for c in CountryStock.objects.all() if c.has_stock_data]
-    countrystocks = [c for c in CountryStock.objects.all() if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    targets =  ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']
+    vg = VaccineGroup.objects.filter(slug__in=targets)
+    countrystocks = CountryStock.objects.filter(group__in=vg)
+    countrystocks = [c for c in countrystocks if c.has_stock_data]
     #countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
-    countries = list(set([c.country for c in countrystocks]))
+    countries = sorted(list(set([c.country for c in countrystocks])), key=operator.attrgetter('printable_name'))
     groups = list(set([g.group for g in countrystocks]))
     return render_to_response("dev.html",\
         {"countrystocks": countrystocks,\
@@ -73,8 +75,9 @@ def sit_as_of(req, country_pk, group_slug):
                         sit_day = 1;
                     else:
                         sit_day = 15
-                    sit_as_of_dict = [{'year': sit_as_of.year, 'month': sit_as_of.month, 'day': sit_day}]
-                    return HttpResponse(simplejson.dumps(sit_as_of_dict), 'application/javascript')
+                    if not sit_as_of > datetime.datetime.now().date():
+                        sit_as_of_dict = [{'year': sit_as_of.year, 'month': sit_as_of.month, 'day': sit_day}]
+                        return HttpResponse(simplejson.dumps(sit_as_of_dict), 'application/javascript')
             today = datetime.datetime.now()
             return HttpResponse(simplejson.dumps([{'year':today.year, 'month': today.month, 'day': today.day}]), 'application/javascript')
         except Exception, e:
@@ -117,74 +120,75 @@ def stats(req, country_pk, group_slug):
                 country_code = string.uppercase[int(country_pk[:2]) -1] + string.uppercase[int(country_pk[2:]) -1]
             countrystock = CountryStock.objects.filter(country=country_code, group__slug=group_slug)
             if countrystock.count() > 0:
-                css = countrystock[0].latest_stats
-                # XXX why isnt this working?
-                #if not css.has_stock_data:
-                #    return HttpResponse([], 'application/javascript')
-                # TODO this is insane
-                # instead of the fields, i'd like the properties that return
-                # a dict of the related obj rather than pks of related obj
-                props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year', 'days_of_stock_data']
+                if countrystock[0]:
+                    css = countrystock[0].latest_stats
+                    if css is not None:
+                        # XXX why isnt this working?
+                        #if not css.has_stock_data:
+                        #    return HttpResponse([], 'application/javascript')
+                        # TODO this is insane
+                        # instead of the fields, i'd like the properties that return
+                        # a dict of the related obj rather than pks of related obj
+                        props_to_get = ['consumed_in_year', 'actual_cons_rate', 'annual_demand', 'three_by_year', 'nine_by_year', 'days_of_stock_data']
 
-                # get a set of years that there may be historical data for
-                # by getting the years from a stocklevel stat and a forecats stat
-                # this way, if there is no forecast/unicef data for a particular year
-                # or no stocklevel data for a particular year, the other data
-                # will be shown in the correct column.
-                # TODO its probably better in the long run to build the
-                # hist tables in a way that does not depend on the orders
-                # of several lists in order for the correct data to appear
-                # in the correct column...
-                years = sorted(list(set(css.get_consumed_in_year.keys() + css.get_annual_demand.keys())))
+                        # get a set of years that there may be historical data for
+                        # by getting the years from a stocklevel stat and a forecats stat
+                        # this way, if there is no forecast/unicef data for a particular year
+                        # or no stocklevel data for a particular year, the other data
+                        # will be shown in the correct column.
+                        # TODO its probably better in the long run to build the
+                        # hist tables in a way that does not depend on the orders
+                        # of several lists in order for the correct data to appear
+                        # in the correct column...
+                        years = sorted(list(set(css.get_consumed_in_year.keys() + css.get_annual_demand.keys())))
 
-                stats = {}
-                for prop in props_to_get:
-                    prop_dict = getattr(css, 'get_' + prop)
-                    prop_list = []
-                    if prop_dict is not None:
-                        for year in years:
-                            if year in prop_dict:
-                                prop_list.append(prop_dict[year])
-                            else:
-                                prop_list.append("")
-                        stats[prop] = prop_list
-                stats['years'] = years
+                        stats = {}
+                        for prop in props_to_get:
+                            prop_dict = getattr(css, 'get_' + prop)
+                            prop_list = []
+                            if prop_dict is not None:
+                                for year in years:
+                                    if year in prop_dict:
+                                        prop_list.append(prop_dict[year])
+                                    else:
+                                        prop_list.append("")
+                                stats[prop] = prop_list
+                        stats['years'] = years
 
-                attrs_to_get = ['est_daily_cons','days_of_stock','doses_delivered_this_year','doses_on_orders','demand_for_period']
-                # instead of a for loop, using this strategy: http://news.ycombinator.com/item?id=2320298
-                # basically, this avoids having the for loop translated into
-                # bytecode by the interpreter and runs in straight c instead
-                #
-                # also add_sep to these -- my lame js version for the hist
-                # table will add commas to these dates
-                any(itertools.imap(lambda attr: stats.update({attr: add_sep(getattr(css, attr))}), attrs_to_get))
+                        attrs_to_get = ['est_daily_cons','days_of_stock','doses_delivered_this_year','doses_on_orders','demand_for_period']
+                        # instead of a for loop, using this strategy: http://news.ycombinator.com/item?id=2320298
+                        # basically, this avoids having the for loop translated into
+                        # bytecode by the interpreter and runs in straight c instead
+                        #
+                        # also add_sep to these -- my lame js version for the hist
+                        # table will add commas to these dates
+                        any(itertools.imap(lambda attr: stats.update({attr: add_sep(getattr(css, attr))}), attrs_to_get))
 
-                if css.percent_coverage is not None:
-                    stats['percent_coverage'] = str(int(css.percent_coverage*100.0)) + '%'
+                        if css.percent_coverage is not None:
+                            stats['percent_coverage'] = str(int(css.percent_coverage*100.0)) + '%'
 
-                # need isoformat because dates/datetimes aren't serializable
-                date_attrs = ['analyzed', 'reference_date']
-                for date_attr in date_attrs:
-                    # analyzed is a datetime, so use the isoformat of its date
-                    temp = getattr(css, date_attr)
-                    if temp is not None:
-                        if isinstance(temp, datetime.datetime):
-                            stats[date_attr] = getattr(css, date_attr).date().strftime("%d/%m/%Y")
-                            continue
-                        # otherwise, assume we have a datetime.date...
-                        stats[date_attr] = getattr(css, date_attr).strftime("%d/%m/%Y")
+                        # need isoformat because dates/datetimes aren't serializable
+                        date_attrs = ['analyzed', 'reference_date']
+                        for date_attr in date_attrs:
+                            # analyzed is a datetime, so use the isoformat of its date
+                            temp = getattr(css, date_attr)
+                            if temp is not None:
+                                if isinstance(temp, datetime.datetime):
+                                    stats[date_attr] = getattr(css, date_attr).date().strftime("%d/%m/%Y")
+                                    continue
+                                # otherwise, assume we have a datetime.date...
+                                stats[date_attr] = getattr(css, date_attr).strftime("%d/%m/%Y")
 
-                if len(stats):
-                    if None in stats.values():
-                        stats.update((k, v) for k, v in stats.iteritems() if v is not None)
-                    data = simplejson.dumps([stats])
-                else:
-                    data = simplejson.dumps([])
+                        if len(stats):
+                            if None in stats.values():
+                                stats.update((k, v) for k, v in stats.iteritems() if v is not None)
+                            data = simplejson.dumps([stats])
+                        else:
+                            data = simplejson.dumps([])
 
-                return HttpResponse(data, 'application/javascript')
-            else:
-                data = simplejson.dumps([])
-                return HttpResponse(data, 'application/javascript')
+                        return HttpResponse(data, 'application/javascript')
+            data = simplejson.dumps([])
+            return HttpResponse(data, 'application/javascript')
         except Exception, e:
             print 'BANG STATS'
             print e
@@ -251,7 +255,7 @@ def revert_upload(req):
 @permission_required('vaxapp.can_upload')
 def entry(req):
     if req.method == 'POST':
-        entry_forms = [forms.EntryForm(request.POST, prefix=str(x)) for x in range(0,10)]
+        entry_forms = [forms.EntryForm(req.POST, prefix=str(x)) for x in range(0,10)]
         #if all((f.is_valid() for f in entry_forms)):
         for entry_form in entry_forms:
             if entry_form.is_valid():

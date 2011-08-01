@@ -93,6 +93,7 @@ def reconcile_country_silently(term):
         except Exception, e:
             print 'BANG'
             print e
+            return None
 
 def reconcile_vaccine_interactively(term, country_pk):
     try:
@@ -175,6 +176,7 @@ def reconcile_vaccine_silently(term, country_pk):
         except Exception, e:
             print 'BANG'
             print e
+            return None
     except ObjectDoesNotExist:
         try:
             vaccine = Vaccine.country_aware_lookup(term, country_pk)
@@ -192,6 +194,12 @@ def reconcile_vaccine_silently(term, country_pk):
         except Exception, e:
             print 'BANG lookup'
             print e
+            return None
+
+def import_all_who(interactive=True, dry_run=False):
+    print import_who("Chad_Stocks.xls", interactive=interactive, dry_run=dry_run)
+    print import_who("Mali_stocks.xls", interactive=interactive, dry_run=dry_run)
+    print import_who("Senegal_stocks.xls", interactive=interactive, dry_run=dry_run)
 
 def import_who(file=None, interactive=True, dry_run=False, upload=None):
     '''
@@ -254,8 +262,10 @@ def import_who(file=None, interactive=True, dry_run=False, upload=None):
                                     imported_countries.append(country.iso2_code)
                         if country is None:
                             if term not in skips:
-                                print "cannot reconcile '%s'" % (term)
+                                err = "cannot reconcile '%s'" % (term)
+                                print err
                                 print "moving on..."
+                                import_errors.append(err)
                                 skips.append(term)
                                 break
 
@@ -284,8 +294,10 @@ def import_who(file=None, interactive=True, dry_run=False, upload=None):
                         if vaccine is None:
                             #print "cannot find vax: '%s'" % (vax)
                             if vax not in vax_skips:
-                                print "cannot reconcile '%s'" % (vax)
+                                err = "cannot reconcile '%s'" % (vax)
+                                print err
                                 print "moving on..."
+                                import_errors.append(err)
                                 vax_skips.append(vax)
                             if vax not in unmatched_products:
                                 unmatched_products.append(vax)
@@ -398,7 +410,7 @@ def import_all_unicef():
     # 2011
     print import_unicef("UNICEF SD - 2011 Country Forecasting Data - CLEANED COUNTRY NAMES.xls")
     print import_unicef("UNICEF SD - 2011 Country Office Forecasts - CLEANED COUNTRY NAMES.xls")
-    print import_unicef("2011_03 UNICEF SD - All Table Vaccines - CLEANED.xls")
+    print import_unicef("2011_06 UNICEF SD - All Table Vaccines - CLEANED.xls")
 
 def import_unicef(file="", interactive=True, dry_run=False, upload=None):
     print file
@@ -467,12 +479,16 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
                         imported_countries.append(country.iso2_code)
                 else:
                     country = reconcile_country_silently(rd['Country'])
-                    if country.iso2_code not in imported_countries:
-                        imported_countries.append(country.iso2_code)
+                    if country:
+                        if country.iso2_code:
+                            if country.iso2_code not in imported_countries:
+                                imported_countries.append(country.iso2_code)
             if country is None:
                 if rd['Country'] not in skips:
-                    print "cannot reconcile '%s'" % (rd['Country'])
+                    err = "cannot reconcile '%s'" % (rd['Country'])
+                    print err
                     print "moving on..."
+                    import_errors.append(err)
                     skips.append(rd['Country'])
                 continue
         except Exception, e:
@@ -492,8 +508,10 @@ def import_unicef(file="", interactive=True, dry_run=False, upload=None):
             if vaccine is None:
                 #print "cannot find vax: '%s'" % (vax)
                 if vax not in vax_skips:
-                    print "cannot reconcile '%s'" % (vax)
+                    err = "cannot reconcile '%s'" % (vax)
+                    print err
                     print "moving on..."
+                    import_errors.append(err)
                     vax_skips.append(vax)
                 if vax not in unmatched_products:
                     unmatched_products.append(vax)
@@ -765,8 +783,10 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
                                 imported_countries.append(country.iso2_code)
                     if country is None:
                         if term not in skips:
-                            print "cannot reconcile '%s'" % (term)
+                            err = "cannot reconcile '%s'" % (term)
+                            print err
                             print "moving on..."
+                            import_errors.append(err)
                             skips.append(term)
                             break
 
@@ -791,8 +811,10 @@ def import_template(file=None, interactive=True, dry_run=False, upload=None):
                     if vaccine is None:
                         #print "cannot find vax: '%s'" % (vax)
                         if vax not in vax_skips:
-                            print "cannot reconcile '%s'" % (vax)
+                            err = "cannot reconcile '%s'" % (vax)
+                            print err
                             print "moving on..."
+                            import_errors.append(err)
                             vax_skips.append(vax)
                         if vax not in unmatched_products:
                             unmatched_products.append(vax)

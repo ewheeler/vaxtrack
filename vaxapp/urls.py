@@ -7,6 +7,12 @@ from django.conf.urls.defaults import *
 from django.contrib import admin
 import authority
 import views
+import nexus
+import gargoyle
+
+# sets up the default nexus site by detecting all nexus_modules.py files
+nexus.autodiscover()
+gargoyle.autodiscover()
 
 admin.autodiscover()
 authority.autodiscover()
@@ -52,5 +58,5 @@ urlpatterns = patterns('',
     url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
     url(r'^translations/', include('rosetta.urls'), name='rosetta'),
     url(r'^authority/', include('authority.urls')),
-
+    url(r'^nexus/', include(nexus.site.urls)),
 )

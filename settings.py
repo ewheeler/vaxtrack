@@ -114,5 +114,7 @@ INSTALLED_APPS = (
     'rosetta',
     'gunicorn',
     'seacucumber',
+    'nexus',
+    'gargoyle',
     #'debug_toolbar',
 )
