@@ -28,6 +28,7 @@ BROKER_VHOST = "vaxlg"
 CELERY_RESULT_BACKEND = "amqp"
 
 DOCUMENT_UPLOAD_BUCKET = 'vaxtrack_uploads'
+SERIALIZATION_MODULES = {'json-pretty': 'serializers.json_pretty'}
 
 AUTH_PROFILE_MODULE = 'vaxapp.UserProfile'
 LOGIN_URL = '/login'
