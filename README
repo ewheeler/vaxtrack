@@ -23,7 +23,8 @@ Technology stack overview:
     javascript charts with the dygraph library. IE8 compatibility has been achieved
     using FlashCanvas, a drop-in product for emulating the canvas tag.
     FlashCanvas may rarely cause IE8 to crash, so using Google's Chrome Frame
-    extension to IE8 is strongly recommended.
+    extension to IE8 is strongly recommended -- and is now available as a plug-in
+    that does NOT require admin privileges to install (http://www.google.com/chromeframe)
     Uploading, analysis, and email alerting are queued and executed via celery,
     which uses RabbitMQ for messaging. RabbitMQ is certainly overkill for this
     use-case, but is perhaps more reliable than some of the 'ghettomq' alternatives.
