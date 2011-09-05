@@ -259,10 +259,7 @@ def entry(req):
         #if all((f.is_valid() for f in entry_forms)):
         for entry_form in entry_forms:
             if entry_form.is_valid():
-                f = entry_form.save(commit=False)
-                f.user = req.user
-                f.date_entered = datetime.datetime.utcnow()
-                f.save()
+                entry_form.save()
                 #process_file.delay(doc)
                 return HttpResponseRedirect('/')
     else:

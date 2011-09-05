@@ -828,6 +828,8 @@ class DataEntry(models.Model):
 
     date_created = models.DateTimeField(_("Date Created"), default=datetime.datetime.utcnow)
 
+    #TODO add group, affiliation, AMOUNT, etc
+
     class Meta:
         verbose_name = _('entry')
         verbose_name_plural = _('entries')
