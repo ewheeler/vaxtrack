@@ -149,8 +149,6 @@ def handle_alert(countrystock, reference_date, status, risk, text, dry_run=False
     if 1:
         # only send emails if this is a new alert
         recipients = []
-        # TODO XXX TEMPORARY
-        '''
         # get all staff
         staff = User.objects.filter(is_staff=True)
         # find other users who list this country in their profile
@@ -163,9 +161,7 @@ def handle_alert(countrystock, reference_date, status, risk, text, dry_run=False
             except ObjectDoesNotExist:
                 continue
         # combine staff and other users
-        #recipients = recipients + [s.email for s in staff]
-        '''
-        recipients = ['evanmwheeler@gmail.com', 'anthonybellon.contact@gmail.com']
+        recipients = recipients + [s.email for s in staff]
         subject = "[VisualVaccines] %s: %s %s" % (alert.countrystock, alert.get_status_display(), alert.get_risk_display())
         body = alert.get_text_display()
         sender = "visualvaccines@gmail.com"
