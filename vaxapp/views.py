@@ -22,10 +22,11 @@ def index_dev(req, country_pk=None):
     else:
         countrystocks = False
     targets =  ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']
+    target_countries = ['SN', 'TD', 'ML']
     vg = VaccineGroup.objects.filter(slug__in=targets)
-    countrystocks = CountryStock.objects.filter(group__in=vg)
-    countrystocks = [c for c in countrystocks if c.has_stock_data]
-    #countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in ['bcg', 'dtp-hepbhib', 'mea', 'opv', 'tt', 'yf']]
+    countrystocks = CountryStock.objects.filter(group__in=vg).filter(country__iso2_code__in=target_countries)
+    #countrystocks = [c for c in countrystocks if c.has_stock_data]
+    #countrystocks = [c for c in CountryStock.objects.filter(country__iso2_code='SN') if c.group.slug in targets]
     countries = sorted(list(set([c.country for c in countrystocks])), key=operator.attrgetter('printable_name'))
     groups = list(set([g.group for g in countrystocks]))
     return render_to_response("dev.html",\

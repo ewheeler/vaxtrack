@@ -30,8 +30,8 @@ $(document).ready(function(){
     var data;
 
     var sit_year = 2011;
-    var sit_month = 7;
-    var sit_day = 1;
+    var sit_month = 9;
+    var sit_day = 15;
 
     /* array of all possible chart options, used to check for plot visibility */
     var all_options = new Array("T", "N", "F", "P", "C", "U");
@@ -46,7 +46,7 @@ $(document).ready(function(){
         options = new Array("T", "N", "F", "P");
         group = "bcg";
 	country = "SN";
-        get_sit_as_of();
+        //get_sit_as_of();
 	chart_name = "";
 	data_url = "/assets/csvs/SN/opv/2011/SN_bcg_" + sit_year +  "_" + sit_month + "_" + sit_day + ".csv";
     } else {
@@ -59,7 +59,7 @@ $(document).ready(function(){
 	lang = hash_parts[1];
 	country = hash_parts[2].replace(/[\#\-\!]/g,"");
 	group = hash_parts[3];
-        get_sit_as_of();
+        //get_sit_as_of();
 	options = new Array();
 	/* clean slate of chart options with only stock levels visible */
 	vis_bools = new Array(true, false, false, false, false, false, false);
@@ -205,12 +205,12 @@ $(document).ready(function(){
 	reset global vaccine variable to currently checked
 	vaccine, update url hash, fetch new chart and tables */
     $("#vaccines :input").click(function(){
-        group = ""; 
+        group = "";
 	$("#vaccines :input:radio:checked").each(function() {
 	    group = $(this).val();
 	});
 	update_url();
-        get_sit_as_of();
+        //get_sit_as_of();
         get_chart();
 	get_alerts();
 	get_stats();
@@ -223,7 +223,7 @@ $(document).ready(function(){
         country = "";
 	country = $(this).val();
 	update_url();
-        get_sit_as_of();
+        //get_sit_as_of();
         get_chart();
 	get_alerts();
 	get_stats();

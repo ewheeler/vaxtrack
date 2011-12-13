@@ -9,8 +9,8 @@ CUCUMBER_RATE_LIMIT = 1
 # Django settings for the example project.
 SDB_DOMAIN = 'papayacountrystocks'
 
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+DEBUG = False
+TEMPLATE_DEBUG = False
 ROOT_URLCONF = 'examples.urls'
 TEMPLATE_DIRS = ('/home/ubuntu/vax/vaxapp/templates',)
 
@@ -88,6 +88,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     #'vax.vaxapp.startup.StartupMiddlewareHack',
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )

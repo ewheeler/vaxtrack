@@ -102,6 +102,7 @@ Wayfinding in the codebase (and notes about important files):
     visit the gargoyle section of the admin site (/nexus) and disable the anonymous switch.
     note there are two versions of vax-dev.js: vax-dev.js and vax-dev-anon.js
     this is unfortunately the simplest way to allow switching between real and anonymous
+- run ./manage.py runserver in one screen and ./manage.py celeryd -v 2 -B -s celery -E -l INFO in another
 
 For more information:
     please contact me! this guide is certainly not comprehensive
