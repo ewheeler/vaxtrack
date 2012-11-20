@@ -52,8 +52,8 @@ OS X INSTALLATION:
 
 FIXTURES:
     ./manage.py loaddata vaxapp/fixtures/countries_fr.json
+    ./manage.py loaddata vaxapp/fixtures/vaccinegroups.json
     ./manage.py loaddata vaxapp/fixtures/vaccines.json
-    ./manage.py loaddata vaxapp/fixtures/vaccine_groups.json
     ./manage.py loaddata vaxapp/fixtures/altcountry.json
 
 I18N AFTER INSTALLATION:
