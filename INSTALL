@@ -21,7 +21,7 @@ DATA IMPORT/EXPORT SCRIPT DEPENDENCIES:
 
 DEBIAN-BASED INSTALLATION:
     sudo apt-get install python-pip python-dev mysql-server git-core python-mysqldb python-matplotlib rabbitmq-server gettext
-    sudo pip install setuptools boto=2.0b4 django south celery django-celery django-rosetta
+    sudo pip install setuptools boto django south celery django-celery django-rosetta gargoyle
 
     optionally:
     sudo apt-get install vim
