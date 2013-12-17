@@ -15,6 +15,7 @@ class CountryStockAdmin(admin.ModelAdmin):
     list_display = ('__unicode__', 'country', 'group')
 
 
+admin.site.register(DataEntry)
 admin.site.register(Vaccine)
 admin.site.register(VaccineGroup)
 admin.site.register(AltVaccine)

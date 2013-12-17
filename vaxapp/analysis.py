@@ -62,7 +62,7 @@ def plot(sit_year=2011, sit_month=12, sit_day=15, country='SN', group_slug='bcg'
     print end
     print delta
 
-def plot_all(sit_year=2011, sit_month=7, sit_day=1):
+def plot_all(sit_year=2011, sit_month=9, sit_day=15):
     begin = datetime.datetime.now()
     #for country in Country.objects.all().values_list('iso2_code', flat=True):
     for country in ['ML', 'SN', 'TD']:
